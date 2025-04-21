@@ -1,0 +1,13 @@
+Live Patient Risk Predictions
+===================================
+
+👤 Patient 1: Predicted = High Risk (Confidence: 1.00)
+👤 Patient 2: Predicted = High Risk (Confidence: 1.00)
+👤 Patient 3: Predicted = Low Risk (Confidence: 1.00)
+👤 Patient 4: Predicted = High Risk (Confidence: 1.00)
+👤 Patient 5: Predicted = High Risk (Confidence: 1.00)
+👤 Patient 6: Predicted = High Risk (Confidence: 1.00)
+👤 Patient 7: Predicted = Low Risk (Confidence: 1.00)
+👤 Patient 8: Predicted = High Risk (Confidence: 1.00)
+👤 Patient 9: Predicted = Low Risk (Confidence: 1.00)
+👤 Patient 10: Predicted = High Risk (Confidence: 1.00)
