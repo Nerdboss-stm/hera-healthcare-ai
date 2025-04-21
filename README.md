@@ -3,6 +3,22 @@
 
 > A full-stack, real-time healthcare AI system designed to monitor patient vitals, predict health risks (e.g., sepsis), and offer explainable AI insights. Built from scratch with a learning-first approach.
 
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Healthcare%20AI-Project-blue.svg?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Built%20With-Python%20|%20Sklearn%20|%20SHAP%20|%20Matplotlib-orange.svg?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Status-In%20Progress-yellowgreen.svg?style=flat-square"/>
+</p>
+
+<h1 align="center">🧠 HERA+: Real-Time Healthcare Risk Prediction & Explainability</h1>
+
+<p align="center">
+  <b>A full-stack, learning-focused AI project that simulates real-world clinical workflows with predictive modeling, data engineering, and interpretability using SHAP.</b>
+  <br />
+  Built from scratch as a personal learning journey and future-ready portfolio project.
+</p>
+
+
 ---
 
 ## 📅 Weekly Progress Overview
