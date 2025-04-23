@@ -1,0 +1,18 @@
+{
+  "model_name": "RandomForestClassifier",
+  "created_on": "2025-04-21",
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 10,
+    "min_samples_split": 2
+  },
+  "trained_on": "cleaned_vitals.csv",
+  "features": [
+    "Heart Rate", "Respiratory Rate", "Body Temperature", "Oxygen Saturation",
+    "Systolic Blood Pressure", "Diastolic Blood Pressure", "Age",
+    "Calculated_BMI", "Calculated_MAP"
+  ],
+  "target": "Risk Category",
+  "version": "v1.0"
+}
+
