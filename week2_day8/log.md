@@ -15,3 +15,17 @@
 - `live_predict.py`
 - `prediction_log.txt`
 
+# Week 2 – Day 8.5 Log: PostgreSQL Logging
+
+## ✅ Completed
+- Installed PostgreSQL via Homebrew on macOS
+- Created DB `hera_ai`, user `hera`, table `patient_predictions`
+- Wrote Python logger using psycopg2
+- Inserted predictions with full feature + label info in real-time
+
+## 🧠 Learning
+- How to structure real-time logs in a relational DB
+- Use parameterized queries to avoid SQL injection
+- Commit after each insert or batch insert periodically
+
+
