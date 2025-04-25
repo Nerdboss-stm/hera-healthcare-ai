@@ -1,6 +1,6 @@
 ✅ Tasks Completed
 
-Set up Python monitoring app exposing Prometheus metrics
+Set up Python monitoring app exposing Prometheus metrics.
 
 Configured Prometheus to scrape prediction data
 
