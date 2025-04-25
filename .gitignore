@@ -1,0 +1,6 @@
+# Ignore database and Prometheus data
+**/data/*
+*.wal
+*.log
+*.pid
+

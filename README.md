@@ -7,7 +7,7 @@
 
 ---
 
-## 🔍 About Me
+### 🔍 About Me
 
 - 👋 I'm @SaranTeja, passionate about solving real-world problems with **Data Science**, **ML**, and **Cloud Engineering**
 - 🌱 Deep-diving into **Big Data** (Kafka, Spark), **LLMs**, and **MLOps**
