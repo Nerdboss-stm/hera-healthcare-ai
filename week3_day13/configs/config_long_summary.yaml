@@ -1,0 +1,13 @@
+#For longer generated summaries
+#Use if you want longer paragraph-style clinical summaries
+
+model_checkpoint: "t5-small"
+batch_size: 2
+num_train_epochs: 5
+learning_rate: 5e-5
+weight_decay: 0.01
+input_max_length: 512
+output_max_length: 256
+save_steps: 100
+eval_steps: 50
+

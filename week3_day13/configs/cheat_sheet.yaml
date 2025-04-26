@@ -1,0 +1,36 @@
+Am I using CPU or Small Mac GPU?
+    ↓
+    Yes → Set batch_size: 1-2
+    ↓
+    No (Real GPU) → batch_size: 8-16
+
+Do I want faster training?
+    ↓
+    Yes → learning_rate: 1e-4, num_train_epochs: 3
+    ↓
+    No → learning_rate: 5e-5, num_train_epochs: 5
+
+Is my clinical note very long (> 500 tokens)?
+    ↓
+    Yes → input_max_length: 512 or 1024 (ONLY if model supports)
+    ↓
+    No → input_max_length: 256
+
+Do I want very short summaries?
+    ↓
+    Yes → output_max_length: 64
+    ↓
+    No → output_max_length: 128 or 256
+
+Is my dataset small (< 10000 notes)?
+    ↓
+    Yes → weight_decay: 0 or 0.01
+    ↓
+    No → keep weight_decay: 0.01
+
+Do I care about very frequent evaluation/saves?
+    ↓
+    Yes → save_steps: 50, eval_steps: 20
+    ↓
+    No → save_steps: 100-300, eval_steps: 100
+

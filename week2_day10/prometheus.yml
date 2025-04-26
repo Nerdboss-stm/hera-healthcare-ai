@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'hera_monitor'
+    static_configs:
+      - targets: ['localhost:9100']
+
+rule_files:
+  - "alerts.yml"

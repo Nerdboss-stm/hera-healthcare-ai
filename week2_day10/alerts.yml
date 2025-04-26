@@ -1,0 +1,10 @@
+groups:
+- name: hera_alerts
+  rules:
+  - alert: TooManyHighRisk
+    expr: high_risk_predictions > 3
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "Too many High Risk patients"
