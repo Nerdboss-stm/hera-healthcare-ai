@@ -1,0 +1,108 @@
+# =========================
+# Python Stuff
+# =========================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Local IDE/editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# System Files
+# =========================
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+
+# =========================
+# Machine Learning Files
+# =========================
+
+# Model weights and outputs
+*.bin
+*.pt
+*.ckpt
+*.h5
+*.onnx
+*.pb
+*.safetensors
+
+# Tensorboard logs
+runs/
+events.out.tfevents.*
+
+# Saved models directories
+saved_models/
+models/
+checkpoints/
+outputs/
+model/   # <-- Specific for your current model folder!
+
+# Dataset cache (like Huggingface Datasets)
+cache/
+*.arrow
+*.jsonl
+
+# =========================
+# Data Files
+# =========================
+
+# Local CSVs, datasets (optional)
+*.csv
+*.tsv
+*.json
+
+# Keep small sample CSVs? (If yes, comment out above ^)
+
+# =========================
+# Misc
+# =========================
+
+# Temporary files
+*.bak
+*.swp
+*.tmp
+
+# Backup files
+*.orig
+*.old
+
+# =========================
+# Pipenv / Poetry
+# =========================
+
+# Pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# =========================
+# Compiled Object files
+# =========================
+
+*.o
+*.so
+
+

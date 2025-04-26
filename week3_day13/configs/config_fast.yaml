@@ -1,0 +1,12 @@
+# forfast gpu training
+# Use on Google Colab Pro, Kaggle GPU, or desktop GPU
+model_checkpoint: "t5-small"
+batch_size: 8
+num_train_epochs: 3
+learning_rate: 1e-4
+weight_decay: 0.01
+input_max_length: 512
+output_max_length: 128
+save_steps: 100
+eval_steps: 50
+
