@@ -1,5 +1,5 @@
 from transformers import T5ForConditionalGeneration, T5Tokenizer
-from config import MODEL_PATH
+from clinical_summarizer_api.app.config import MODEL_PATH
 
 tokenizer = T5Tokenizer.from_pretrained(MODEL_PATH)
 model = T5ForConditionalGeneration.from_pretrained(MODEL_PATH)
