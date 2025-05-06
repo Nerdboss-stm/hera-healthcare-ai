@@ -1,3 +1,3 @@
-DATABASE_URL = "postgresql://username:password@localhost:5432/yourdb"
-MODEL_PATH = "./t5_clinical_summary_model"
+DATABASE_URL = "postgresql://hera:hera123@localhost:5432/hera_ai"
+MODEL_PATH = "../../model"
 
