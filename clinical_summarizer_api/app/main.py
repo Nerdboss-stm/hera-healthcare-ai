@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from app.model import generate_summary
+from clinical_summarizer_api.app.model import generate_summary
 from app.schemas import SummarizationRequest, SummarizationResponse
 from app.db import SessionLocal, PredictionLog
 from app.logger import logger
