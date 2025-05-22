@@ -6,6 +6,10 @@ from datetime import datetime
 
 app = FastAPI(title="Clinical Summarizer API")
 
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Clinical Summarizer API. Use /docs to explore endpoints."}
+
 @app.post("/summarize", response_model=SummaryResponse)
 def summarize_note(request: NoteRequest):
     try:
