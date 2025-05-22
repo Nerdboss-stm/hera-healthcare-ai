@@ -1,8 +1,8 @@
 DB_CONFIG = {
     "host": "localhost",
     "port": 5432,
-    "user": "postgres",
+    "user": "hera",
     "password": "yourpassword",
-    "dbname": "clinical_ai"
+    "dbname": "hera_ai"
 }
 
