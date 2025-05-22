@@ -1,4 +1,4 @@
-# Rename this to db_config.py and add real values (never commit secrets)
+## Rename this to db_config.py and add real values (never commit secrets)
 
 db_config = {
     'host': 'localhost',
