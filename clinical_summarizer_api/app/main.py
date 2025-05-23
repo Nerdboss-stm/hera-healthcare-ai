@@ -3,6 +3,12 @@ from clinical_summarizer_api.app.models import NoteRequest, SummaryResponse
 from clinical_summarizer_api.app.summarizer import generate_summary
 from clinical_summarizer_api.app.db_logger import log_to_db
 from datetime import datetime
+from fastapi.responses import PlainTextResponse
+from clinical_summarizer_api.app.metrics import track_metrics, prometheus_metrics
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    return prometheus_metrics()
 
 app = FastAPI(title="Clinical Summarizer API")
 
