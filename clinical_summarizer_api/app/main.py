@@ -6,11 +6,18 @@ from datetime import datetime
 from fastapi.responses import PlainTextResponse
 from clinical_summarizer_api.app.metrics import track_metrics, prometheus_metrics
 
-@app.get("/metrics", response_class=PlainTextResponse)
 def metrics():
     return prometheus_metrics()
 
 app = FastAPI(title="Clinical Summarizer API")
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    return prometheus_metrics()
+
+@app.get("/")
+def root():
+    return {"message": "FastAPI server is up!"}
 
 @app.post("/summarize", response_model=SummaryResponse)
 def summarize_note(request: NoteRequest):
