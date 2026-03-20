@@ -18,7 +18,11 @@ class TestPreprocessing:
         if not os.path.exists(path):
             pytest.skip("cleaned_vitals.csv not available")
         df = pd.read_csv(path)
-        expected_cols = ["Calculated_BMI", "Calculated_MAP", "Calculated_Pulse_Pressure"]
+        expected_cols = [
+            "Calculated_BMI",
+            "Calculated_MAP",
+            "Calculated_Pulse_Pressure",
+        ]
         for col in expected_cols:
             assert col in df.columns, f"Missing engineered feature: {col}"
 
@@ -28,9 +32,13 @@ class TestPreprocessing:
             pytest.skip("cleaned_vitals.csv not available")
         df = pd.read_csv(path)
         features = [
-            "Heart Rate", "Respiratory Rate", "Body Temperature",
-            "Oxygen Saturation", "Systolic Blood Pressure",
-            "Diastolic Blood Pressure", "Age",
+            "Heart Rate",
+            "Respiratory Rate",
+            "Body Temperature",
+            "Oxygen Saturation",
+            "Systolic Blood Pressure",
+            "Diastolic Blood Pressure",
+            "Age",
         ]
         for col in features:
             if col in df.columns:
@@ -44,7 +52,9 @@ class TestPreprocessing:
         if "Risk Category" in df.columns:
             valid_labels = {"High Risk", "Low Risk"}
             actual_labels = set(df["Risk Category"].unique())
-            assert actual_labels.issubset(valid_labels), f"Unexpected labels: {actual_labels - valid_labels}"
+            assert actual_labels.issubset(valid_labels), (
+                f"Unexpected labels: {actual_labels - valid_labels}"
+            )
 
 
 class TestModelTraining:
@@ -53,9 +63,14 @@ class TestModelTraining:
     def test_random_forest_features_match(self):
         """Verify the expected feature list is consistent."""
         expected_features = [
-            "Heart Rate", "Respiratory Rate", "Body Temperature",
-            "Oxygen Saturation", "Systolic Blood Pressure",
-            "Diastolic Blood Pressure", "Age",
-            "Calculated_BMI", "Calculated_MAP",
+            "Heart Rate",
+            "Respiratory Rate",
+            "Body Temperature",
+            "Oxygen Saturation",
+            "Systolic Blood Pressure",
+            "Diastolic Blood Pressure",
+            "Age",
+            "Calculated_BMI",
+            "Calculated_MAP",
         ]
         assert len(expected_features) == 9

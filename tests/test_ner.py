@@ -61,6 +61,7 @@ class TestClinicalNERExtractor:
 class TestPatientKnowledgeGraph:
     def test_build_graph(self):
         from ner.knowledge_graph import PatientKnowledgeGraph
+
         kg = PatientKnowledgeGraph()
         result = kg.build_from_note(
             "Patient on aspirin for myocardial infarction. ECG ordered.",
@@ -71,6 +72,7 @@ class TestPatientKnowledgeGraph:
 
     def test_query_entity(self):
         from ner.knowledge_graph import PatientKnowledgeGraph
+
         kg = PatientKnowledgeGraph()
         kg.build_from_note("Patient on aspirin for myocardial infarction.")
         result = kg.query_entity("aspirin")
@@ -78,14 +80,18 @@ class TestPatientKnowledgeGraph:
 
     def test_treatment_chain(self):
         from ner.knowledge_graph import PatientKnowledgeGraph
+
         kg = PatientKnowledgeGraph()
-        kg.build_from_note("Aspirin and heparin for myocardial infarction. ECG performed.")
+        kg.build_from_note(
+            "Aspirin and heparin for myocardial infarction. ECG performed."
+        )
         chain = kg.get_treatment_chain("myocardial infarction")
         assert chain["found"] is True
         assert len(chain["treating_medications"]) > 0
 
     def test_export_dict(self):
         from ner.knowledge_graph import PatientKnowledgeGraph
+
         kg = PatientKnowledgeGraph()
         kg.build_from_note("Aspirin for hypertension.")
         export = kg.to_dict()
@@ -94,6 +100,7 @@ class TestPatientKnowledgeGraph:
 
     def test_cytoscape_export(self):
         from ner.knowledge_graph import PatientKnowledgeGraph
+
         kg = PatientKnowledgeGraph()
         kg.build_from_note("Aspirin for hypertension.")
         export = kg.to_cytoscape()

@@ -4,6 +4,7 @@ from transformers import Trainer
 
 rouge = evaluate.load("rouge")
 
+
 def build_compute_metrics(tokenizer):
     def compute_metrics(eval_preds):
         preds, labels = eval_preds
@@ -17,14 +18,18 @@ def build_compute_metrics(tokenizer):
         decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
         decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-        result = rouge.compute(predictions=decoded_preds, references=decoded_labels, use_stemmer=True)
+        result = rouge.compute(
+            predictions=decoded_preds, references=decoded_labels, use_stemmer=True
+        )
         result = {key: value * 100 for key, value in result.items()}
 
         prediction_lens = [len(pred.split()) for pred in decoded_preds]
         result["gen_len"] = sum(prediction_lens) / len(prediction_lens)
 
         return result
+
     return compute_metrics
+
 
 def build_trainer(model, tokenizer, tokenized_datasets, training_args):
     trainer = Trainer(
@@ -33,7 +38,6 @@ def build_trainer(model, tokenizer, tokenized_datasets, training_args):
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
-        compute_metrics=build_compute_metrics(tokenizer)  # ✅ Correct!
+        compute_metrics=build_compute_metrics(tokenizer),  # ✅ Correct!
     )
     return trainer
-

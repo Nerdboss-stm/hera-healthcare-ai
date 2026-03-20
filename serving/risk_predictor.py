@@ -9,9 +9,15 @@ FALLBACK_PATH = os.path.join(_dir, "..", "risk_prediction", "risk_predictor_mode
 _model = None
 
 FEATURES = [
-    "Heart Rate", "Respiratory Rate", "Body Temperature", "Oxygen Saturation",
-    "Systolic Blood Pressure", "Diastolic Blood Pressure", "Age",
-    "Calculated_BMI", "Calculated_MAP",
+    "Heart Rate",
+    "Respiratory Rate",
+    "Body Temperature",
+    "Oxygen Saturation",
+    "Systolic Blood Pressure",
+    "Diastolic Blood Pressure",
+    "Age",
+    "Calculated_BMI",
+    "Calculated_MAP",
 ]
 
 LABEL_MAP = {1: "High Risk", 0: "Low Risk"}
@@ -44,13 +50,24 @@ def predict_risk(
 
     bmi_weight = 70.0
     bmi_height = 1.70
-    calculated_bmi = bmi_weight / (bmi_height ** 2)
+    calculated_bmi = bmi_weight / (bmi_height**2)
     calculated_map = (2 * diastolic_bp + systolic_bp) / 3
 
-    features = np.array([[
-        heart_rate, respiratory_rate, body_temperature, oxygen_saturation,
-        systolic_bp, diastolic_bp, age, calculated_bmi, calculated_map,
-    ]])
+    features = np.array(
+        [
+            [
+                heart_rate,
+                respiratory_rate,
+                body_temperature,
+                oxygen_saturation,
+                systolic_bp,
+                diastolic_bp,
+                age,
+                calculated_bmi,
+                calculated_map,
+            ]
+        ]
+    )
 
     prediction = model.predict(features)[0]
     probabilities = model.predict_proba(features)[0]

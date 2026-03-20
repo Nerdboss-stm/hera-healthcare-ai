@@ -68,12 +68,9 @@ class RAGPipeline:
         retrieved = self._retriever.retrieve(clinical_note, top_k=top_k)
 
         # Build augmented prompt
-        context_block = "\n\n".join(
-            f"[{r['source']}]: {r['text']}" for r in retrieved
-        )
+        context_block = "\n\n".join(f"[{r['source']}]: {r['text']}" for r in retrieved)
         augmented_input = (
-            f"Medical context:\n{context_block}\n\n"
-            f"Clinical note:\n{clinical_note}"
+            f"Medical context:\n{context_block}\n\nClinical note:\n{clinical_note}"
         )
 
         # Generate summary
@@ -90,8 +87,7 @@ class RAGPipeline:
                     summary = None
 
         citations = [
-            {"source": r["source"], "relevance": r["score"]}
-            for r in retrieved
+            {"source": r["source"], "relevance": r["score"]} for r in retrieved
         ]
 
         return {

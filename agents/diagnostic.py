@@ -9,7 +9,10 @@ from __future__ import annotations
 import logging
 
 from agents.protocols import (
-    PatientContext, TriageResult, DiagnosticResult, Diagnosis,
+    PatientContext,
+    TriageResult,
+    DiagnosticResult,
+    Diagnosis,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,14 +31,23 @@ CLINICAL_KNOWLEDGE = {
             condition="Pulmonary Embolism",
             icd10_code="I26.99",
             probability=0.0,
-            supporting_evidence=["pleuritic chest pain", "dyspnea", "tachycardia", "hypoxia"],
+            supporting_evidence=[
+                "pleuritic chest pain",
+                "dyspnea",
+                "tachycardia",
+                "hypoxia",
+            ],
             ruling_out=["negative D-dimer", "normal CT-PA"],
         ),
         Diagnosis(
             condition="Pneumothorax",
             icd10_code="J93.9",
             probability=0.0,
-            supporting_evidence=["sudden onset", "pleuritic", "decreased breath sounds"],
+            supporting_evidence=[
+                "sudden onset",
+                "pleuritic",
+                "decreased breath sounds",
+            ],
             ruling_out=["normal chest X-ray"],
         ),
         Diagnosis(
@@ -65,7 +77,12 @@ CLINICAL_KNOWLEDGE = {
             condition="Pneumonia",
             icd10_code="J18.9",
             probability=0.0,
-            supporting_evidence=["fever", "productive cough", "crackles", "consolidation"],
+            supporting_evidence=[
+                "fever",
+                "productive cough",
+                "crackles",
+                "consolidation",
+            ],
             ruling_out=["clear chest X-ray", "no fever"],
         ),
     ],
@@ -81,7 +98,11 @@ CLINICAL_KNOWLEDGE = {
             condition="Subarachnoid Hemorrhage",
             icd10_code="I60.9",
             probability=0.0,
-            supporting_evidence=["thunderclap onset", "worst headache of life", "neck stiffness"],
+            supporting_evidence=[
+                "thunderclap onset",
+                "worst headache of life",
+                "neck stiffness",
+            ],
             ruling_out=["gradual onset", "normal CT head"],
         ),
         Diagnosis(
@@ -104,14 +125,24 @@ CLINICAL_KNOWLEDGE = {
             condition="Acute Cholecystitis",
             icd10_code="K81.0",
             probability=0.0,
-            supporting_evidence=["RUQ pain", "Murphy's sign", "post-prandial", "nausea"],
+            supporting_evidence=[
+                "RUQ pain",
+                "Murphy's sign",
+                "post-prandial",
+                "nausea",
+            ],
             ruling_out=["normal ultrasound", "no gallstones"],
         ),
         Diagnosis(
             condition="Small Bowel Obstruction",
             icd10_code="K56.60",
             probability=0.0,
-            supporting_evidence=["distension", "vomiting", "obstipation", "prior surgery"],
+            supporting_evidence=[
+                "distension",
+                "vomiting",
+                "obstipation",
+                "prior surgery",
+            ],
             ruling_out=["normal abdominal X-ray", "passing flatus"],
         ),
     ],
@@ -143,14 +174,24 @@ CLINICAL_KNOWLEDGE = {
             condition="Hypoglycemia",
             icd10_code="E16.2",
             probability=0.0,
-            supporting_evidence=["diabetes history", "diaphoresis", "tremor", "low glucose"],
+            supporting_evidence=[
+                "diabetes history",
+                "diaphoresis",
+                "tremor",
+                "low glucose",
+            ],
             ruling_out=["normal glucose"],
         ),
         Diagnosis(
             condition="Stroke (CVA)",
             icd10_code="I63.9",
             probability=0.0,
-            supporting_evidence=["focal deficits", "sudden onset", "facial droop", "arm drift"],
+            supporting_evidence=[
+                "focal deficits",
+                "sudden onset",
+                "facial droop",
+                "arm drift",
+            ],
             ruling_out=["normal CT/MRI", "no focal findings"],
         ),
         Diagnosis(
@@ -192,9 +233,7 @@ class DiagnosticAgent:
     def __init__(self, summarizer=None):
         self._summarizer = summarizer
 
-    def diagnose(
-        self, ctx: PatientContext, triage: TriageResult
-    ) -> DiagnosticResult:
+    def diagnose(self, ctx: PatientContext, triage: TriageResult) -> DiagnosticResult:
         logger.info("Diagnostic assessment for patient %s", ctx.patient_id)
 
         note_lower = ctx.clinical_note.lower()
@@ -207,13 +246,15 @@ class DiagnosticAgent:
             if category in complaint_lower or category in note_lower:
                 matched_categories.add(category)
                 for dx in diagnoses:
-                    candidates.append(Diagnosis(
-                        condition=dx.condition,
-                        icd10_code=dx.icd10_code,
-                        probability=0.0,
-                        supporting_evidence=list(dx.supporting_evidence),
-                        ruling_out=list(dx.ruling_out),
-                    ))
+                    candidates.append(
+                        Diagnosis(
+                            condition=dx.condition,
+                            icd10_code=dx.icd10_code,
+                            probability=0.0,
+                            supporting_evidence=list(dx.supporting_evidence),
+                            ruling_out=list(dx.ruling_out),
+                        )
+                    )
 
         if not candidates:
             # Fallback: use chief complaint keywords to find nearest match
@@ -221,13 +262,15 @@ class DiagnosticAgent:
                 words = category.split()
                 if any(w in complaint_lower for w in words):
                     for dx in CLINICAL_KNOWLEDGE[category]:
-                        candidates.append(Diagnosis(
-                            condition=dx.condition,
-                            icd10_code=dx.icd10_code,
-                            probability=0.0,
-                            supporting_evidence=list(dx.supporting_evidence),
-                            ruling_out=list(dx.ruling_out),
-                        ))
+                        candidates.append(
+                            Diagnosis(
+                                condition=dx.condition,
+                                icd10_code=dx.icd10_code,
+                                probability=0.0,
+                                supporting_evidence=list(dx.supporting_evidence),
+                                ruling_out=list(dx.ruling_out),
+                            )
+                        )
                     break
 
         # Score each candidate
@@ -249,7 +292,13 @@ class DiagnosticAgent:
             age_factor = 0.05 if ctx.age > 60 else 0.0
 
             dx.probability = round(
-                min(max(evidence_score - ruling_penalty + acuity_boost + age_factor, 0.05), 0.95),
+                min(
+                    max(
+                        evidence_score - ruling_penalty + acuity_boost + age_factor,
+                        0.05,
+                    ),
+                    0.95,
+                ),
                 3,
             )
             dx.supporting_evidence = evidence_found or dx.supporting_evidence[:2]

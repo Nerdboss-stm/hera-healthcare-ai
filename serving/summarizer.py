@@ -24,6 +24,8 @@ def _load_model():
 
 def generate_summary(note: str, max_length=150, min_length=30) -> str:
     model, tokenizer = _load_model()
-    input_ids = tokenizer(note, return_tensors="pt", padding=True, truncation=True).input_ids
+    input_ids = tokenizer(
+        note, return_tensors="pt", padding=True, truncation=True
+    ).input_ids
     output = model.generate(input_ids, max_length=max_length, min_length=min_length)
     return tokenizer.decode(output[0], skip_special_tokens=True)

@@ -19,7 +19,7 @@ from clinical_summarizer.dataset import preprocess_function  # noqa: E402
 from clinical_summarizer.trainer import build_trainer  # noqa: E402
 
 # FORCE PyTorch device to CPU manually
-device = torch.device('cpu')
+device = torch.device("cpu")
 
 # Load config
 with open(os.path.join(_dir, "configs", "config.yaml"), "r") as f:
@@ -36,7 +36,12 @@ dataset = DatasetDict({"train": train_dataset, "validation": val_dataset})
 model, tokenizer = load_model_and_tokenizer(config["model_checkpoint"])
 
 # Preprocess
-tokenized_datasets = dataset.map(lambda x: preprocess_function(x, tokenizer, config["input_max_length"], config["output_max_length"]), batched=True)
+tokenized_datasets = dataset.map(
+    lambda x: preprocess_function(
+        x, tokenizer, config["input_max_length"], config["output_max_length"]
+    ),
+    batched=True,
+)
 
 model_output_dir = os.path.join(project_root, "model")
 
@@ -56,7 +61,7 @@ training_args = Seq2SeqTrainingArguments(
     logging_dir=os.path.join(project_root, "logs"),
     logging_steps=10,
     fp16=False,
-    no_cuda=True
+    no_cuda=True,
 )
 
 # Build Trainer

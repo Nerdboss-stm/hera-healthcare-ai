@@ -9,22 +9,32 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load data
 df = pd.read_csv(os.path.join(_dir, "..", "data", "processed", "cleaned_vitals.csv"))
-df['Risk Category'] = df['Risk Category'].map({'High Risk': 1, 'Low Risk': 0})
+df["Risk Category"] = df["Risk Category"].map({"High Risk": 1, "Low Risk": 0})
 
-features = ['Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation',
-            'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Age', 
-            'Calculated_BMI', 'Calculated_MAP']
+features = [
+    "Heart Rate",
+    "Respiratory Rate",
+    "Body Temperature",
+    "Oxygen Saturation",
+    "Systolic Blood Pressure",
+    "Diastolic Blood Pressure",
+    "Age",
+    "Calculated_BMI",
+    "Calculated_MAP",
+]
 X = df[features]
-y = df['Risk Category']
+y = df["Risk Category"]
 
 # Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 # Grid Search
 param_grid = {
-    'n_estimators': [50, 100, 200],
-    'max_depth': [None, 5, 10],
-    'min_samples_split': [2, 5],
+    "n_estimators": [50, 100, 200],
+    "max_depth": [None, 5, 10],
+    "min_samples_split": [2, 5],
 }
 
 grid_search = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5)
@@ -41,4 +51,3 @@ print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 # Save model
 joblib.dump(best_model, os.path.join(_dir, "tuned_risk_model.pkl"))
-
