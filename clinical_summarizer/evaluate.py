@@ -32,20 +32,30 @@ predictions = []
 references = []
 
 for idx, row in tqdm(test_df.iterrows(), total=len(test_df)):
-    input_ids = tokenizer(row['original_note'], return_tensors="pt", truncation=True, padding=True, max_length=512).input_ids.to(device)
+    input_ids = tokenizer(
+        row["original_note"],
+        return_tensors="pt",
+        truncation=True,
+        padding=True,
+        max_length=512,
+    ).input_ids.to(device)
     outputs = model.generate(input_ids, max_length=128, num_beams=4)
     pred = tokenizer.decode(outputs[0], skip_special_tokens=True)
     predictions.append(pred)
-    references.append(row['target_summary'])
+    references.append(row["target_summary"])
 
 # ========== EVALUATE ==========
 rouge = evaluate.load("rouge")
-rouge_scores = rouge.compute(predictions=predictions, references=references, use_stemmer=True)
+rouge_scores = rouge.compute(
+    predictions=predictions, references=references, use_stemmer=True
+)
 
 try:
     bertscore = evaluate.load("bertscore")
-    bert_scores = bertscore.compute(predictions=predictions, references=references, lang="en")
-    bert_f1 = sum(bert_scores['f1']) / len(bert_scores['f1'])
+    bert_scores = bertscore.compute(
+        predictions=predictions, references=references, lang="en"
+    )
+    bert_f1 = sum(bert_scores["f1"]) / len(bert_scores["f1"])
 except Exception:
     bert_f1 = "BERTScore evaluation failed (likely not installed)."
 
@@ -59,4 +69,3 @@ with open(OUTPUT_METRICS_FILE, "w") as f:
     f.write(f"- **BERTScore F1**: {bert_f1}\n")
 
 print("✅ Evaluation complete. Metrics saved to:", OUTPUT_METRICS_FILE)
-

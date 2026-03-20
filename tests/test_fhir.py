@@ -46,11 +46,15 @@ class TestFHIRConverter:
             "code": {"coding": [{"system": "http://loinc.org", "code": "85354-9"}]},
             "component": [
                 {
-                    "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]},
+                    "code": {
+                        "coding": [{"system": "http://loinc.org", "code": "8480-6"}]
+                    },
                     "valueQuantity": {"value": 140},
                 },
                 {
-                    "code": {"coding": [{"system": "http://loinc.org", "code": "8462-4"}]},
+                    "code": {
+                        "coding": [{"system": "http://loinc.org", "code": "8462-4"}]
+                    },
                     "valueQuantity": {"value": 90},
                 },
             ],
@@ -64,18 +68,24 @@ class TestFHIRConverter:
             "resourceType": "Bundle",
             "type": "collection",
             "entry": [
-                {"resource": {
-                    "resourceType": "Patient",
-                    "id": "pt-002",
-                    "name": [{"given": ["Jane"], "family": "Smith"}],
-                    "gender": "female",
-                    "birthDate": "1975-01-01",
-                }},
-                {"resource": {
-                    "resourceType": "Observation",
-                    "code": {"coding": [{"system": "http://loinc.org", "code": "8867-4"}]},
-                    "valueQuantity": {"value": 88},
-                }},
+                {
+                    "resource": {
+                        "resourceType": "Patient",
+                        "id": "pt-002",
+                        "name": [{"given": ["Jane"], "family": "Smith"}],
+                        "gender": "female",
+                        "birthDate": "1975-01-01",
+                    }
+                },
+                {
+                    "resource": {
+                        "resourceType": "Observation",
+                        "code": {
+                            "coding": [{"system": "http://loinc.org", "code": "8867-4"}]
+                        },
+                        "valueQuantity": {"value": 88},
+                    }
+                },
             ],
         }
         result = FHIRConverter.parse_bundle(bundle)

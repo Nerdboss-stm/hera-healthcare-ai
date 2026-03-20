@@ -5,22 +5,33 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import PlainTextResponse, FileResponse
 from serving.schemas import (
-    NoteRequest, SummaryResponse,
-    VitalsRequest, RiskResponse,
+    NoteRequest,
+    SummaryResponse,
+    VitalsRequest,
+    RiskResponse,
     HealthResponse,
-    ClinicalReasoningRequest, ClinicalReasoningResponse,
-    RAGQueryRequest, RAGQueryResponse,
-    RAGSummarizeRequest, RAGSummarizeResponse,
-    NERRequest, NERResponse,
-    KnowledgeGraphRequest, KnowledgeGraphResponse,
-    FHIRBundleRequest, FHIRPredictResponse,
-    EvaluationRequest, EvaluationResponse,
+    ClinicalReasoningRequest,
+    ClinicalReasoningResponse,
+    RAGQueryRequest,
+    RAGQueryResponse,
+    RAGSummarizeRequest,
+    RAGSummarizeResponse,
+    NERRequest,
+    NERResponse,
+    KnowledgeGraphRequest,
+    KnowledgeGraphResponse,
+    FHIRBundleRequest,
+    FHIRPredictResponse,
+    EvaluationRequest,
+    EvaluationResponse,
 )
 from serving.summarizer import generate_summary
 from serving.risk_predictor import predict_risk
 from serving.db_logger import log_to_db
 from serving.metrics import (
-    REQUEST_COUNT, REQUEST_FAILURES, REQUEST_LATENCY,
+    REQUEST_COUNT,
+    REQUEST_FAILURES,
+    REQUEST_LATENCY,
     prometheus_metrics,
 )
 
@@ -42,6 +53,7 @@ app.mount("/static", StaticFiles(directory=os.path.join(_dir, "static")), name="
 
 # ── Health & Metrics ──────────────────────────────────────────────
 
+
 @app.get("/", response_class=FileResponse)
 def serve_ui():
     return FileResponse(os.path.join(_dir, "static", "index.html"))
@@ -52,6 +64,7 @@ def health_check():
     summarizer_status = "available"
     try:
         from serving.summarizer import _load_model
+
         _load_model()
     except Exception:
         summarizer_status = "model not loaded"
@@ -59,6 +72,7 @@ def health_check():
     risk_status = "available"
     try:
         from serving.risk_predictor import _load_risk_model
+
         _load_risk_model()
     except Exception:
         risk_status = "model not loaded"
@@ -84,6 +98,7 @@ def metrics():
 
 
 # ── Clinical Summarization ────────────────────────────────────────
+
 
 @app.post("/api/summarize", response_model=SummaryResponse)
 def summarize_note(request: NoteRequest):
@@ -137,6 +152,7 @@ async def summarize_file(file: UploadFile = File(...)):
 
 # ── Risk Prediction ──────────────────────────────────────────────
 
+
 @app.post("/api/predict", response_model=RiskResponse)
 def predict_patient_risk(request: VitalsRequest):
     REQUEST_COUNT.inc()
@@ -166,6 +182,7 @@ def predict_patient_risk(request: VitalsRequest):
 
 
 # ── Multi-Agent Clinical Reasoning ───────────────────────────────
+
 
 @app.post("/api/reason", response_model=ClinicalReasoningResponse)
 def clinical_reasoning(request: ClinicalReasoningRequest):
@@ -229,6 +246,7 @@ def _get_rag_pipeline():
     if _rag_pipeline is None:
         try:
             from rag.rag_pipeline import RAGPipeline
+
             _rag_pipeline = RAGPipeline(summarizer_fn=generate_summary)
             _rag_pipeline.initialize()
         except ImportError:
@@ -280,6 +298,7 @@ def rag_summarize(request: RAGSummarizeRequest):
 
 # ── Clinical NER & Knowledge Graph ───────────────────────────────
 
+
 @app.post("/api/ner/extract", response_model=NERResponse)
 def extract_entities(request: NERRequest):
     """Extract medical entities (medications, conditions, procedures, labs) from clinical notes."""
@@ -287,6 +306,7 @@ def extract_entities(request: NERRequest):
     start = time.time()
     try:
         from ner.extractor import ClinicalNERExtractor
+
         extractor = ClinicalNERExtractor()
         result = extractor.extract(request.note)
         REQUEST_LATENCY.observe(time.time() - start)
@@ -307,6 +327,7 @@ def build_knowledge_graph(request: KnowledgeGraphRequest):
     start = time.time()
     try:
         from ner.knowledge_graph import PatientKnowledgeGraph
+
         kg = PatientKnowledgeGraph()
         result = kg.build_from_note(request.note, request.patient_id)
         graph_data = kg.to_dict()
@@ -328,6 +349,7 @@ def build_knowledge_graph(request: KnowledgeGraphRequest):
 
 
 # ── FHIR R4 Interoperability ────────────────────────────────────
+
 
 @app.post("/api/fhir/predict", response_model=FHIRPredictResponse)
 def fhir_predict(request: FHIRBundleRequest):
@@ -376,6 +398,7 @@ def fhir_predict(request: FHIRBundleRequest):
 
 # ── LLM-as-Judge Evaluation ─────────────────────────────────────
 
+
 @app.post("/api/evaluate", response_model=EvaluationResponse)
 def evaluate_output(request: EvaluationRequest):
     """Evaluate a clinical AI output for factual consistency, hallucinations, and safety."""
@@ -383,6 +406,7 @@ def evaluate_output(request: EvaluationRequest):
     start = time.time()
     try:
         from evaluation.evaluator import ClinicalEvaluator
+
         evaluator = ClinicalEvaluator()
         report = evaluator.evaluate(request.source_note, request.generated_output)
         report_dict = report.to_dict()

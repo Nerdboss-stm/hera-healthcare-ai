@@ -14,70 +14,72 @@ logger = logging.getLogger(__name__)
 
 # Regex patterns for clinical entity extraction
 MEDICATION_PATTERNS = [
-    r'\b(?:aspirin|heparin|nitroglycerin|morphine|acetaminophen|ibuprofen|'
-    r'metoprolol|lisinopril|atorvastatin|ceftriaxone|azithromycin|vancomycin|'
-    r'piperacillin|furosemide|prednisone|albuterol|ipratropium|warfarin|'
-    r'enoxaparin|rivaroxaban|amoxicillin|doxycycline|ciprofloxacin|'
-    r'metformin|insulin|omeprazole|pantoprazole|ondansetron|lorazepam|'
-    r'alteplase|norepinephrine|epinephrine|atropine|fentanyl|hydromorphone|'
-    r'clopidogrel|ticagrelor|nitrofurantoin|metronidazole)\b',
+    r"\b(?:aspirin|heparin|nitroglycerin|morphine|acetaminophen|ibuprofen|"
+    r"metoprolol|lisinopril|atorvastatin|ceftriaxone|azithromycin|vancomycin|"
+    r"piperacillin|furosemide|prednisone|albuterol|ipratropium|warfarin|"
+    r"enoxaparin|rivaroxaban|amoxicillin|doxycycline|ciprofloxacin|"
+    r"metformin|insulin|omeprazole|pantoprazole|ondansetron|lorazepam|"
+    r"alteplase|norepinephrine|epinephrine|atropine|fentanyl|hydromorphone|"
+    r"clopidogrel|ticagrelor|nitrofurantoin|metronidazole)\b",
 ]
 
 CONDITION_PATTERNS = [
-    r'\b(?:hypertension|diabetes|COPD|asthma|pneumonia|sepsis|stroke|'
-    r'myocardial infarction|heart failure|atrial fibrillation|DVT|PE|'
-    r'pulmonary embolism|appendicitis|cholecystitis|pancreatitis|'
-    r'acute coronary syndrome|STEMI|NSTEMI|unstable angina|'
-    r'subarachnoid hemorrhage|meningitis|cellulitis|UTI|'
-    r'urinary tract infection|chronic kidney disease|cirrhosis|'
-    r'anaphylaxis|status epilepticus|DKA|diabetic ketoacidosis)\b',
+    r"\b(?:hypertension|diabetes|COPD|asthma|pneumonia|sepsis|stroke|"
+    r"myocardial infarction|heart failure|atrial fibrillation|DVT|PE|"
+    r"pulmonary embolism|appendicitis|cholecystitis|pancreatitis|"
+    r"acute coronary syndrome|STEMI|NSTEMI|unstable angina|"
+    r"subarachnoid hemorrhage|meningitis|cellulitis|UTI|"
+    r"urinary tract infection|chronic kidney disease|cirrhosis|"
+    r"anaphylaxis|status epilepticus|DKA|diabetic ketoacidosis)\b",
 ]
 
 PROCEDURE_PATTERNS = [
-    r'\b(?:intubation|ventilation|chest tube|central line|'
-    r'lumbar puncture|thoracentesis|paracentesis|cardioversion|'
-    r'CT scan|MRI|X-ray|ultrasound|ECG|EKG|echocardiogram|'
-    r'colonoscopy|endoscopy|bronchoscopy|catheterization|PCI|'
-    r'appendectomy|cholecystectomy|laparoscopy|biopsy|dialysis|'
-    r'transfusion|CPR|defibrillation)\b',
+    r"\b(?:intubation|ventilation|chest tube|central line|"
+    r"lumbar puncture|thoracentesis|paracentesis|cardioversion|"
+    r"CT scan|MRI|X-ray|ultrasound|ECG|EKG|echocardiogram|"
+    r"colonoscopy|endoscopy|bronchoscopy|catheterization|PCI|"
+    r"appendectomy|cholecystectomy|laparoscopy|biopsy|dialysis|"
+    r"transfusion|CPR|defibrillation)\b",
 ]
 
 LAB_VALUE_PATTERN = (
-    r'(?:(?:troponin|BNP|NT-proBNP|WBC|hemoglobin|hematocrit|platelets|'
-    r'creatinine|BUN|sodium|potassium|glucose|lactate|INR|PT|PTT|'
-    r'D-dimer|procalcitonin|CRP|ESR|lipase|amylase|ALT|AST|bilirubin|'
-    r'albumin|A1c|HbA1c|TSH|pH|pCO2|pO2|bicarbonate|SpO2)'
-    r'\s*(?:of|=|:|\s)\s*'
-    r'[\d]+\.?[\d]*\s*(?:mg/dL|mmol/L|mEq/L|g/dL|%|ng/mL|pg/mL|'
-    r'U/L|IU/L|mcg/L|cells/uL|x10\^3|mmHg|sec)?)'
+    r"(?:(?:troponin|BNP|NT-proBNP|WBC|hemoglobin|hematocrit|platelets|"
+    r"creatinine|BUN|sodium|potassium|glucose|lactate|INR|PT|PTT|"
+    r"D-dimer|procalcitonin|CRP|ESR|lipase|amylase|ALT|AST|bilirubin|"
+    r"albumin|A1c|HbA1c|TSH|pH|pCO2|pO2|bicarbonate|SpO2)"
+    r"\s*(?:of|=|:|\s)\s*"
+    r"[\d]+\.?[\d]*\s*(?:mg/dL|mmol/L|mEq/L|g/dL|%|ng/mL|pg/mL|"
+    r"U/L|IU/L|mcg/L|cells/uL|x10\^3|mmHg|sec)?)"
 )
 
-DOSAGE_PATTERN = r'(\d+\.?\d*)\s*(mg|mcg|g|mL|units?|mEq)\b'
+DOSAGE_PATTERN = r"(\d+\.?\d*)\s*(mg|mcg|g|mL|units?|mEq)\b"
 
 VITAL_SIGN_PATTERN = (
-    r'(?:(?:HR|heart rate|pulse)\s*(?:of|=|:|\s)\s*(\d+))|'
-    r'(?:(?:BP|blood pressure)\s*(?:of|=|:|\s)\s*(\d+/\d+))|'
-    r'(?:(?:RR|respiratory rate)\s*(?:of|=|:|\s)\s*(\d+))|'
-    r'(?:(?:temp|temperature)\s*(?:of|=|:|\s)\s*([\d.]+))|'
-    r'(?:(?:SpO2|O2 sat|oxygen saturation)\s*(?:of|=|:|\s)\s*(\d+))'
+    r"(?:(?:HR|heart rate|pulse)\s*(?:of|=|:|\s)\s*(\d+))|"
+    r"(?:(?:BP|blood pressure)\s*(?:of|=|:|\s)\s*(\d+/\d+))|"
+    r"(?:(?:RR|respiratory rate)\s*(?:of|=|:|\s)\s*(\d+))|"
+    r"(?:(?:temp|temperature)\s*(?:of|=|:|\s)\s*([\d.]+))|"
+    r"(?:(?:SpO2|O2 sat|oxygen saturation)\s*(?:of|=|:|\s)\s*(\d+))"
 )
 
 
 @dataclass
 class ClinicalEntity:
     """A single extracted clinical entity."""
+
     text: str
     label: str  # MEDICATION, CONDITION, PROCEDURE, LAB_VALUE, VITAL_SIGN, DOSAGE
     start: int
     end: int
     confidence: float = 1.0
     normalized: str = ""  # UMLS/SNOMED normalized form
-    code: str = ""        # UMLS CUI or SNOMED code
+    code: str = ""  # UMLS CUI or SNOMED code
 
 
 @dataclass
 class ExtractionResult:
     """Complete NER extraction output."""
+
     entities: list[ClinicalEntity]
     medications: list[ClinicalEntity]
     conditions: list[ClinicalEntity]
@@ -89,11 +91,15 @@ class ExtractionResult:
     def to_dict(self) -> dict:
         return {
             "entity_count": self.entity_count,
-            "medications": [{"text": e.text, "label": e.label} for e in self.medications],
+            "medications": [
+                {"text": e.text, "label": e.label} for e in self.medications
+            ],
             "conditions": [{"text": e.text, "label": e.label} for e in self.conditions],
             "procedures": [{"text": e.text, "label": e.label} for e in self.procedures],
             "lab_values": [{"text": e.text, "label": e.label} for e in self.lab_values],
-            "vital_signs": [{"text": e.text, "label": e.label} for e in self.vital_signs],
+            "vital_signs": [
+                {"text": e.text, "label": e.label} for e in self.vital_signs
+            ],
         }
 
 
@@ -128,6 +134,7 @@ class ClinicalNERExtractor:
         if use_scispacy:
             try:
                 import spacy
+
                 self._nlp = spacy.load("en_ner_bc5cdr_md")
                 logger.info("SciSpaCy model loaded for NER augmentation")
             except (ImportError, OSError):
@@ -176,58 +183,68 @@ class ClinicalNERExtractor:
         entities = []
         for pattern in MEDICATION_PATTERNS:
             for match in re.finditer(pattern, text, re.IGNORECASE):
-                entities.append(ClinicalEntity(
-                    text=match.group(),
-                    label="MEDICATION",
-                    start=match.start(),
-                    end=match.end(),
-                ))
+                entities.append(
+                    ClinicalEntity(
+                        text=match.group(),
+                        label="MEDICATION",
+                        start=match.start(),
+                        end=match.end(),
+                    )
+                )
         return entities
 
     def _extract_conditions(self, text: str) -> list[ClinicalEntity]:
         entities = []
         for pattern in CONDITION_PATTERNS:
             for match in re.finditer(pattern, text, re.IGNORECASE):
-                entities.append(ClinicalEntity(
-                    text=match.group(),
-                    label="CONDITION",
-                    start=match.start(),
-                    end=match.end(),
-                ))
+                entities.append(
+                    ClinicalEntity(
+                        text=match.group(),
+                        label="CONDITION",
+                        start=match.start(),
+                        end=match.end(),
+                    )
+                )
         return entities
 
     def _extract_procedures(self, text: str) -> list[ClinicalEntity]:
         entities = []
         for pattern in PROCEDURE_PATTERNS:
             for match in re.finditer(pattern, text, re.IGNORECASE):
-                entities.append(ClinicalEntity(
-                    text=match.group(),
-                    label="PROCEDURE",
-                    start=match.start(),
-                    end=match.end(),
-                ))
+                entities.append(
+                    ClinicalEntity(
+                        text=match.group(),
+                        label="PROCEDURE",
+                        start=match.start(),
+                        end=match.end(),
+                    )
+                )
         return entities
 
     def _extract_lab_values(self, text: str) -> list[ClinicalEntity]:
         entities = []
         for match in re.finditer(LAB_VALUE_PATTERN, text, re.IGNORECASE):
-            entities.append(ClinicalEntity(
-                text=match.group().strip(),
-                label="LAB_VALUE",
-                start=match.start(),
-                end=match.end(),
-            ))
+            entities.append(
+                ClinicalEntity(
+                    text=match.group().strip(),
+                    label="LAB_VALUE",
+                    start=match.start(),
+                    end=match.end(),
+                )
+            )
         return entities
 
     def _extract_vital_signs(self, text: str) -> list[ClinicalEntity]:
         entities = []
         for match in re.finditer(VITAL_SIGN_PATTERN, text, re.IGNORECASE):
-            entities.append(ClinicalEntity(
-                text=match.group().strip(),
-                label="VITAL_SIGN",
-                start=match.start(),
-                end=match.end(),
-            ))
+            entities.append(
+                ClinicalEntity(
+                    text=match.group().strip(),
+                    label="VITAL_SIGN",
+                    start=match.start(),
+                    end=match.end(),
+                )
+            )
         return entities
 
     def _scispacy_extract(self, text: str) -> list[ClinicalEntity]:
@@ -241,13 +258,15 @@ class ClinicalNERExtractor:
         for ent in doc.ents:
             mapped_label = label_map.get(ent.label_, ent.label_)
             if mapped_label in ("MEDICATION", "CONDITION"):
-                entities.append(ClinicalEntity(
-                    text=ent.text,
-                    label=mapped_label,
-                    start=ent.start_char,
-                    end=ent.end_char,
-                    confidence=0.9,
-                ))
+                entities.append(
+                    ClinicalEntity(
+                        text=ent.text,
+                        label=mapped_label,
+                        start=ent.start_char,
+                        end=ent.end_char,
+                        confidence=0.9,
+                    )
+                )
         return entities
 
     def _normalize_entity(self, entity: ClinicalEntity) -> None:

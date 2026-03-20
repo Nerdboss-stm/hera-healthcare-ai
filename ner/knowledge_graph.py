@@ -10,6 +10,7 @@ import logging
 
 try:
     import networkx as nx
+
     HAS_NETWORKX = True
 except ImportError:
     HAS_NETWORKX = False
@@ -146,17 +147,21 @@ class PatientKnowledgeGraph:
 
         relationships = []
         for _, target, data in self._graph.out_edges(node, data=True):
-            relationships.append({
-                "target": target,
-                "relationship": data.get("relationship", "unknown"),
-                "target_label": self._graph.nodes[target].get("label", "unknown"),
-            })
+            relationships.append(
+                {
+                    "target": target,
+                    "relationship": data.get("relationship", "unknown"),
+                    "target_label": self._graph.nodes[target].get("label", "unknown"),
+                }
+            )
         for source, _, data in self._graph.in_edges(node, data=True):
-            relationships.append({
-                "source": source,
-                "relationship": data.get("relationship", "unknown"),
-                "source_label": self._graph.nodes[source].get("label", "unknown"),
-            })
+            relationships.append(
+                {
+                    "source": source,
+                    "relationship": data.get("relationship", "unknown"),
+                    "source_label": self._graph.nodes[source].get("label", "unknown"),
+                }
+            )
 
         return {
             "entity": entity_name,
@@ -171,12 +176,19 @@ class PatientKnowledgeGraph:
         interactions = []
         for _, target, data in self._graph.out_edges(node, data=True):
             rel = data.get("relationship", "")
-            if rel in ("contraindicated_with", "caution_with", "interaction_risk", "avoid_combination"):
-                interactions.append({
-                    "medication": medication,
-                    "interacts_with": target,
-                    "severity": rel,
-                })
+            if rel in (
+                "contraindicated_with",
+                "caution_with",
+                "interaction_risk",
+                "avoid_combination",
+            ):
+                interactions.append(
+                    {
+                        "medication": medication,
+                        "interacts_with": target,
+                        "severity": rel,
+                    }
+                )
         return interactions
 
     def get_treatment_chain(self, condition: str) -> dict:
@@ -218,13 +230,17 @@ class PatientKnowledgeGraph:
         """Export in Cytoscape.js format for frontend visualization."""
         elements = []
         for node_id, data in self._graph.nodes(data=True):
-            elements.append({
-                "data": {"id": node_id, **data},
-                "group": "nodes",
-            })
+            elements.append(
+                {
+                    "data": {"id": node_id, **data},
+                    "group": "nodes",
+                }
+            )
         for source, target, data in self._graph.edges(data=True):
-            elements.append({
-                "data": {"source": source, "target": target, **data},
-                "group": "edges",
-            })
+            elements.append(
+                {
+                    "data": {"source": source, "target": target, **data},
+                    "group": "edges",
+                }
+            )
         return {"elements": elements}

@@ -30,6 +30,7 @@ def _make_context(**overrides):
 
 # ── Triage Agent ─────────────────────────────────────────────
 
+
 class TestTriageAgent:
     def test_chest_pain_high_acuity(self):
         agent = TriageAgent()
@@ -41,9 +42,14 @@ class TestTriageAgent:
         agent = TriageAgent()
         ctx = _make_context(
             chief_complaint="sore throat",
-            vitals={"heart_rate": 75, "respiratory_rate": 16,
-                    "body_temperature": 37.0, "oxygen_saturation": 99,
-                    "systolic_bp": 120, "diastolic_bp": 80},
+            vitals={
+                "heart_rate": 75,
+                "respiratory_rate": 16,
+                "body_temperature": 37.0,
+                "oxygen_saturation": 99,
+                "systolic_bp": 120,
+                "diastolic_bp": 80,
+            },
         )
         result = agent.assess(ctx)
         assert result.esi_level >= ESILevel.LESS_URGENT
@@ -52,9 +58,14 @@ class TestTriageAgent:
         agent = TriageAgent()
         ctx = _make_context(
             chief_complaint="weakness",
-            vitals={"heart_rate": 35, "respiratory_rate": 6,
-                    "body_temperature": 34.5, "oxygen_saturation": 85,
-                    "systolic_bp": 70, "diastolic_bp": 35},
+            vitals={
+                "heart_rate": 35,
+                "respiratory_rate": 6,
+                "body_temperature": 34.5,
+                "oxygen_saturation": 85,
+                "systolic_bp": 70,
+                "diastolic_bp": 35,
+            },
         )
         result = agent.assess(ctx)
         assert result.esi_level == ESILevel.RESUSCITATION
@@ -79,6 +90,7 @@ class TestTriageAgent:
 
 
 # ── Diagnostic Agent ─────────────────────────────────────────
+
 
 class TestDiagnosticAgent:
     def test_generates_differentials(self):
@@ -119,6 +131,7 @@ class TestDiagnosticAgent:
 
 
 # ── Treatment Agent ──────────────────────────────────────────
+
 
 class TestTreatmentAgent:
     def test_generates_treatment_plan(self):
@@ -166,6 +179,7 @@ class TestTreatmentAgent:
 
 
 # ── Orchestrator ─────────────────────────────────────────────
+
 
 class TestOrchestrator:
     def test_full_pipeline(self):

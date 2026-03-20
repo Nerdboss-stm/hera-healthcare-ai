@@ -18,7 +18,10 @@ class TestClinicalEvaluator:
         generated = "Patient has headache, fever, and myocardial infarction requiring emergent PCI with stenting."
         report = self.evaluator.evaluate(source, generated)
         # Should detect some hallucination
-        assert report.hallucination.hallucination_score >= 0 or len(report.hallucination.hallucinated_claims) >= 0
+        assert (
+            report.hallucination.hallucination_score >= 0
+            or len(report.hallucination.hallucinated_claims) >= 0
+        )
 
     def test_valid_medical_terms(self):
         text = "Patient has hypertension and tachycardia with evidence of pneumonia."
@@ -42,7 +45,13 @@ class TestClinicalEvaluator:
         source = "Patient has mild headache."
         generated = "Patient presents with mild headache, recommend acetaminophen."
         report = self.evaluator.evaluate(source, generated)
-        assert report.clinical_safety.severity in ("none", "low", "medium", "high", "critical")
+        assert report.clinical_safety.severity in (
+            "none",
+            "low",
+            "medium",
+            "high",
+            "critical",
+        )
 
     def test_to_dict(self):
         source = "Patient has chest pain."

@@ -12,16 +12,18 @@ from enum import IntEnum
 
 class ESILevel(IntEnum):
     """Emergency Severity Index — 5-level triage acuity scale."""
-    RESUSCITATION = 1   # Immediate life-saving intervention
-    EMERGENT = 2        # High risk / confused / severe pain
-    URGENT = 3          # Stable but needs multiple resources
-    LESS_URGENT = 4     # Stable, single resource expected
-    NON_URGENT = 5      # No resources expected
+
+    RESUSCITATION = 1  # Immediate life-saving intervention
+    EMERGENT = 2  # High risk / confused / severe pain
+    URGENT = 3  # Stable but needs multiple resources
+    LESS_URGENT = 4  # Stable, single resource expected
+    NON_URGENT = 5  # No resources expected
 
 
 @dataclass
 class PatientContext:
     """Input context for the clinical reasoning pipeline."""
+
     patient_id: str
     chief_complaint: str
     clinical_note: str
@@ -39,6 +41,7 @@ class PatientContext:
 @dataclass
 class TriageResult:
     """Output from the Triage Agent."""
+
     esi_level: ESILevel
     acuity_rationale: str
     vital_flags: list[str]
@@ -55,6 +58,7 @@ class TriageResult:
 @dataclass
 class Diagnosis:
     """A single differential diagnosis entry."""
+
     condition: str
     icd10_code: str
     probability: float  # 0.0 to 1.0
@@ -65,6 +69,7 @@ class Diagnosis:
 @dataclass
 class DiagnosticResult:
     """Output from the Diagnostic Agent."""
+
     differentials: list[Diagnosis]
     primary_diagnosis: str
     confidence: float
@@ -79,6 +84,7 @@ class DiagnosticResult:
 @dataclass
 class Medication:
     """A single medication recommendation."""
+
     name: str
     dose: str
     route: str
@@ -90,6 +96,7 @@ class Medication:
 @dataclass
 class TreatmentResult:
     """Output from the Treatment Agent."""
+
     treatment_plan: list[str]
     medications: list[Medication]
     monitoring_plan: list[str]
@@ -106,6 +113,7 @@ class TreatmentResult:
 @dataclass
 class ClinicalReasoningResult:
     """Complete output from the multi-agent pipeline."""
+
     patient_id: str
     triage: TriageResult
     diagnosis: DiagnosticResult

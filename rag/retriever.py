@@ -20,6 +20,7 @@ def _load_faiss():
     global _faiss
     if _faiss is None:
         import faiss
+
         _faiss = faiss
     return _faiss
 
@@ -28,6 +29,7 @@ def _load_sentence_transformer():
     global _SentenceTransformer
     if _SentenceTransformer is None:
         from sentence_transformers import SentenceTransformer
+
         _SentenceTransformer = SentenceTransformer
     return _SentenceTransformer
 
@@ -80,7 +82,9 @@ class MedicalRetriever:
         self._texts = list(texts)
         self._metadata = metadata or [{} for _ in texts]
 
-        logger.info("Indexed %d vectors (dim=%d)", self._index.ntotal, embeddings.shape[1])
+        logger.info(
+            "Indexed %d vectors (dim=%d)", self._index.ntotal, embeddings.shape[1]
+        )
 
     def retrieve(
         self, query: str, top_k: int = 3, threshold: float = 0.3
@@ -108,12 +112,14 @@ class MedicalRetriever:
             if idx < 0 or score < threshold:
                 continue
             meta = self._metadata[idx] if idx < len(self._metadata) else {}
-            results.append({
-                "text": self._texts[idx],
-                "score": round(float(score), 4),
-                "source": meta.get("source", "unknown"),
-                "metadata": meta,
-            })
+            results.append(
+                {
+                    "text": self._texts[idx],
+                    "score": round(float(score), 4),
+                    "source": meta.get("source", "unknown"),
+                    "metadata": meta,
+                }
+            )
 
         return results
 

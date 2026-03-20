@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FactualConsistencyResult:
     """Result of factual consistency check between source and generated text."""
+
     score: float  # 0.0 (inconsistent) to 1.0 (fully consistent)
     supported_claims: list[str]
     unsupported_claims: list[str]
@@ -25,6 +26,7 @@ class FactualConsistencyResult:
 @dataclass
 class HallucinationResult:
     """Result of hallucination detection."""
+
     hallucination_score: float  # 0.0 (no hallucination) to 1.0 (fully hallucinated)
     hallucinated_entities: list[str]
     hallucinated_claims: list[str]
@@ -35,6 +37,7 @@ class HallucinationResult:
 @dataclass
 class MedicalAccuracyResult:
     """Result of medical terminology and logic validation."""
+
     accuracy_score: float
     valid_terms: list[str]
     invalid_terms: list[str]
@@ -45,6 +48,7 @@ class MedicalAccuracyResult:
 @dataclass
 class ClinicalSafetyResult:
     """Result of clinical safety check."""
+
     safe: bool
     severity: str  # "none", "low", "medium", "high", "critical"
     issues: list[str]
@@ -53,6 +57,7 @@ class ClinicalSafetyResult:
 @dataclass
 class EvaluationReport:
     """Comprehensive evaluation report for a clinical AI output."""
+
     factual_consistency: FactualConsistencyResult
     hallucination: HallucinationResult
     medical_accuracy: MedicalAccuracyResult
@@ -93,20 +98,62 @@ class EvaluationReport:
 
 # Known valid medical terms (expandable)
 VALID_MEDICAL_TERMS = {
-    "hypertension", "hypotension", "tachycardia", "bradycardia",
-    "tachypnea", "dyspnea", "hypoxia", "hypoxemia", "cyanosis",
-    "edema", "effusion", "consolidation", "infiltrate", "atelectasis",
-    "pneumothorax", "hemothorax", "pneumonia", "bronchitis",
-    "myocardial infarction", "angina", "arrhythmia", "fibrillation",
-    "embolism", "thrombosis", "hemorrhage", "aneurysm",
-    "diabetes", "ketoacidosis", "hyperglycemia", "hypoglycemia",
-    "sepsis", "bacteremia", "cellulitis", "abscess",
-    "fracture", "dislocation", "contusion", "laceration",
-    "stroke", "ischemia", "infarction", "hemorrhagic",
-    "renal failure", "hepatic failure", "cirrhosis",
-    "appendicitis", "cholecystitis", "pancreatitis", "peritonitis",
-    "meningitis", "encephalitis", "seizure", "epilepsy",
-    "anaphylaxis", "urticaria", "angioedema",
+    "hypertension",
+    "hypotension",
+    "tachycardia",
+    "bradycardia",
+    "tachypnea",
+    "dyspnea",
+    "hypoxia",
+    "hypoxemia",
+    "cyanosis",
+    "edema",
+    "effusion",
+    "consolidation",
+    "infiltrate",
+    "atelectasis",
+    "pneumothorax",
+    "hemothorax",
+    "pneumonia",
+    "bronchitis",
+    "myocardial infarction",
+    "angina",
+    "arrhythmia",
+    "fibrillation",
+    "embolism",
+    "thrombosis",
+    "hemorrhage",
+    "aneurysm",
+    "diabetes",
+    "ketoacidosis",
+    "hyperglycemia",
+    "hypoglycemia",
+    "sepsis",
+    "bacteremia",
+    "cellulitis",
+    "abscess",
+    "fracture",
+    "dislocation",
+    "contusion",
+    "laceration",
+    "stroke",
+    "ischemia",
+    "infarction",
+    "hemorrhagic",
+    "renal failure",
+    "hepatic failure",
+    "cirrhosis",
+    "appendicitis",
+    "cholecystitis",
+    "pancreatitis",
+    "peritonitis",
+    "meningitis",
+    "encephalitis",
+    "seizure",
+    "epilepsy",
+    "anaphylaxis",
+    "urticaria",
+    "angioedema",
 }
 
 # Dangerous dosage ranges that should trigger safety alerts
@@ -180,7 +227,9 @@ class ClinicalEvaluator:
         source_lower = source.lower()
 
         # Extract claims (sentences) from generated text
-        claims = [s.strip() for s in re.split(r'[.!?]+', generated) if len(s.strip()) > 10]
+        claims = [
+            s.strip() for s in re.split(r"[.!?]+", generated) if len(s.strip()) > 10
+        ]
 
         supported = []
         unsupported = []
@@ -206,8 +255,8 @@ class ClinicalEvaluator:
                 continue
 
             # Check keyword overlap for support
-            claim_keywords = set(re.findall(r'\b[a-z]{4,}\b', claim_lower))
-            source_keywords = set(re.findall(r'\b[a-z]{4,}\b', source_lower))
+            claim_keywords = set(re.findall(r"\b[a-z]{4,}\b", claim_lower))
+            source_keywords = set(re.findall(r"\b[a-z]{4,}\b", source_lower))
             if not claim_keywords:
                 continue
 
@@ -239,14 +288,14 @@ class ClinicalEvaluator:
 
         # Extract medical entities from both texts
         med_pattern = (
-            r'\b(?:mg|mcg|mL|units?|tablets?|capsules?|'
-            r'[A-Z][a-z]+(?:ine|ole|cin|tin|mab|nib|pril|lol|tan|pin))\b'
+            r"\b(?:mg|mcg|mL|units?|tablets?|capsules?|"
+            r"[A-Z][a-z]+(?:ine|ole|cin|tin|mab|nib|pril|lol|tan|pin))\b"
         )
         source_entities = set(re.findall(med_pattern, source, re.IGNORECASE))
         generated_entities = set(re.findall(med_pattern, generated, re.IGNORECASE))
 
         # Also extract numbers with units
-        num_pattern = r'\d+\.?\d*\s*(?:mg|mcg|g|mL|%|mmHg|bpm|°[CF])'
+        num_pattern = r"\d+\.?\d*\s*(?:mg|mcg|g|mL|%|mmHg|bpm|°[CF])"
         source_nums = set(re.findall(num_pattern, source, re.IGNORECASE))
         generated_nums = set(re.findall(num_pattern, generated, re.IGNORECASE))
 
@@ -263,12 +312,14 @@ class ClinicalEvaluator:
 
         # Check for fabricated claims
         hallucinated_claims = []
-        sentences = [s.strip() for s in re.split(r'[.!?]+', generated) if len(s.strip()) > 15]
+        sentences = [
+            s.strip() for s in re.split(r"[.!?]+", generated) if len(s.strip()) > 15
+        ]
         for sent in sentences:
             sent_lower = sent.lower()
             # If a sentence has very low overlap with source, it may be hallucinated
-            words = set(re.findall(r'\b[a-z]{4,}\b', sent_lower))
-            source_words = set(re.findall(r'\b[a-z]{4,}\b', source_lower))
+            words = set(re.findall(r"\b[a-z]{4,}\b", sent_lower))
+            source_words = set(re.findall(r"\b[a-z]{4,}\b", source_lower))
             if words and len(words & source_words) / len(words) < 0.2:
                 hallucinated_claims.append(sent)
 
@@ -301,7 +352,7 @@ class ClinicalEvaluator:
         # Check for potential misspellings or nonsensical medical terms
         # Look for words ending in common medical suffixes
         medical_words = re.findall(
-            r'\b[a-z]+(?:itis|osis|emia|pathy|ectomy|otomy|plasty|scopy|gram|graph)\b',
+            r"\b[a-z]+(?:itis|osis|emia|pathy|ectomy|otomy|plasty|scopy|gram|graph)\b",
             text_lower,
         )
         for word in medical_words:
@@ -311,8 +362,9 @@ class ClinicalEvaluator:
         # Check dosages
         dosage_errors = []
         dosage_matches = re.findall(
-            r'(\w+)\s+(\d+\.?\d*)\s*(mg|mcg|units?|mEq)',
-            text, re.IGNORECASE,
+            r"(\w+)\s+(\d+\.?\d*)\s*(mg|mcg|units?|mEq)",
+            text,
+            re.IGNORECASE,
         )
         for drug, dose_str, unit in dosage_matches:
             drug_lower = drug.lower()
@@ -329,7 +381,9 @@ class ClinicalEvaluator:
         # Logic errors
         logic_errors = []
         if "administer" in text_lower and "allergic" in text_lower:
-            logic_errors.append("Potential: administering medication to allergic patient")
+            logic_errors.append(
+                "Potential: administering medication to allergic patient"
+            )
 
         total_checks = max(len(valid_terms) + len(invalid_terms), 1)
         accuracy = len(valid_terms) / total_checks
@@ -353,11 +407,18 @@ class ClinicalEvaluator:
 
         # Check for dangerous recommendations
         dangerous_patterns = [
-            (r"discontinue\s+all\s+medications", "Recommending discontinuation of all medications"),
-            (r"no\s+(?:further|additional)\s+(?:treatment|care)\s+(?:needed|required)",
-             "Potentially dismissing need for care"),
-            (r"discharge\s+(?:immediately|now).*(?:chest pain|stroke|sepsis)",
-             "Recommending discharge for critical condition"),
+            (
+                r"discontinue\s+all\s+medications",
+                "Recommending discontinuation of all medications",
+            ),
+            (
+                r"no\s+(?:further|additional)\s+(?:treatment|care)\s+(?:needed|required)",
+                "Potentially dismissing need for care",
+            ),
+            (
+                r"discharge\s+(?:immediately|now).*(?:chest pain|stroke|sepsis)",
+                "Recommending discharge for critical condition",
+            ),
         ]
         for pattern, description in dangerous_patterns:
             if re.search(pattern, text_lower):
@@ -368,9 +429,7 @@ class ClinicalEvaluator:
             allergies = context.get("allergies", [])
             for allergy in allergies:
                 if allergy.lower() in text_lower and "allergy" not in text_lower:
-                    issues.append(
-                        f"Mentions {allergy} without noting patient allergy"
-                    )
+                    issues.append(f"Mentions {allergy} without noting patient allergy")
 
         # Severity assessment
         if not issues:

@@ -46,8 +46,12 @@ class TestDatasetPreprocessing:
 
         mock_tokenizer = MagicMock()
         mock_tokenizer.return_value = {"input_ids": [[1, 2, 3]]}
-        mock_tokenizer.as_target_tokenizer.return_value.__enter__ = MagicMock(return_value=mock_tokenizer)
-        mock_tokenizer.as_target_tokenizer.return_value.__exit__ = MagicMock(return_value=False)
+        mock_tokenizer.as_target_tokenizer.return_value.__enter__ = MagicMock(
+            return_value=mock_tokenizer
+        )
+        mock_tokenizer.as_target_tokenizer.return_value.__exit__ = MagicMock(
+            return_value=False
+        )
 
         examples = {
             "original_note": ["Patient has chest pain."],

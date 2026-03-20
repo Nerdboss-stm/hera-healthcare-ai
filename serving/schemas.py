@@ -17,10 +17,16 @@ class SummaryResponse(BaseModel):
 class VitalsRequest(BaseModel):
     heart_rate: float = Field(..., ge=30, le=220, description="Heart rate in BPM")
     respiratory_rate: float = Field(..., ge=5, le=60, description="Breaths per minute")
-    body_temperature: float = Field(..., ge=34.0, le=42.0, description="Temperature in Celsius")
+    body_temperature: float = Field(
+        ..., ge=34.0, le=42.0, description="Temperature in Celsius"
+    )
     oxygen_saturation: float = Field(..., ge=70, le=100, description="SpO2 percentage")
-    systolic_bp: float = Field(..., ge=60, le=250, description="Systolic blood pressure mmHg")
-    diastolic_bp: float = Field(..., ge=30, le=150, description="Diastolic blood pressure mmHg")
+    systolic_bp: float = Field(
+        ..., ge=60, le=250, description="Systolic blood pressure mmHg"
+    )
+    diastolic_bp: float = Field(
+        ..., ge=30, le=150, description="Diastolic blood pressure mmHg"
+    )
     age: int = Field(..., ge=0, le=120, description="Patient age in years")
 
 
@@ -39,6 +45,7 @@ class HealthResponse(BaseModel):
 
 
 # ── Multi-Agent Clinical Reasoning ───────────────────────────
+
 
 class ClinicalReasoningRequest(BaseModel):
     patient_id: str = Field(..., description="Unique patient identifier")
@@ -70,6 +77,7 @@ class ClinicalReasoningResponse(BaseModel):
 
 # ── RAG Knowledge Base ───────────────────────────────────────
 
+
 class RAGQueryRequest(BaseModel):
     query: str = Field(..., min_length=3, description="Medical knowledge query")
     top_k: int = Field(default=3, ge=1, le=10)
@@ -82,7 +90,9 @@ class RAGQueryResponse(BaseModel):
 
 
 class RAGSummarizeRequest(BaseModel):
-    note: str = Field(..., min_length=10, description="Clinical note for RAG-augmented summary")
+    note: str = Field(
+        ..., min_length=10, description="Clinical note for RAG-augmented summary"
+    )
     top_k: int = Field(default=3, ge=1, le=5)
 
 
@@ -96,8 +106,11 @@ class RAGSummarizeResponse(BaseModel):
 
 # ── Clinical NER ─────────────────────────────────────────────
 
+
 class NERRequest(BaseModel):
-    note: str = Field(..., min_length=10, description="Clinical note for entity extraction")
+    note: str = Field(
+        ..., min_length=10, description="Clinical note for entity extraction"
+    )
 
 
 class NERResponse(BaseModel):
@@ -111,7 +124,9 @@ class NERResponse(BaseModel):
 
 
 class KnowledgeGraphRequest(BaseModel):
-    note: str = Field(..., min_length=10, description="Clinical note for graph building")
+    note: str = Field(
+        ..., min_length=10, description="Clinical note for graph building"
+    )
     patient_id: str = Field(default="unknown")
 
 
@@ -126,6 +141,7 @@ class KnowledgeGraphResponse(BaseModel):
 
 # ── FHIR R4 ─────────────────────────────────────────────────
 
+
 class FHIRBundleRequest(BaseModel):
     bundle: Dict[str, Any] = Field(..., description="FHIR R4 Bundle resource")
 
@@ -137,6 +153,7 @@ class FHIRPredictResponse(BaseModel):
 
 
 # ── Evaluation ───────────────────────────────────────────────
+
 
 class EvaluationRequest(BaseModel):
     source_note: str = Field(..., min_length=10)
