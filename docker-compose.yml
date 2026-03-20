@@ -1,0 +1,75 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hera-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=hera_ai
+      - DB_USER=hera
+      - DB_PASSWORD=hera123
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - hera-net
+
+  postgres:
+    image: postgres:15
+    container_name: hera-postgres
+    environment:
+      POSTGRES_DB: hera_ai
+      POSTGRES_USER: hera
+      POSTGRES_PASSWORD: hera123
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hera -d hera_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hera-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hera-prometheus
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/alerts.yml:/etc/prometheus/alerts.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - hera-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hera-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - hera-net
+
+volumes:
+  pgdata:
+
+networks:
+  hera-net:
+    driver: bridge
