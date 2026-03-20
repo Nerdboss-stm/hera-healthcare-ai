@@ -1,108 +1,58 @@
-# =========================
-# Python Stuff
-# =========================
+# System
+.DS_Store
+Thumbs.db
 
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual environments
+*.egg-info/
 .venv/
-env/
 venv/
-ENV/
-env.bak/
-venv.bak/
+env/
 
-# Jupyter Notebook Checkpoints
-.ipynb_checkpoints/
-
-# Local IDE/editor configs
+# IDE
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
 
-# =========================
-# System Files
-# =========================
-
-# macOS system files
-.DS_Store
-
-# Windows system files
-Thumbs.db
-ehthumbs.db
-
-# =========================
-# Machine Learning Files
-# =========================
-
-# Model weights and outputs
-*.bin
+# ML artifacts
+*.pkl
 *.pt
+*.bin
 *.ckpt
 *.h5
 *.onnx
-*.pb
 *.safetensors
-
-# Tensorboard logs
-runs/
-events.out.tfevents.*
-
-# Saved models directories
+model/checkpoint-*/
+model/spiece.model
 saved_models/
-models/
 checkpoints/
 outputs/
-model/   # <-- Specific for your current model folder!
+runs/
 
-# Dataset cache (like Huggingface Datasets)
-cache/
-*.arrow
-*.jsonl
+# Data (large files)
+data/clinical_notes/notes_5000.csv
 
-# =========================
-# Data Files
-# =========================
+# Jupyter
+.ipynb_checkpoints/
 
-# Local CSVs, datasets (optional)
-*.csv
-*.tsv
-*.json
+# Logs
+logs/
+*.log
 
-# Keep small sample CSVs? (If yes, comment out above ^)
+# Secrets
+.env
+db_config_secret.py
 
-# =========================
-# Misc
-# =========================
+# Docker
+pgdata/
 
-# Temporary files
+# Temp
 *.bak
 *.swp
 *.tmp
 
-# Backup files
-*.orig
-*.old
-
-# =========================
-# Pipenv / Poetry
-# =========================
-
-# Pipenv
-Pipfile.lock
-
-# Poetry
-poetry.lock
-
-# =========================
-# Compiled Object files
-# =========================
-
-*.o
-*.so
-
-
+# Claude
+.claude/
