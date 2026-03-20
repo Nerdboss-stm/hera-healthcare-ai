@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
 
 
 class NoteRequest(BaseModel):
@@ -36,3 +36,118 @@ class HealthResponse(BaseModel):
     status: str
     services: Dict[str, str]
     version: str
+
+
+# ── Multi-Agent Clinical Reasoning ───────────────────────────
+
+class ClinicalReasoningRequest(BaseModel):
+    patient_id: str = Field(..., description="Unique patient identifier")
+    chief_complaint: str = Field(..., min_length=3, description="Primary complaint")
+    clinical_note: str = Field(..., min_length=10, description="Full clinical note")
+    heart_rate: float = Field(..., ge=30, le=220)
+    respiratory_rate: float = Field(..., ge=5, le=60)
+    body_temperature: float = Field(..., ge=34.0, le=42.0)
+    oxygen_saturation: float = Field(..., ge=70, le=100)
+    systolic_bp: float = Field(..., ge=60, le=250)
+    diastolic_bp: float = Field(..., ge=30, le=150)
+    age: int = Field(..., ge=0, le=120)
+    gender: str = Field(default="unknown")
+    medical_history: List[str] = Field(default_factory=list)
+    current_medications: List[str] = Field(default_factory=list)
+    allergies: List[str] = Field(default_factory=list)
+
+
+class ClinicalReasoningResponse(BaseModel):
+    patient_id: str
+    triage: Dict[str, Any]
+    diagnosis: Dict[str, Any]
+    treatment: Dict[str, Any]
+    reasoning_audit: List[Dict[str, Any]]
+    consensus_score: float
+    pipeline_latency_ms: float
+    timestamp: datetime
+
+
+# ── RAG Knowledge Base ───────────────────────────────────────
+
+class RAGQueryRequest(BaseModel):
+    query: str = Field(..., min_length=3, description="Medical knowledge query")
+    top_k: int = Field(default=3, ge=1, le=10)
+
+
+class RAGQueryResponse(BaseModel):
+    query: str
+    results: List[Dict[str, Any]]
+    total_corpus_size: int
+
+
+class RAGSummarizeRequest(BaseModel):
+    note: str = Field(..., min_length=10, description="Clinical note for RAG-augmented summary")
+    top_k: int = Field(default=3, ge=1, le=5)
+
+
+class RAGSummarizeResponse(BaseModel):
+    summary: Optional[str]
+    citations: List[Dict[str, Any]]
+    retrieved_context: List[Dict[str, Any]]
+    augmented: bool
+    timestamp: datetime
+
+
+# ── Clinical NER ─────────────────────────────────────────────
+
+class NERRequest(BaseModel):
+    note: str = Field(..., min_length=10, description="Clinical note for entity extraction")
+
+
+class NERResponse(BaseModel):
+    entity_count: int
+    medications: List[Dict[str, str]]
+    conditions: List[Dict[str, str]]
+    procedures: List[Dict[str, str]]
+    lab_values: List[Dict[str, str]]
+    vital_signs: List[Dict[str, str]]
+    timestamp: datetime
+
+
+class KnowledgeGraphRequest(BaseModel):
+    note: str = Field(..., min_length=10, description="Clinical note for graph building")
+    patient_id: str = Field(default="unknown")
+
+
+class KnowledgeGraphResponse(BaseModel):
+    patient_id: str
+    nodes: int
+    edges: int
+    entities: Dict[str, Any]
+    graph: Dict[str, Any]
+    timestamp: datetime
+
+
+# ── FHIR R4 ─────────────────────────────────────────────────
+
+class FHIRBundleRequest(BaseModel):
+    bundle: Dict[str, Any] = Field(..., description="FHIR R4 Bundle resource")
+
+
+class FHIRPredictResponse(BaseModel):
+    risk_assessment: Dict[str, Any]
+    original_prediction: Dict[str, Any]
+    timestamp: datetime
+
+
+# ── Evaluation ───────────────────────────────────────────────
+
+class EvaluationRequest(BaseModel):
+    source_note: str = Field(..., min_length=10)
+    generated_output: str = Field(..., min_length=10)
+
+
+class EvaluationResponse(BaseModel):
+    overall_score: float
+    pass_threshold: bool
+    factual_consistency: Dict[str, Any]
+    hallucination: Dict[str, Any]
+    medical_accuracy: Dict[str, Any]
+    clinical_safety: Dict[str, Any]
+    timestamp: datetime
