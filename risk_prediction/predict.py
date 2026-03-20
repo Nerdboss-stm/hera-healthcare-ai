@@ -21,9 +21,15 @@ model = joblib.load(os.path.join(_dir, "tuned_risk_model.pkl"))
 df = pd.read_csv(os.path.join(_dir, "..", "data", "processed", "cleaned_vitals.csv"))
 
 features = [
-    'Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation',
-    'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Age',
-    'Calculated_BMI', 'Calculated_MAP'
+    "Heart Rate",
+    "Respiratory Rate",
+    "Body Temperature",
+    "Oxygen Saturation",
+    "Systolic Blood Pressure",
+    "Diastolic Blood Pressure",
+    "Age",
+    "Calculated_BMI",
+    "Calculated_MAP",
 ]
 
 label_map = {1: "High Risk", 0: "Low Risk"}
@@ -38,17 +44,17 @@ for i in range(10):
 
     # Prepare values for insertion
     values = (
-        float(patient['Heart Rate']),
-        float(patient['Respiratory Rate']),
-        float(patient['Body Temperature']),
-        float(patient['Oxygen Saturation']),
-        float(patient['Systolic Blood Pressure']),
-        float(patient['Diastolic Blood Pressure']),
-        int(patient['Age']),
-        float(patient['Calculated_BMI']),
-        float(patient['Calculated_MAP']),
+        float(patient["Heart Rate"]),
+        float(patient["Respiratory Rate"]),
+        float(patient["Body Temperature"]),
+        float(patient["Oxygen Saturation"]),
+        float(patient["Systolic Blood Pressure"]),
+        float(patient["Diastolic Blood Pressure"]),
+        int(patient["Age"]),
+        float(patient["Calculated_BMI"]),
+        float(patient["Calculated_MAP"]),
         label,
-        round(y_prob, 4)
+        round(y_prob, 4),
     )
 
     # Insert into DB
@@ -63,9 +69,9 @@ for i in range(10):
     try:
         cursor.execute(insert_query, values)
         conn.commit()
-        print(f"🧬 Patient {i+1}: {label} (Confidence: {y_prob:.2f}) → Logged.")
+        print(f"🧬 Patient {i + 1}: {label} (Confidence: {y_prob:.2f}) → Logged.")
     except Exception as e:
-        print(f"❌ Error logging Patient {i+1}:", e)
+        print(f"❌ Error logging Patient {i + 1}:", e)
 
     time.sleep(1)
 
@@ -73,4 +79,3 @@ for i in range(10):
 cursor.close()
 conn.close()
 print("✅ All predictions logged and DB connection closed.")
-

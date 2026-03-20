@@ -11,16 +11,27 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(_dir, "..", "data", "processed", "cleaned_vitals.csv"))
 
 # Encode categorical label
-df['Risk Category'] = df['Risk Category'].map({'High Risk': 1, 'Low Risk': 0})
+df["Risk Category"] = df["Risk Category"].map({"High Risk": 1, "Low Risk": 0})
 
 # Define features & target
-features = ['Heart Rate', 'Respiratory Rate', 'Body Temperature', 'Oxygen Saturation',
-            'Systolic Blood Pressure', 'Diastolic Blood Pressure', 'Age', 'Calculated_BMI', 'Calculated_MAP']
+features = [
+    "Heart Rate",
+    "Respiratory Rate",
+    "Body Temperature",
+    "Oxygen Saturation",
+    "Systolic Blood Pressure",
+    "Diastolic Blood Pressure",
+    "Age",
+    "Calculated_BMI",
+    "Calculated_MAP",
+]
 X = df[features]
-y = df['Risk Category']
+y = df["Risk Category"]
 
 # Train/test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 # Train Random Forest model
 model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -32,4 +43,3 @@ print(classification_report(y_test, y_pred))
 
 # Save the model
 joblib.dump(model, os.path.join(_dir, "risk_predictor_model.pkl"))
-
