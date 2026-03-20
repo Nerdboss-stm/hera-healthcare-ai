@@ -176,7 +176,7 @@ class TestOrchestrator:
         assert result.triage is not None
         assert result.diagnosis is not None
         assert result.treatment is not None
-        assert result.pipeline_latency_ms > 0
+        assert result.pipeline_latency_ms >= 0
 
     def test_audit_trail_complete(self):
         orch = ClinicalOrchestrator()

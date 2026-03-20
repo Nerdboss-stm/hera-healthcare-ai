@@ -9,7 +9,6 @@ from __future__ import annotations
 import re
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +178,6 @@ class ClinicalEvaluator:
         Uses entity overlap and claim-level verification.
         """
         source_lower = source.lower()
-        generated_lower = generated.lower()
 
         # Extract claims (sentences) from generated text
         claims = [s.strip() for s in re.split(r'[.!?]+', generated) if len(s.strip()) > 10]
@@ -238,7 +236,6 @@ class ClinicalEvaluator:
     ) -> HallucinationResult:
         """Detect hallucinated entities and claims in generated text."""
         source_lower = source.lower()
-        generated_lower = generated.lower()
 
         # Extract medical entities from both texts
         med_pattern = (

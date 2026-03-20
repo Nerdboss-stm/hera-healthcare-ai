@@ -7,8 +7,6 @@ codes, supporting evidence, and recommended confirmatory tests.
 
 from __future__ import annotations
 import logging
-import re
-from typing import Optional
 
 from agents.protocols import (
     PatientContext, TriageResult, DiagnosticResult, Diagnosis,

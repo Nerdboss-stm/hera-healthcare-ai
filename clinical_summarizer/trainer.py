@@ -1,9 +1,8 @@
+import numpy as np
 import evaluate
 from transformers import Trainer
 
 rouge = evaluate.load("rouge")
-
-import numpy as np
 
 def build_compute_metrics(tokenizer):
     def compute_metrics(eval_preds):

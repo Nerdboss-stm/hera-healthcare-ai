@@ -7,7 +7,6 @@ and follow-up instructions. Includes contraindication checking.
 
 from __future__ import annotations
 import logging
-from typing import Optional
 
 from agents.protocols import (
     PatientContext, DiagnosticResult, TreatmentResult, Medication,

@@ -46,7 +46,7 @@ try:
     bertscore = evaluate.load("bertscore")
     bert_scores = bertscore.compute(predictions=predictions, references=references, lang="en")
     bert_f1 = sum(bert_scores['f1']) / len(bert_scores['f1'])
-except:
+except Exception:
     bert_f1 = "BERTScore evaluation failed (likely not installed)."
 
 # ========== SAVE METRICS ==========

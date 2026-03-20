@@ -1,6 +1,5 @@
 """Tests for Clinical NER + Knowledge Graph."""
 
-import pytest
 from ner.extractor import ClinicalNERExtractor
 
 

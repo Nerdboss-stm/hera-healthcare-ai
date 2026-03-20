@@ -8,7 +8,6 @@ FHIR-compliant RiskAssessment and DocumentReference resources.
 from __future__ import annotations
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
