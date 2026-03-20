@@ -1,5 +1,12 @@
 import sys
 import os
+
+import yaml  # noqa: E402
+import pandas as pd  # noqa: E402
+import torch  # noqa: E402
+from datasets import DatasetDict, Dataset  # noqa: E402
+from transformers import Seq2SeqTrainingArguments  # noqa: E402
+
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -7,17 +14,12 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(_dir, ".."))
 sys.path.insert(0, project_root)
 
-import yaml
-import pandas as pd
-import torch
-from datasets import DatasetDict, Dataset
-from transformers import Seq2SeqTrainingArguments
-from clinical_summarizer.model import load_model_and_tokenizer
-from clinical_summarizer.dataset import preprocess_function
-from clinical_summarizer.trainer import build_trainer
+from clinical_summarizer.model import load_model_and_tokenizer  # noqa: E402
+from clinical_summarizer.dataset import preprocess_function  # noqa: E402
+from clinical_summarizer.trainer import build_trainer  # noqa: E402
 
 # FORCE PyTorch device to CPU manually
-device = torch.device('cpu')
+device = torch.device("cpu")
 
 # Load config
 with open(os.path.join(_dir, "configs", "config.yaml"), "r") as f:
@@ -34,7 +36,12 @@ dataset = DatasetDict({"train": train_dataset, "validation": val_dataset})
 model, tokenizer = load_model_and_tokenizer(config["model_checkpoint"])
 
 # Preprocess
-tokenized_datasets = dataset.map(lambda x: preprocess_function(x, tokenizer, config["input_max_length"], config["output_max_length"]), batched=True)
+tokenized_datasets = dataset.map(
+    lambda x: preprocess_function(
+        x, tokenizer, config["input_max_length"], config["output_max_length"]
+    ),
+    batched=True,
+)
 
 model_output_dir = os.path.join(project_root, "model")
 
@@ -54,7 +61,7 @@ training_args = Seq2SeqTrainingArguments(
     logging_dir=os.path.join(project_root, "logs"),
     logging_steps=10,
     fp16=False,
-    no_cuda=True
+    no_cuda=True,
 )
 
 # Build Trainer

@@ -22,3 +22,11 @@ pydantic
 requests
 tqdm
 bert-score
+# RAG dependencies
+faiss-cpu>=1.7.0
+sentence-transformers>=2.2.0
+# Knowledge graph
+networkx>=3.0
+# NER (optional — SciSpaCy)
+# spacy>=3.5.0
+# scispacy>=0.5.0
