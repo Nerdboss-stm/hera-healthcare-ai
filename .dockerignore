@@ -1,0 +1,35 @@
+# Large ML model artifacts (download or train separately inside container)
+model/
+*.pkl
+*.pt
+*.bin
+*.safetensors
+*.onnx
+
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# Docker (prevent recursive copy)
+docker-compose.yml
+pgdata/
+
+# Data files not needed in API container
+data/raw/
+notebooks/
+docs/
+tests/
+
+# OS
+.DS_Store
