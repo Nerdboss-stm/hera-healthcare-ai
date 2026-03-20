@@ -7,7 +7,6 @@ agents, records a full audit trail, and computes a consensus confidence score.
 from __future__ import annotations
 import logging
 import time
-from typing import Optional
 
 from agents.protocols import (
     PatientContext,

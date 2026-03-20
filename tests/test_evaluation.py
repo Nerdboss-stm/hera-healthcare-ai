@@ -1,6 +1,5 @@
 """Tests for LLM-as-Judge Clinical Evaluation Framework."""
 
-import pytest
 from evaluation.evaluator import ClinicalEvaluator
 
 

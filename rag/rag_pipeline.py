@@ -6,8 +6,6 @@ summarizer to produce evidence-grounded clinical outputs with citations.
 
 from __future__ import annotations
 import logging
-from typing import Optional
-
 from rag.knowledge_base import MedicalKnowledgeBase
 from rag.retriever import MedicalRetriever
 

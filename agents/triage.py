@@ -6,7 +6,6 @@ augmented by the trained risk prediction model for vital sign analysis.
 
 from __future__ import annotations
 import logging
-from typing import Optional
 
 from agents.protocols import PatientContext, TriageResult, ESILevel
 

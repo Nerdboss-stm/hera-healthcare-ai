@@ -8,8 +8,7 @@ rule-based patterns augmented by SciSpaCy when available.
 from __future__ import annotations
 import re
 import logging
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 

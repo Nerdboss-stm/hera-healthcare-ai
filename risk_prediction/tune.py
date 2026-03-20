@@ -1,4 +1,5 @@
 import os
+import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -39,6 +40,5 @@ y_pred = best_model.predict(X_test)
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 # Save model
-import joblib
 joblib.dump(best_model, os.path.join(_dir, "tuned_risk_model.pkl"))
 
