@@ -12,6 +12,8 @@ joblib
 matplotlib
 seaborn
 fastapi
+python-multipart
+uvicorn[standard]
 flask
 flask-cors
 psycopg2-binary
