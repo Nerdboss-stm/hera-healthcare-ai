@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERA — Healthcare Risk Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f6fec;
+            --primary-dark: #0a4fb0;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── Top Navigation ── */
+        .topbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        .topbar-brand svg { width: 32px; height: 32px; }
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ── Tab Navigation ── */
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+        }
+        .tab {
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ── Main Layout ── */
+        .main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+        .card + .card { margin-top: 20px; }
+
+        .card-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* ── Form Elements ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .form-group input, .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            background: var(--bg);
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15,111,236,0.1);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 140px;
+        }
+        .input-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        /* ── File Upload ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg);
+            margin-bottom: 16px;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(15,111,236,0.03);
+        }
+        .upload-zone svg { width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 12px; }
+        .upload-zone p { font-size: 14px; color: var(--text-secondary); }
+        .upload-zone .upload-label {
+            color: var(--primary);
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .upload-zone .file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* ── Result Cards ── */
+        .result-container { margin-top: 24px; display: none; }
+        .result-container.visible { display: block; }
+
+        .result-card {
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid;
+        }
+        .result-card.high-risk {
+            background: var(--danger-bg);
+            border-color: #fecaca;
+        }
+        .result-card.low-risk {
+            background: var(--success-bg);
+            border-color: #a7f3d0;
+        }
+        .result-card.summary-result {
+            background: var(--card);
+            border-color: var(--border);
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .result-badge.high-risk {
+            background: var(--danger);
+            color: white;
+        }
+        .result-badge.low-risk {
+            background: var(--success);
+            color: white;
+        }
+
+        .result-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .metric-box {
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .metric-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metric-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .summary-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text);
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-top: 12px;
+            white-space: pre-wrap;
+        }
+
+        /* ── Confidence Bar ── */
+        .confidence-bar-container {
+            margin-top: 16px;
+        }
+        .confidence-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .confidence-bar {
+            height: 8px;
+            background: rgba(0,0,0,0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        /* ── Loading Spinner ── */
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+        .loading .spinner { display: block; }
+        .loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Sample Note ── */
+        .sample-notes {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .sample-chip {
+            padding: 6px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: var(--text-secondary);
+        }
+        .sample-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ── Error Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: white;
+            background: var(--danger);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ── Dashboard Overview ── */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .overview-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+        .overview-card .ov-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .overview-card .ov-icon svg { width: 22px; height: 22px; }
+        .overview-card .ov-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .overview-card .ov-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .overview-card .ov-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ── Swagger Link ── */
+        .api-docs-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary);
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .api-docs-link:hover { text-decoration: underline; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .main { padding: 16px; }
+            .tabs { padding: 0 16px; overflow-x: auto; }
+            .tab { padding: 12px 16px; white-space: nowrap; }
+            .topbar { padding: 0 16px; }
+            .form-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<div class="topbar">
+    <div class="topbar-brand">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="#0f6fec"/>
+            <path d="M9 16h14M16 9v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        HERA
+    </div>
+    <div class="topbar-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Checking...</span>
+        <span style="margin-left: 12px">
+            <a href="/docs" class="api-docs-link" target="_blank">API Docs &rarr;</a>
+        </span>
+    </div>
+</div>
+
+<!-- ── Tabs ── -->
+<div class="tabs">
+    <div class="tab active" data-panel="overview">Overview</div>
+    <div class="tab" data-panel="summarize">Clinical Summarization</div>
+    <div class="tab" data-panel="predict">Risk Prediction</div>
+</div>
+
+<!-- ── Content ── -->
+<div class="main">
+
+    <!-- OVERVIEW PANEL -->
+    <div class="panel active" id="panel-overview">
+        <div class="overview-grid">
+            <div class="overview-card">
+                <div class="ov-icon" style="background: #eff6ff;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#0f6fec" stroke-width="2"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div class="ov-title">Clinical Summarization</div>
+                <div class="ov-value" id="ov-summarizer-status">--</div>
+                <div class="ov-subtitle">T5 transformer model</div>
+            </div>
+            <div class="overview-card">
+                <div class="ov-icon" style="background: #fef3c7;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div class="ov-title">Risk Prediction</div>
+                <div class="ov-value" id="ov-risk-status">--</div>
+                <div class="ov-subtitle">Random Forest + SHAP</div>
+            </div>
+            <div class="overview-card">
+                <div class="ov-icon" style="background: #ecfdf5;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+                <div class="ov-title">API Endpoints</div>
+                <div class="ov-value">4</div>
+                <div class="ov-subtitle">/api/summarize, /api/predict, /api/summarize/upload, /api/health</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Quick Start</div>
+            <div class="card-subtitle">Use the tabs above to interact with each pipeline, or call the API directly.</div>
+            <div style="background: #0f172a; border-radius: 8px; padding: 20px; overflow-x: auto; margin-top: 12px;">
+                <pre style="color: #e2e8f0; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.8; margin: 0;"><span style="color:#94a3b8"># Summarize a clinical note</span>
+<span style="color:#10b981">curl</span> -X POST http://localhost:8000/api/summarize \
+  -H "Content-Type: application/json" \
+  -d '{"note": "Patient is a 65yo male with chest pain..."}'
+
+<span style="color:#94a3b8"># Predict patient risk from vitals</span>
+<span style="color:#10b981">curl</span> -X POST http://localhost:8000/api/predict \
+  -H "Content-Type: application/json" \
+  -d '{"heart_rate":95,"respiratory_rate":22,"body_temperature":38.1,
+       "oxygen_saturation":93,"systolic_bp":145,"diastolic_bp":92,"age":67}'
+
+<span style="color:#94a3b8"># Upload a .txt clinical note file</span>
+<span style="color:#10b981">curl</span> -X POST http://localhost:8000/api/summarize/upload \
+  -F "file=@clinical_note.txt"</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUMMARIZE PANEL -->
+    <div class="panel" id="panel-summarize">
+        <div class="card">
+            <div class="card-header">Clinical Note Summarization</div>
+            <div class="card-subtitle">Paste a clinical note or upload a .txt file to generate an abstractive summary using the fine-tuned T5 model.</div>
+
+            <!-- File Upload -->
+            <div class="upload-zone" id="uploadZone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 16V4m0 0l-4 4m4-4 4 4M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4"/>
+                </svg>
+                <p>Drag & drop a <strong>.txt</strong> file here, or <span class="upload-label">browse</span></p>
+                <div class="file-name" id="fileName" style="display:none"></div>
+                <input type="file" id="fileInput" accept=".txt" style="display:none">
+            </div>
+
+            <!-- Or type it -->
+            <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin: 12px 0;">or paste a note below</div>
+
+            <div class="sample-notes">
+                <span class="sample-chip" data-sample="cardiology">Cardiology</span>
+                <span class="sample-chip" data-sample="pulmonology">Pulmonology</span>
+                <span class="sample-chip" data-sample="neurology">Neurology</span>
+                <span class="sample-chip" data-sample="emergency">Emergency</span>
+            </div>
+
+            <div class="form-group">
+                <textarea id="noteInput" placeholder="Chief Complaint: Patient presents with...&#10;&#10;History of Present Illness: ...&#10;&#10;Physical Exam: ...&#10;&#10;Assessment and Plan: ..."></textarea>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="summarizeBtn" onclick="submitSummarize()">
+                    <span class="btn-text">Generate Summary</span>
+                    <div class="spinner"></div>
+                </button>
+                <button class="btn btn-secondary" onclick="clearSummarize()">Clear</button>
+            </div>
+        </div>
+
+        <div class="result-container" id="summaryResult">
+            <div class="card result-card summary-result">
+                <div class="card-header">Generated Summary</div>
+                <div class="summary-text" id="summaryText"></div>
+                <div class="result-metrics">
+                    <div class="metric-box">
+                        <div class="metric-label">Input Length</div>
+                        <div class="metric-value" id="inputLen">-</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Summary Length</div>
+                        <div class="metric-value" id="summaryLen">-</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Compression</div>
+                        <div class="metric-value" id="compressionRatio">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREDICT PANEL -->
+    <div class="panel" id="panel-predict">
+        <div class="card">
+            <div class="card-header">Patient Risk Prediction</div>
+            <div class="card-subtitle">Enter patient vitals to classify risk level using the trained Random Forest model with SHAP explainability.</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Heart Rate (BPM)</label>
+                    <input type="number" id="v-hr" value="82" min="30" max="220" step="1">
+                    <span class="input-hint">Normal: 60–100</span>
+                </div>
+                <div class="form-group">
+                    <label>Respiratory Rate (breaths/min)</label>
+                    <input type="number" id="v-rr" value="18" min="5" max="60" step="1">
+                    <span class="input-hint">Normal: 12–20</span>
+                </div>
+                <div class="form-group">
+                    <label>Body Temperature (&deg;C)</label>
+                    <input type="number" id="v-temp" value="37.0" min="34" max="42" step="0.1">
+                    <span class="input-hint">Normal: 36.1–37.2</span>
+                </div>
+                <div class="form-group">
+                    <label>Oxygen Saturation (SpO2 %)</label>
+                    <input type="number" id="v-spo2" value="97" min="70" max="100" step="0.1">
+                    <span class="input-hint">Normal: 95–100</span>
+                </div>
+                <div class="form-group">
+                    <label>Systolic BP (mmHg)</label>
+                    <input type="number" id="v-sbp" value="120" min="60" max="250" step="1">
+                    <span class="input-hint">Normal: 90–120</span>
+                </div>
+                <div class="form-group">
+                    <label>Diastolic BP (mmHg)</label>
+                    <input type="number" id="v-dbp" value="80" min="30" max="150" step="1">
+                    <span class="input-hint">Normal: 60–80</span>
+                </div>
+                <div class="form-group">
+                    <label>Age (years)</label>
+                    <input type="number" id="v-age" value="55" min="0" max="120" step="1">
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="predictBtn" onclick="submitPredict()">
+                    <span class="btn-text">Predict Risk</span>
+                    <div class="spinner"></div>
+                </button>
+                <button class="btn btn-secondary" onclick="loadPreset('critical')">Load Critical Patient</button>
+                <button class="btn btn-secondary" onclick="loadPreset('healthy')">Load Healthy Patient</button>
+            </div>
+        </div>
+
+        <div class="result-container" id="riskResult">
+            <div class="card result-card" id="riskCard">
+                <div class="result-badge" id="riskBadge"></div>
+
+                <div class="confidence-bar-container">
+                    <div class="confidence-bar-label">
+                        <span>Low Risk</span>
+                        <span id="riskScoreLabel">0%</span>
+                        <span>High Risk</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="riskBar" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="result-metrics" id="riskMetrics"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ── Sample Notes ──
+    const SAMPLES = {
+        cardiology: `Chief Complaint: Chest pain radiating to left arm for 3 hours.
+
+History of Present Illness: 67-year-old male with history of hypertension and type 2 diabetes presents with substernal chest pressure radiating to the left arm. Pain started at rest, rated 8/10, associated with diaphoresis and shortness of breath. No relief with nitroglycerin.
+
+Review of Systems: Positive for chest pain, dyspnea, diaphoresis. Negative for fever, cough, abdominal pain.
+
+Physical Exam: BP 158/95, HR 102, RR 22, SpO2 94% on room air. Diaphoretic. S1S2 regular, no murmurs. Lungs clear bilaterally.
+
+Labs: Troponin I elevated at 0.82 ng/mL (normal <0.04). BNP 340 pg/mL. CBC and BMP within normal limits. ECG shows ST elevation in leads II, III, aVF.
+
+Assessment and Plan: STEMI. Activate cath lab. Aspirin 325mg, heparin drip, clopidogrel loading dose. Cardiology consulted for emergent PCI.`,
+
+        pulmonology: `Chief Complaint: Progressive shortness of breath over 2 weeks.
+
+History of Present Illness: 72-year-old female with 40-pack-year smoking history presenting with worsening dyspnea on exertion progressing to dyspnea at rest. Associated productive cough with yellow sputum. No hemoptysis, no fever.
+
+Physical Exam: BP 134/82, HR 88, RR 24, SpO2 89% on room air. Bilateral wheezing and diminished breath sounds at bases. No peripheral edema.
+
+Labs: ABG shows pH 7.35, pCO2 52, pO2 58. WBC 11.2, CRP elevated at 45. Chest X-ray shows hyperinflation with flattened diaphragms.
+
+Assessment and Plan: Acute exacerbation of COPD. Start nebulized albuterol and ipratropium, prednisone 40mg daily for 5 days, azithromycin for possible infectious component. Supplemental oxygen to maintain SpO2 >92%.`,
+
+        neurology: `Chief Complaint: Sudden onset right-sided weakness and slurred speech.
+
+History of Present Illness: 58-year-old male brought by EMS with acute onset right hemiparesis and dysarthria noticed by wife 45 minutes ago. Last known well at 0800. PMH significant for atrial fibrillation (not on anticoagulation), hypertension, hyperlipidemia.
+
+Physical Exam: BP 182/98, HR 92 irregular, RR 16, SpO2 97%. Alert but confused. Right facial droop, right arm drift, dysarthric speech. NIHSS score 14.
+
+Imaging: CT head negative for hemorrhage. CT angiography shows left MCA occlusion. CT perfusion shows large penumbra.
+
+Assessment and Plan: Acute ischemic stroke, left MCA territory. Within tPA window. Administer alteplase 0.9mg/kg IV. Neurology and interventional radiology consulted for possible thrombectomy. Admit to neuro ICU.`,
+
+        emergency: `Chief Complaint: Fall from ladder, bilateral lower extremity pain.
+
+History of Present Illness: 45-year-old male fell approximately 12 feet from a ladder while performing home maintenance. Landed on feet, immediate onset bilateral heel pain and inability to bear weight. Denies loss of consciousness, head strike, or neck pain.
+
+Physical Exam: BP 142/88, HR 96, RR 18, SpO2 99%. Bilateral calcaneal tenderness, swelling, and ecchymosis. No open fractures. Thoracolumbar spine nontender. Neurovascularly intact bilateral lower extremities. Negative Bohler's angle bilaterally.
+
+Imaging: X-rays bilateral feet show comminuted calcaneus fractures bilateral. CT of bilateral calcanei confirms Sanders Type III fractures. Lumbar spine CT negative for compression fractures.
+
+Assessment and Plan: Bilateral calcaneus fractures. Orthopedic surgery consulted. Posterior splints applied bilateral. Pain management with morphine IV. Admit for operative planning.`
+    };
+
+    // ── Tab Switching ──
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+        });
+    });
+
+    // ── Sample Notes ──
+    document.querySelectorAll('.sample-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.getElementById('noteInput').value = SAMPLES[chip.dataset.sample];
+        });
+    });
+
+    // ── File Upload ──
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    let selectedFile = null;
+    function handleFile(file) {
+        if (!file.name.endsWith('.txt')) {
+            showToast('Please upload a .txt file');
+            return;
+        }
+        selectedFile = file;
+        fileName.textContent = file.name;
+        fileName.style.display = 'block';
+        // Also read into textarea
+        const reader = new FileReader();
+        reader.onload = e => document.getElementById('noteInput').value = e.target.result;
+        reader.readAsText(file);
+    }
+
+    // ── API Calls ──
+    async function submitSummarize() {
+        const note = document.getElementById('noteInput').value.trim();
+        if (!note && !selectedFile) { showToast('Enter a clinical note or upload a file'); return; }
+
+        const btn = document.getElementById('summarizeBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        try {
+            let response;
+            if (selectedFile) {
+                const form = new FormData();
+                form.append('file', selectedFile);
+                response = await fetch('/api/summarize/upload', { method: 'POST', body: form });
+            } else {
+                response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note })
+                });
+            }
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Summarization failed');
+            }
+
+            const data = await response.json();
+            document.getElementById('summaryText').textContent = data.summary;
+            document.getElementById('inputLen').textContent = data.note_length || note.length;
+            document.getElementById('summaryLen').textContent = data.summary_length || data.summary.length;
+            const ratio = ((1 - (data.summary_length || data.summary.length) / (data.note_length || note.length)) * 100).toFixed(0);
+            document.getElementById('compressionRatio').textContent = ratio + '%';
+            document.getElementById('summaryResult').classList.add('visible');
+        } catch (e) {
+            showToast(e.message);
+        } finally {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    }
+
+    async function submitPredict() {
+        const btn = document.getElementById('predictBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        const payload = {
+            heart_rate: parseFloat(document.getElementById('v-hr').value),
+            respiratory_rate: parseFloat(document.getElementById('v-rr').value),
+            body_temperature: parseFloat(document.getElementById('v-temp').value),
+            oxygen_saturation: parseFloat(document.getElementById('v-spo2').value),
+            systolic_bp: parseFloat(document.getElementById('v-sbp').value),
+            diastolic_bp: parseFloat(document.getElementById('v-dbp').value),
+            age: parseInt(document.getElementById('v-age').value),
+        };
+
+        try {
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Prediction failed');
+            }
+
+            const data = await response.json();
+            const isHigh = data.prediction === 'High Risk';
+
+            const card = document.getElementById('riskCard');
+            card.className = 'card result-card ' + (isHigh ? 'high-risk' : 'low-risk');
+
+            const badge = document.getElementById('riskBadge');
+            badge.className = 'result-badge ' + (isHigh ? 'high-risk' : 'low-risk');
+            badge.innerHTML = (isHigh ? '&#9888; ' : '&#10003; ') + data.prediction;
+
+            const bar = document.getElementById('riskBar');
+            const pct = (data.risk_score * 100).toFixed(1);
+            bar.style.width = pct + '%';
+            bar.style.background = isHigh
+                ? 'linear-gradient(90deg, #f59e0b, #ef4444)'
+                : 'linear-gradient(90deg, #10b981, #34d399)';
+            document.getElementById('riskScoreLabel').textContent = pct + '%';
+
+            const metrics = document.getElementById('riskMetrics');
+            metrics.innerHTML = '';
+            const entries = [
+                ['Confidence', (data.confidence * 100).toFixed(1) + '%'],
+                ['Risk Score', pct + '%'],
+                ['BMI (calc)', data.features_used.calculated_bmi],
+                ['MAP (calc)', data.features_used.calculated_map],
+            ];
+            entries.forEach(([label, value]) => {
+                metrics.innerHTML += `<div class="metric-box"><div class="metric-label">${label}</div><div class="metric-value">${value}</div></div>`;
+            });
+
+            document.getElementById('riskResult').classList.add('visible');
+        } catch (e) {
+            showToast(e.message);
+        } finally {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    }
+
+    // ── Presets ──
+    function loadPreset(type) {
+        if (type === 'critical') {
+            document.getElementById('v-hr').value = 115;
+            document.getElementById('v-rr').value = 28;
+            document.getElementById('v-temp').value = 38.9;
+            document.getElementById('v-spo2').value = 88;
+            document.getElementById('v-sbp').value = 165;
+            document.getElementById('v-dbp').value = 100;
+            document.getElementById('v-age').value = 72;
+        } else {
+            document.getElementById('v-hr').value = 72;
+            document.getElementById('v-rr').value = 16;
+            document.getElementById('v-temp').value = 36.8;
+            document.getElementById('v-spo2').value = 98;
+            document.getElementById('v-sbp').value = 118;
+            document.getElementById('v-dbp').value = 76;
+            document.getElementById('v-age').value = 32;
+        }
+    }
+
+    function clearSummarize() {
+        document.getElementById('noteInput').value = '';
+        document.getElementById('summaryResult').classList.remove('visible');
+        selectedFile = null;
+        fileName.style.display = 'none';
+        fileInput.value = '';
+    }
+
+    // ── Toast ──
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('visible');
+        setTimeout(() => t.classList.remove('visible'), 4000);
+    }
+
+    // ── Health Check ──
+    async function checkHealth() {
+        try {
+            const res = await fetch('/api/health');
+            const data = await res.json();
+            document.getElementById('statusDot').style.background =
+                data.status === 'healthy' ? '#10b981' : '#f59e0b';
+            document.getElementById('statusText').textContent =
+                data.status === 'healthy' ? 'All systems operational' : 'Degraded';
+
+            document.getElementById('ov-summarizer-status').textContent =
+                data.services.summarizer === 'available' ? 'Online' : 'Offline';
+            document.getElementById('ov-summarizer-status').style.color =
+                data.services.summarizer === 'available' ? '#10b981' : '#f59e0b';
+
+            document.getElementById('ov-risk-status').textContent =
+                data.services.risk_predictor === 'available' ? 'Online' : 'Offline';
+            document.getElementById('ov-risk-status').style.color =
+                data.services.risk_predictor === 'available' ? '#10b981' : '#f59e0b';
+        } catch {
+            document.getElementById('statusDot').style.background = '#ef4444';
+            document.getElementById('statusText').textContent = 'API unreachable';
+        }
+    }
+    checkHealth();
+    setInterval(checkHealth, 30000);
+</script>
+</body>
+</html>
