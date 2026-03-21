@@ -95,13 +95,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip auth for static files, health, docs, and root
         path = request.url.path
-        if path in (
-            "/",
-            "/api/health",
-            "/docs",
-            "/openapi.json",
-            "/metrics",
-        ) or path.startswith("/static") or path.startswith("/api/de/"):
+        if (
+            path
+            in (
+                "/",
+                "/api/health",
+                "/docs",
+                "/openapi.json",
+                "/metrics",
+            )
+            or path.startswith("/static")
+            or path.startswith("/api/de/")
+        ):
             response = await call_next(request)
             return response
 

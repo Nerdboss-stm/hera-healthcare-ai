@@ -136,7 +136,9 @@ class PipelineDAG:
         for tid, task in self._tasks.items():
             for dep in task.depends_on:
                 if dep not in self._tasks:
-                    errors.append(f"Task '{tid}' depends on '{dep}' which does not exist")
+                    errors.append(
+                        f"Task '{tid}' depends on '{dep}' which does not exist"
+                    )
 
         # Simple cycle detection
         visited = set()
@@ -202,7 +204,9 @@ class PipelineDAG:
             callable_fn = self._task_callables.get(task_id)
             for attempt in range(task_def.retries + 1):
                 task_run.attempt = attempt + 1
-                task_run.state = TaskState.RUNNING if attempt == 0 else TaskState.RETRYING
+                task_run.state = (
+                    TaskState.RUNNING if attempt == 0 else TaskState.RETRYING
+                )
                 task_run.started_at = time.time()
 
                 try:
@@ -234,7 +238,9 @@ class PipelineDAG:
                 task_run.sla_breached = True
                 logger.warning(
                     "SLA breach: %s took %.1fms (limit: %.0fs)",
-                    task_id, task_run.latency_ms, task_def.sla_seconds,
+                    task_id,
+                    task_run.latency_ms,
+                    task_def.sla_seconds,
                 )
 
         # Finalize run
@@ -278,116 +284,153 @@ def build_hera_dag() -> PipelineDAG:
     """Build the default HERA clinical pipeline DAG."""
     dag = PipelineDAG("hera_clinical_pipeline")
 
-    dag.add_task(TaskDefinition(
-        task_id="ingest_data",
-        callable_name="streaming.ingest",
-        description="Ingest patient data through event stream with schema validation",
-        sla_seconds=5.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="validate_quality",
-        callable_name="quality.validate",
-        depends_on=["ingest_data"],
-        description="Run data quality checks on input vitals and notes",
-        sla_seconds=2.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="extract_entities",
-        callable_name="ner.extract",
-        depends_on=["validate_quality"],
-        description="Extract medical entities (medications, conditions, procedures)",
-        sla_seconds=10.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="build_knowledge_graph",
-        callable_name="ner.knowledge_graph",
-        depends_on=["extract_entities"],
-        description="Build patient knowledge graph from extracted entities",
-        sla_seconds=5.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="run_triage",
-        callable_name="agents.triage",
-        depends_on=["validate_quality"],
-        description="Triage agent assigns ESI level",
-        sla_seconds=10.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="run_diagnosis",
-        callable_name="agents.diagnostic",
-        depends_on=["run_triage", "extract_entities"],
-        description="Diagnostic agent identifies primary diagnosis using NER + vitals",
-        sla_seconds=10.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="run_treatment",
-        callable_name="agents.treatment",
-        depends_on=["run_diagnosis"],
-        description="Treatment agent plans interventions based on diagnosis",
-        sla_seconds=10.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="predict_risk",
-        callable_name="risk_predictor.predict",
-        depends_on=["validate_quality"],
-        description="Random Forest risk prediction with derived features",
-        sla_seconds=5.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="retrieve_rag_context",
-        callable_name="rag.query",
-        depends_on=["run_diagnosis"],
-        description="RAG retrieval of relevant medical guidelines via FAISS",
-        sla_seconds=15.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="generate_summary",
-        callable_name="summarizer.generate",
-        depends_on=["retrieve_rag_context"],
-        description="T5 transformer clinical note summarization",
-        sla_seconds=15.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="evaluate_safety",
-        callable_name="evaluator.evaluate",
-        depends_on=["generate_summary"],
-        description="LLM-as-Judge safety evaluation (4-axis)",
-        sla_seconds=10.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="export_fhir",
-        callable_name="fhir.export",
-        depends_on=["run_treatment", "predict_risk", "generate_summary", "evaluate_safety"],
-        description="Export entire case as FHIR R4 Bundle",
-        sla_seconds=5.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="load_warehouse",
-        callable_name="warehouse.load",
-        depends_on=["export_fhir"],
-        description="Load encounter into star schema analytics warehouse",
-        sla_seconds=5.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="track_lineage",
-        callable_name="lineage.track",
-        depends_on=["export_fhir"],
-        description="Record column-level data lineage for governance",
-        sla_seconds=2.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="emit_cdc_events",
-        callable_name="cdc.emit",
-        depends_on=["load_warehouse"],
-        description="Emit CDC change events for downstream consumers",
-        sla_seconds=2.0,
-    ))
-    dag.add_task(TaskDefinition(
-        task_id="update_catalog",
-        callable_name="catalog.update",
-        depends_on=["load_warehouse", "track_lineage"],
-        description="Update data catalog with fresh metadata",
-        sla_seconds=2.0,
-    ))
+    dag.add_task(
+        TaskDefinition(
+            task_id="ingest_data",
+            callable_name="streaming.ingest",
+            description="Ingest patient data through event stream with schema validation",
+            sla_seconds=5.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="validate_quality",
+            callable_name="quality.validate",
+            depends_on=["ingest_data"],
+            description="Run data quality checks on input vitals and notes",
+            sla_seconds=2.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="extract_entities",
+            callable_name="ner.extract",
+            depends_on=["validate_quality"],
+            description="Extract medical entities (medications, conditions, procedures)",
+            sla_seconds=10.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="build_knowledge_graph",
+            callable_name="ner.knowledge_graph",
+            depends_on=["extract_entities"],
+            description="Build patient knowledge graph from extracted entities",
+            sla_seconds=5.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="run_triage",
+            callable_name="agents.triage",
+            depends_on=["validate_quality"],
+            description="Triage agent assigns ESI level",
+            sla_seconds=10.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="run_diagnosis",
+            callable_name="agents.diagnostic",
+            depends_on=["run_triage", "extract_entities"],
+            description="Diagnostic agent identifies primary diagnosis using NER + vitals",
+            sla_seconds=10.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="run_treatment",
+            callable_name="agents.treatment",
+            depends_on=["run_diagnosis"],
+            description="Treatment agent plans interventions based on diagnosis",
+            sla_seconds=10.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="predict_risk",
+            callable_name="risk_predictor.predict",
+            depends_on=["validate_quality"],
+            description="Random Forest risk prediction with derived features",
+            sla_seconds=5.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="retrieve_rag_context",
+            callable_name="rag.query",
+            depends_on=["run_diagnosis"],
+            description="RAG retrieval of relevant medical guidelines via FAISS",
+            sla_seconds=15.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="generate_summary",
+            callable_name="summarizer.generate",
+            depends_on=["retrieve_rag_context"],
+            description="T5 transformer clinical note summarization",
+            sla_seconds=15.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="evaluate_safety",
+            callable_name="evaluator.evaluate",
+            depends_on=["generate_summary"],
+            description="LLM-as-Judge safety evaluation (4-axis)",
+            sla_seconds=10.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="export_fhir",
+            callable_name="fhir.export",
+            depends_on=[
+                "run_treatment",
+                "predict_risk",
+                "generate_summary",
+                "evaluate_safety",
+            ],
+            description="Export entire case as FHIR R4 Bundle",
+            sla_seconds=5.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="load_warehouse",
+            callable_name="warehouse.load",
+            depends_on=["export_fhir"],
+            description="Load encounter into star schema analytics warehouse",
+            sla_seconds=5.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="track_lineage",
+            callable_name="lineage.track",
+            depends_on=["export_fhir"],
+            description="Record column-level data lineage for governance",
+            sla_seconds=2.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="emit_cdc_events",
+            callable_name="cdc.emit",
+            depends_on=["load_warehouse"],
+            description="Emit CDC change events for downstream consumers",
+            sla_seconds=2.0,
+        )
+    )
+    dag.add_task(
+        TaskDefinition(
+            task_id="update_catalog",
+            callable_name="catalog.update",
+            depends_on=["load_warehouse", "track_lineage"],
+            description="Update data catalog with fresh metadata",
+            sla_seconds=2.0,
+        )
+    )
 
     return dag

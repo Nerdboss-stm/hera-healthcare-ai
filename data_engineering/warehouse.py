@@ -115,9 +115,15 @@ class ClinicalWarehouse:
         """)
 
         # Indexes
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_fact_patient ON fact_clinical_encounters(patient_key)")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_fact_risk ON fact_clinical_encounters(risk_score)")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_fact_time ON fact_clinical_encounters(time_key)")
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fact_patient ON fact_clinical_encounters(patient_key)"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fact_risk ON fact_clinical_encounters(risk_score)"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fact_time ON fact_clinical_encounters(time_key)"
+        )
 
         # Seed dimension: providers (the HERA agents)
         providers = [
@@ -148,14 +154,25 @@ class ClinicalWarehouse:
             return row["time_key"]
         cur.execute(
             "INSERT INTO dim_time (full_datetime, date, hour, day_of_week, month, year) VALUES (?, ?, ?, ?, ?, ?)",
-            (full, dt.strftime("%Y-%m-%d"), dt.hour, dt.strftime("%A"), dt.month, dt.year),
+            (
+                full,
+                dt.strftime("%Y-%m-%d"),
+                dt.hour,
+                dt.strftime("%A"),
+                dt.month,
+                dt.year,
+            ),
         )
         self._conn.commit()
         return cur.lastrowid
 
-    def _get_or_create_patient(self, patient_id: str, age: int = 0, gender: str = "unknown") -> int:
+    def _get_or_create_patient(
+        self, patient_id: str, age: int = 0, gender: str = "unknown"
+    ) -> int:
         cur = self._conn.cursor()
-        cur.execute("SELECT patient_key FROM dim_patient WHERE patient_id = ?", (patient_id,))
+        cur.execute(
+            "SELECT patient_key FROM dim_patient WHERE patient_id = ?", (patient_id,)
+        )
         row = cur.fetchone()
         if row:
             return row["patient_key"]
@@ -166,9 +183,13 @@ class ClinicalWarehouse:
         self._conn.commit()
         return cur.lastrowid
 
-    def _get_or_create_diagnosis(self, name: str, category: str = "", severity: str = "") -> int:
+    def _get_or_create_diagnosis(
+        self, name: str, category: str = "", severity: str = ""
+    ) -> int:
         cur = self._conn.cursor()
-        cur.execute("SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = ?", (name,))
+        cur.execute(
+            "SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = ?", (name,)
+        )
         row = cur.fetchone()
         if row:
             return row["diagnosis_key"]
@@ -237,7 +258,8 @@ class ClinicalWarehouse:
         map_val = round(dbp + (sbp - dbp) / 3, 1) if sbp and dbp else 0
 
         cur = self._conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO fact_clinical_encounters (
                 patient_key, diagnosis_key, provider_key, time_key,
                 heart_rate, respiratory_rate, body_temperature,
@@ -247,17 +269,32 @@ class ClinicalWarehouse:
                 safety_score, safety_passed, pipeline_latency_ms,
                 fhir_resource_count, feedback_loops, created_at
             ) VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            patient_key, diagnosis_key, time_key,
-            vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
-            vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
-            sbp, dbp, map_val,
-            risk_score, risk_prediction, confidence, esi_level,
-            ner_count, compression, safety_score, safety_passed,
-            pipeline_result.get("overall_latency_ms", 0),
-            fhir_count, pipeline_result.get("feedback_loops_triggered", 0),
-            now.isoformat(),
-        ))
+        """,
+            (
+                patient_key,
+                diagnosis_key,
+                time_key,
+                vitals.get("heart_rate", 0),
+                vitals.get("respiratory_rate", 0),
+                vitals.get("body_temperature", 0),
+                vitals.get("oxygen_saturation", 0),
+                sbp,
+                dbp,
+                map_val,
+                risk_score,
+                risk_prediction,
+                confidence,
+                esi_level,
+                ner_count,
+                compression,
+                safety_score,
+                safety_passed,
+                pipeline_result.get("overall_latency_ms", 0),
+                fhir_count,
+                pipeline_result.get("feedback_loops_triggered", 0),
+                now.isoformat(),
+            ),
+        )
         self._conn.commit()
         return cur.lastrowid
 
@@ -287,7 +324,8 @@ class ClinicalWarehouse:
     def query_encounters(self, limit: int = 20) -> list[dict]:
         """Query recent encounters with full dimensional context."""
         cur = self._conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
                 p.patient_id, p.age, p.gender,
                 d.diagnosis_name, d.category,
@@ -303,7 +341,9 @@ class ClinicalWarehouse:
             JOIN dim_time dt ON f.time_key = dt.time_key
             ORDER BY f.encounter_id DESC
             LIMIT ?
-        """, (limit,))
+        """,
+            (limit,),
+        )
         return [dict(row) for row in cur.fetchall()]
 
     def query_risk_distribution(self) -> dict:
@@ -321,15 +361,26 @@ class ClinicalWarehouse:
             FROM fact_clinical_encounters
             GROUP BY risk_level
         """)
-        return {row["risk_level"]: {"count": row["count"], "avg_latency": row["avg_latency"]}
-                for row in cur.fetchall()}
+        return {
+            row["risk_level"]: {
+                "count": row["count"],
+                "avg_latency": row["avg_latency"],
+            }
+            for row in cur.fetchall()
+        }
 
     def get_warehouse_stats(self) -> dict:
         """Get warehouse metadata and stats."""
         cur = self._conn.cursor()
         tables = {}
-        for tbl in ["dim_patient", "dim_diagnosis", "dim_provider", "dim_time",
-                     "fact_clinical_encounters", "agg_hourly_summary"]:
+        for tbl in [
+            "dim_patient",
+            "dim_diagnosis",
+            "dim_provider",
+            "dim_time",
+            "fact_clinical_encounters",
+            "agg_hourly_summary",
+        ]:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM {tbl}")  # noqa: S608
             tables[tbl] = cur.fetchone()["cnt"]
 

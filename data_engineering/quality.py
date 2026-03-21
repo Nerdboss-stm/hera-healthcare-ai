@@ -96,59 +96,73 @@ class DataQualityFramework:
         report = QualityReport(stage=stage)
 
         # Schema completeness
-        required = ["heart_rate", "respiratory_rate", "body_temperature",
-                     "oxygen_saturation", "systolic_bp", "diastolic_bp"]
+        required = [
+            "heart_rate",
+            "respiratory_rate",
+            "body_temperature",
+            "oxygen_saturation",
+            "systolic_bp",
+            "diastolic_bp",
+        ]
         for field_name in required:
             present = field_name in vitals and vitals[field_name] is not None
-            report.checks.append(QualityCheck(
-                name=f"field_present_{field_name}",
-                category="completeness",
-                passed=present,
-                severity="critical" if not present else "info",
-                details=f"Required field '{field_name}' {'present' if present else 'MISSING'}",
-                expected="present",
-                actual="present" if present else "missing",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name=f"field_present_{field_name}",
+                    category="completeness",
+                    passed=present,
+                    severity="critical" if not present else "info",
+                    details=f"Required field '{field_name}' {'present' if present else 'MISSING'}",
+                    expected="present",
+                    actual="present" if present else "missing",
+                )
+            )
 
         # Range validation
         for field_name, (low, high) in self.VITAL_RANGES.items():
             val = vitals.get(field_name)
             if val is not None:
                 in_range = low <= val <= high
-                report.checks.append(QualityCheck(
-                    name=f"range_{field_name}",
-                    category="accuracy",
-                    passed=in_range,
-                    severity="warning" if not in_range else "info",
-                    details=f"{field_name}={val} {'within' if in_range else 'OUTSIDE'} [{low}, {high}]",
-                    expected=f"[{low}, {high}]",
-                    actual=str(val),
-                ))
+                report.checks.append(
+                    QualityCheck(
+                        name=f"range_{field_name}",
+                        category="accuracy",
+                        passed=in_range,
+                        severity="warning" if not in_range else "info",
+                        details=f"{field_name}={val} {'within' if in_range else 'OUTSIDE'} [{low}, {high}]",
+                        expected=f"[{low}, {high}]",
+                        actual=str(val),
+                    )
+                )
 
         # Statistical anomaly: BP consistency
         sbp = vitals.get("systolic_bp", 0)
         dbp = vitals.get("diastolic_bp", 0)
         if sbp and dbp:
             bp_consistent = sbp > dbp
-            report.checks.append(QualityCheck(
-                name="bp_consistency",
-                category="consistency",
-                passed=bp_consistent,
-                severity="critical" if not bp_consistent else "info",
-                details=f"Systolic ({sbp}) {'>' if bp_consistent else '<='} Diastolic ({dbp})",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name="bp_consistency",
+                    category="consistency",
+                    passed=bp_consistent,
+                    severity="critical" if not bp_consistent else "info",
+                    details=f"Systolic ({sbp}) {'>' if bp_consistent else '<='} Diastolic ({dbp})",
+                )
+            )
 
         # Pulse pressure check (abnormal if < 25 or > 100)
         if sbp and dbp:
             pp = sbp - dbp
             pp_ok = 25 <= pp <= 100
-            report.checks.append(QualityCheck(
-                name="pulse_pressure",
-                category="accuracy",
-                passed=pp_ok,
-                severity="warning" if not pp_ok else "info",
-                details=f"Pulse pressure={pp} {'normal' if pp_ok else 'ABNORMAL'} range [25, 100]",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name="pulse_pressure",
+                    category="accuracy",
+                    passed=pp_ok,
+                    severity="warning" if not pp_ok else "info",
+                    details=f"Pulse pressure={pp} {'normal' if pp_ok else 'ABNORMAL'} range [25, 100]",
+                )
+            )
 
         report.compute_score()
         self._history.append(report)
@@ -159,48 +173,69 @@ class DataQualityFramework:
         report = QualityReport(stage=stage)
 
         # Non-empty
-        report.checks.append(QualityCheck(
-            name="note_not_empty",
-            category="completeness",
-            passed=len(note.strip()) > 0,
-            severity="critical",
-            details=f"Note length: {len(note)} characters",
-        ))
+        report.checks.append(
+            QualityCheck(
+                name="note_not_empty",
+                category="completeness",
+                passed=len(note.strip()) > 0,
+                severity="critical",
+                details=f"Note length: {len(note)} characters",
+            )
+        )
 
         # Minimum length
         min_len = 20
-        report.checks.append(QualityCheck(
-            name="note_min_length",
-            category="completeness",
-            passed=len(note) >= min_len,
-            severity="warning",
-            details=f"Note length {len(note)} {'meets' if len(note) >= min_len else 'below'} minimum {min_len}",
-        ))
+        report.checks.append(
+            QualityCheck(
+                name="note_min_length",
+                category="completeness",
+                passed=len(note) >= min_len,
+                severity="warning",
+                details=f"Note length {len(note)} {'meets' if len(note) >= min_len else 'below'} minimum {min_len}",
+            )
+        )
 
         # Contains clinical keywords
-        clinical_terms = ["patient", "history", "diagnosis", "treatment",
-                          "medication", "vital", "complaint", "assessment",
-                          "presenting", "symptoms", "exam"]
+        clinical_terms = [
+            "patient",
+            "history",
+            "diagnosis",
+            "treatment",
+            "medication",
+            "vital",
+            "complaint",
+            "assessment",
+            "presenting",
+            "symptoms",
+            "exam",
+        ]
         found = [t for t in clinical_terms if t.lower() in note.lower()]
-        report.checks.append(QualityCheck(
-            name="clinical_terminology",
-            category="accuracy",
-            passed=len(found) >= 2,
-            severity="warning",
-            details=f"Found {len(found)} clinical terms: {found[:5]}",
-        ))
+        report.checks.append(
+            QualityCheck(
+                name="clinical_terminology",
+                category="accuracy",
+                passed=len(found) >= 2,
+                severity="warning",
+                details=f"Found {len(found)} clinical terms: {found[:5]}",
+            )
+        )
 
         # No obvious PHI patterns in wrong context (SSN, phone in note body)
         import re
+
         ssn_pattern = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
         has_ssn = bool(ssn_pattern.search(note))
-        report.checks.append(QualityCheck(
-            name="no_embedded_ssn",
-            category="consistency",
-            passed=not has_ssn,
-            severity="critical",
-            details="SSN pattern detected in note" if has_ssn else "No SSN patterns found",
-        ))
+        report.checks.append(
+            QualityCheck(
+                name="no_embedded_ssn",
+                category="consistency",
+                passed=not has_ssn,
+                severity="critical",
+                details="SSN pattern detected in note"
+                if has_ssn
+                else "No SSN patterns found",
+            )
+        )
 
         report.compute_score()
         self._history.append(report)
@@ -211,64 +246,76 @@ class DataQualityFramework:
         report = QualityReport(stage=stage_name)
 
         # Non-empty output
-        report.checks.append(QualityCheck(
-            name="output_not_empty",
-            category="completeness",
-            passed=len(output) > 0,
-            severity="critical",
-            details=f"Output has {len(output)} fields",
-        ))
+        report.checks.append(
+            QualityCheck(
+                name="output_not_empty",
+                category="completeness",
+                passed=len(output) > 0,
+                severity="critical",
+                details=f"Output has {len(output)} fields",
+            )
+        )
 
         # No null values in output
         nulls = [k for k, v in output.items() if v is None]
-        report.checks.append(QualityCheck(
-            name="no_null_values",
-            category="completeness",
-            passed=len(nulls) == 0,
-            severity="warning",
-            details=f"Null fields: {nulls}" if nulls else "No null fields",
-        ))
+        report.checks.append(
+            QualityCheck(
+                name="no_null_values",
+                category="completeness",
+                passed=len(nulls) == 0,
+                severity="warning",
+                details=f"Null fields: {nulls}" if nulls else "No null fields",
+            )
+        )
 
         # Stage-specific checks
         if stage_name == "ner":
             entity_count = output.get("entity_count", 0)
-            report.checks.append(QualityCheck(
-                name="ner_entities_found",
-                category="accuracy",
-                passed=entity_count > 0,
-                severity="warning",
-                details=f"NER extracted {entity_count} entities",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name="ner_entities_found",
+                    category="accuracy",
+                    passed=entity_count > 0,
+                    severity="warning",
+                    details=f"NER extracted {entity_count} entities",
+                )
+            )
 
         elif stage_name == "risk_prediction":
             score = output.get("risk_score", -1)
-            report.checks.append(QualityCheck(
-                name="risk_score_range",
-                category="accuracy",
-                passed=0 <= score <= 1,
-                severity="critical",
-                details=f"Risk score {score} {'valid' if 0 <= score <= 1 else 'OUT OF RANGE'} [0, 1]",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name="risk_score_range",
+                    category="accuracy",
+                    passed=0 <= score <= 1,
+                    severity="critical",
+                    details=f"Risk score {score} {'valid' if 0 <= score <= 1 else 'OUT OF RANGE'} [0, 1]",
+                )
+            )
 
         elif stage_name == "evaluation":
             overall = output.get("overall_score", 0)
-            report.checks.append(QualityCheck(
-                name="eval_score_range",
-                category="accuracy",
-                passed=0 <= overall <= 1,
-                severity="critical",
-                details=f"Evaluation score {overall}",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name="eval_score_range",
+                    category="accuracy",
+                    passed=0 <= overall <= 1,
+                    severity="critical",
+                    details=f"Evaluation score {overall}",
+                )
+            )
 
         elif stage_name == "fhir_export":
             count = output.get("resource_count", 0)
-            report.checks.append(QualityCheck(
-                name="fhir_resources_generated",
-                category="completeness",
-                passed=count > 0,
-                severity="critical",
-                details=f"Generated {count} FHIR resources",
-            ))
+            report.checks.append(
+                QualityCheck(
+                    name="fhir_resources_generated",
+                    category="completeness",
+                    passed=count > 0,
+                    severity="critical",
+                    details=f"Generated {count} FHIR resources",
+                )
+            )
 
         report.compute_score()
         self._history.append(report)
