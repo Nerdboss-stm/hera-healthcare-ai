@@ -58,9 +58,11 @@ class TestEventStreaming:
         stream = EventStream()
         # Missing required field should go to DLQ
         result = stream.produce(
-            "vitals", "P-001",
+            "vitals",
+            "P-001",
             {"heart_rate": 88.0},  # missing patient_id for v3
-            schema_name="patient_vitals", schema_version="3.0",
+            schema_name="patient_vitals",
+            schema_version="3.0",
         )
         assert result is None  # rejected
         dlq = stream.get_dead_letter_queue()
@@ -70,18 +72,20 @@ class TestEventStreaming:
         from data_engineering.streaming import EventStream
 
         stream = EventStream()
-        result = stream.ingest_patient_event({
-            "patient_id": "P-001",
-            "heart_rate": 88.0,
-            "respiratory_rate": 18.0,
-            "body_temperature": 37.0,
-            "oxygen_saturation": 96.0,
-            "systolic_bp": 142.0,
-            "diastolic_bp": 88.0,
-            "age": 65,
-            "chief_complaint": "chest pain",
-            "clinical_note": "65-year-old male with chest pain.",
-        })
+        result = stream.ingest_patient_event(
+            {
+                "patient_id": "P-001",
+                "heart_rate": 88.0,
+                "respiratory_rate": 18.0,
+                "body_temperature": 37.0,
+                "oxygen_saturation": 96.0,
+                "systolic_bp": 142.0,
+                "diastolic_bp": 88.0,
+                "age": 65,
+                "chief_complaint": "chest pain",
+                "clinical_note": "65-year-old male with chest pain.",
+            }
+        )
         assert result["patient_id"] == "P-001"
         assert len(result["events"]) >= 1
         assert result["metrics"]["events_produced"] >= 1
@@ -146,11 +150,17 @@ class TestDataQuality:
         from data_engineering.quality import DataQualityFramework
 
         dq = DataQualityFramework()
-        report = dq.validate_vitals({
-            "heart_rate": 88, "respiratory_rate": 18,
-            "body_temperature": 37.0, "oxygen_saturation": 96,
-            "systolic_bp": 120, "diastolic_bp": 80, "age": 65,
-        })
+        report = dq.validate_vitals(
+            {
+                "heart_rate": 88,
+                "respiratory_rate": 18,
+                "body_temperature": 37.0,
+                "oxygen_saturation": 96,
+                "systolic_bp": 120,
+                "diastolic_bp": 80,
+                "age": 65,
+            }
+        )
         assert report.score > 0.9
         assert all(c.passed for c in report.checks)
 
@@ -158,10 +168,13 @@ class TestDataQuality:
         from data_engineering.quality import DataQualityFramework
 
         dq = DataQualityFramework()
-        report = dq.validate_vitals({
-            "heart_rate": 300,  # out of range
-            "systolic_bp": 50, "diastolic_bp": 200,  # inverted
-        })
+        report = dq.validate_vitals(
+            {
+                "heart_rate": 300,  # out of range
+                "systolic_bp": 50,
+                "diastolic_bp": 200,  # inverted
+            }
+        )
         assert report.score < 0.8
         failed = [c for c in report.checks if not c.passed]
         assert len(failed) > 0
@@ -190,9 +203,16 @@ class TestDataQuality:
         from data_engineering.quality import DataQualityFramework
 
         dq = DataQualityFramework()
-        dq.validate_vitals({"heart_rate": 88, "respiratory_rate": 18,
-                            "body_temperature": 37.0, "oxygen_saturation": 96,
-                            "systolic_bp": 120, "diastolic_bp": 80})
+        dq.validate_vitals(
+            {
+                "heart_rate": 88,
+                "respiratory_rate": 18,
+                "body_temperature": 37.0,
+                "oxygen_saturation": 96,
+                "systolic_bp": 120,
+                "diastolic_bp": 80,
+            }
+        )
         summary = dq.get_pipeline_quality_summary()
         assert "overall_avg" in summary
         assert summary["total_checks_run"] > 0
@@ -214,30 +234,47 @@ class TestWarehouse:
         from data_engineering.warehouse import ClinicalWarehouse
 
         wh = ClinicalWarehouse()
-        enc_id = wh.load_encounter({
-            "patient_id": "P-001",
-            "age": 65,
-            "gender": "male",
-            "vitals": {"heart_rate": 88, "systolic_bp": 140, "diastolic_bp": 90},
-            "stages": [
-                {"system": "ner", "result": {"entity_count": 5}},
-                {"system": "risk_predictor", "result": {"risk_score": 0.75, "prediction": "High Risk", "confidence": 0.85}},
-                {"system": "agents", "result": {"triage": {"esi_level": 2}, "diagnosis": {"primary_diagnosis": "STEMI"}}},
-            ],
-            "overall_latency_ms": 5000,
-        })
+        enc_id = wh.load_encounter(
+            {
+                "patient_id": "P-001",
+                "age": 65,
+                "gender": "male",
+                "vitals": {"heart_rate": 88, "systolic_bp": 140, "diastolic_bp": 90},
+                "stages": [
+                    {"system": "ner", "result": {"entity_count": 5}},
+                    {
+                        "system": "risk_predictor",
+                        "result": {
+                            "risk_score": 0.75,
+                            "prediction": "High Risk",
+                            "confidence": 0.85,
+                        },
+                    },
+                    {
+                        "system": "agents",
+                        "result": {
+                            "triage": {"esi_level": 2},
+                            "diagnosis": {"primary_diagnosis": "STEMI"},
+                        },
+                    },
+                ],
+                "overall_latency_ms": 5000,
+            }
+        )
         assert enc_id > 0
 
     def test_query_encounters(self):
         from data_engineering.warehouse import ClinicalWarehouse
 
         wh = ClinicalWarehouse()
-        wh.load_encounter({
-            "patient_id": "P-002",
-            "age": 45,
-            "vitals": {"heart_rate": 72, "systolic_bp": 118, "diastolic_bp": 76},
-            "stages": [],
-        })
+        wh.load_encounter(
+            {
+                "patient_id": "P-002",
+                "age": 45,
+                "vitals": {"heart_rate": 72, "systolic_bp": 118, "diastolic_bp": 76},
+                "stages": [],
+            }
+        )
         encounters = wh.query_encounters()
         assert len(encounters) >= 1
 
@@ -295,7 +332,9 @@ class TestOrchestrator:
             callable_fn=lambda ctx: (_ for _ in ()).throw(ValueError("boom")),
         )
         dag.add_task(
-            TaskDefinition(task_id="dep_step", callable_name="test", depends_on=["fail_step"]),
+            TaskDefinition(
+                task_id="dep_step", callable_name="test", depends_on=["fail_step"]
+            ),
             callable_fn=lambda ctx: "ok",
         )
         run = dag.execute()
@@ -310,8 +349,12 @@ class TestCDC:
         from data_engineering.cdc import CDCStream, ChangeType
 
         cdc = CDCStream()
-        evt = cdc.capture_change("patients", "P-001", ChangeType.INSERT,
-                                 new_state={"name": "John", "age": 65})
+        evt = cdc.capture_change(
+            "patients",
+            "P-001",
+            ChangeType.INSERT,
+            new_state={"name": "John", "age": 65},
+        )
         assert evt.change_type == "INSERT"
         assert evt.before is None
         assert evt.after["name"] == "John"
@@ -320,10 +363,18 @@ class TestCDC:
         from data_engineering.cdc import CDCStream, ChangeType
 
         cdc = CDCStream()
-        cdc.capture_change("patients", "P-001", ChangeType.INSERT,
-                           new_state={"name": "John", "age": 65})
-        evt = cdc.capture_change("patients", "P-001", ChangeType.UPDATE,
-                                 new_state={"name": "John", "age": 66})
+        cdc.capture_change(
+            "patients",
+            "P-001",
+            ChangeType.INSERT,
+            new_state={"name": "John", "age": 65},
+        )
+        evt = cdc.capture_change(
+            "patients",
+            "P-001",
+            ChangeType.UPDATE,
+            new_state={"name": "John", "age": 66},
+        )
         assert evt.before["age"] == 65
         assert evt.after["age"] == 66
         assert "age" in evt.diff
@@ -359,14 +410,16 @@ class TestCDC:
         from data_engineering.cdc import CDCStream
 
         cdc = CDCStream()
-        events = cdc.capture_encounter({
-            "patient_id": "P-001",
-            "age": 65,
-            "heart_rate": 88,
-            "systolic_bp": 140,
-            "diastolic_bp": 90,
-            "stages": [{"system": "ner", "status": "completed", "latency_ms": 50}],
-        })
+        events = cdc.capture_encounter(
+            {
+                "patient_id": "P-001",
+                "age": 65,
+                "heart_rate": 88,
+                "systolic_bp": 140,
+                "diastolic_bp": 90,
+                "stages": [{"system": "ner", "status": "completed", "latency_ms": 50}],
+            }
+        )
         assert len(events) >= 2  # patient + vitals + stages
         stats = cdc.get_stats()
         assert stats["total_events"] > 0

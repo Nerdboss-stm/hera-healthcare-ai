@@ -527,18 +527,20 @@ class UnifiedPipeline:
             from data_engineering.catalog import data_catalog
 
             # 1. Stream ingestion with schema validation
-            stream_result = event_stream.ingest_patient_event({
-                "patient_id": patient_id,
-                "heart_rate": vitals.get("heart_rate", 0),
-                "respiratory_rate": vitals.get("respiratory_rate", 0),
-                "body_temperature": vitals.get("body_temperature", 0),
-                "oxygen_saturation": vitals.get("oxygen_saturation", 0),
-                "systolic_bp": vitals.get("systolic_bp", 0),
-                "diastolic_bp": vitals.get("diastolic_bp", 0),
-                "age": age,
-                "chief_complaint": chief_complaint,
-                "clinical_note": clinical_note,
-            })
+            stream_result = event_stream.ingest_patient_event(
+                {
+                    "patient_id": patient_id,
+                    "heart_rate": vitals.get("heart_rate", 0),
+                    "respiratory_rate": vitals.get("respiratory_rate", 0),
+                    "body_temperature": vitals.get("body_temperature", 0),
+                    "oxygen_saturation": vitals.get("oxygen_saturation", 0),
+                    "systolic_bp": vitals.get("systolic_bp", 0),
+                    "diastolic_bp": vitals.get("diastolic_bp", 0),
+                    "age": age,
+                    "chief_complaint": chief_complaint,
+                    "clinical_note": clinical_note,
+                }
+            )
 
             # 2. Data quality validation
             dq = DataQualityFramework()
@@ -598,12 +600,16 @@ class UnifiedPipeline:
             (de_stage.completed_at - de_stage.started_at) * 1000, 1
         )
         stages.append(de_stage)
-        lineage.append({
-            "stage": "data_engineering",
-            "input": "all_pipeline_outputs",
-            "output": "warehouse+cdc+catalog",
-            "records": de_stage.result.get("cdc_events", 0) if de_stage.result else 0,
-        })
+        lineage.append(
+            {
+                "stage": "data_engineering",
+                "input": "all_pipeline_outputs",
+                "output": "warehouse+cdc+catalog",
+                "records": de_stage.result.get("cdc_events", 0)
+                if de_stage.result
+                else 0,
+            }
+        )
 
         # ── Final result ──
         consensus = reasoning_result.consensus_score if reasoning_result else 0.0
