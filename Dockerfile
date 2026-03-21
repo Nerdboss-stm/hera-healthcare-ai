@@ -9,6 +9,12 @@ RUN python -m pip install --no-cache-dir -r requirements.txt \
 
 COPY config/ ./config/
 COPY serving/ ./serving/
+COPY agents/ ./agents/
+COPY rag/ ./rag/
+COPY ner/ ./ner/
+COPY evaluation/ ./evaluation/
+COPY fhir_layer/ ./fhir_layer/
+COPY data_engineering/ ./data_engineering/
 COPY risk_prediction/ ./risk_prediction/
 COPY clinical_summarizer/ ./clinical_summarizer/
 COPY data/processed/ ./data/processed/

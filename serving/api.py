@@ -24,6 +24,17 @@ from serving.schemas import (
     FHIRPredictResponse,
     EvaluationRequest,
     EvaluationResponse,
+    CommandCenterRequest,
+    CommandCenterResponse,
+    UsageResponse,
+    DEStreamingResponse,
+    DELineageResponse,
+    DEQualityResponse,
+    DEWarehouseResponse,
+    DEOrchestratorResponse,
+    DECDCResponse,
+    DECatalogResponse,
+    DEDashboardResponse,
 )
 from serving.summarizer import generate_summary
 from serving.risk_predictor import predict_risk
@@ -37,15 +48,20 @@ from serving.metrics import (
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 
+from serving.middleware import AuthMiddleware, AuditMiddleware, usage_tracker  # noqa: E402
+
 app = FastAPI(
     title="HERA — Healthcare Risk Analytics",
     description=(
-        "AI-powered clinical platform with multi-agent reasoning, "
+        "Production-grade multi-agent clinical AI platform with unified pipeline, "
         "RAG knowledge retrieval, NER entity extraction, FHIR R4 interoperability, "
-        "and LLM-as-Judge evaluation."
+        "LLM-as-Judge evaluation, API key auth, rate limiting, and usage metering."
     ),
-    version="2.0.0",
+    version="4.0.0",
 )
+
+app.add_middleware(AuditMiddleware)
+app.add_middleware(AuthMiddleware)
 
 # Serve the frontend
 app.mount("/static", StaticFiles(directory=os.path.join(_dir, "static")), name="static")
@@ -80,6 +96,7 @@ def health_check():
     return HealthResponse(
         status="healthy",
         services={
+            "command_center": "available",
             "summarizer": summarizer_status,
             "risk_predictor": risk_status,
             "clinical_reasoning": "available",
@@ -87,8 +104,17 @@ def health_check():
             "ner_extraction": "available",
             "fhir_converter": "available",
             "clinical_evaluator": "available",
+            "auth_middleware": "available",
+            "usage_metering": "available",
+            "event_streaming": "available",
+            "data_lineage": "available",
+            "data_quality": "available",
+            "analytics_warehouse": "available",
+            "etl_orchestrator": "available",
+            "cdc_stream": "available",
+            "data_catalog": "available",
         },
-        version="2.0.0",
+        version="4.0.0",
     )
 
 
@@ -419,3 +445,222 @@ def evaluate_output(request: EvaluationRequest):
         REQUEST_FAILURES.inc()
         REQUEST_LATENCY.observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Unified Command Center ─────────────────────────────────────
+
+
+@app.post("/api/command-center", response_model=CommandCenterResponse)
+def command_center(request: CommandCenterRequest):
+    """Run the unified pipeline — all 7 subsystems on one patient.
+
+    NER → Knowledge Graph → Multi-Agent Reasoning → Risk Prediction →
+    RAG Retrieval → Summarization → Safety Evaluation → FHIR Export.
+    Includes feedback loops: if safety evaluation fails, the summarizer
+    re-runs with RAG context for better accuracy.
+    """
+    REQUEST_COUNT.inc()
+    start = time.time()
+    try:
+        from serving.command_center import UnifiedPipeline
+
+        pipeline = UnifiedPipeline(
+            risk_predictor=predict_risk,
+            summarizer_fn=generate_summary,
+        )
+        result = pipeline.execute(
+            patient_id=request.patient_id,
+            clinical_note=request.clinical_note,
+            chief_complaint=request.chief_complaint,
+            vitals={
+                "heart_rate": request.heart_rate,
+                "respiratory_rate": request.respiratory_rate,
+                "body_temperature": request.body_temperature,
+                "oxygen_saturation": request.oxygen_saturation,
+                "systolic_bp": request.systolic_bp,
+                "diastolic_bp": request.diastolic_bp,
+            },
+            age=request.age,
+            gender=request.gender,
+            medical_history=request.medical_history,
+            current_medications=request.current_medications,
+            allergies=request.allergies,
+        )
+        REQUEST_LATENCY.observe(time.time() - start)
+        return CommandCenterResponse(
+            **result.to_dict(),
+            timestamp=datetime.now(),
+        )
+    except Exception as e:
+        REQUEST_FAILURES.inc()
+        REQUEST_LATENCY.observe(time.time() - start)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Usage & Admin ──────────────────────────────────────────────
+
+
+@app.get("/api/usage", response_model=UsageResponse)
+def get_usage():
+    """Get API usage metrics per tenant. Production: dashboard for billing."""
+    return UsageResponse(
+        tenants=usage_tracker.get_all_usage(),
+        timestamp=datetime.now(),
+    )
+
+
+# ── Data Engineering Endpoints ────────────────────────────────
+
+
+@app.post("/api/de/stream", response_model=DEStreamingResponse)
+def de_stream_ingest(request: CommandCenterRequest):
+    """Ingest patient data through event streaming pipeline with schema validation."""
+    REQUEST_COUNT.inc()
+    start = time.time()
+    try:
+        from data_engineering.streaming import event_stream
+
+        result = event_stream.ingest_patient_event({
+            "patient_id": request.patient_id,
+            "heart_rate": request.heart_rate,
+            "respiratory_rate": request.respiratory_rate,
+            "body_temperature": request.body_temperature,
+            "oxygen_saturation": request.oxygen_saturation,
+            "systolic_bp": request.systolic_bp,
+            "diastolic_bp": request.diastolic_bp,
+            "age": request.age,
+            "chief_complaint": request.chief_complaint,
+            "clinical_note": request.clinical_note,
+        })
+        evolution = event_stream.registry.get_evolution("patient_vitals")
+        REQUEST_LATENCY.observe(time.time() - start)
+        return DEStreamingResponse(
+            patient_id=request.patient_id,
+            events=result.get("events", []),
+            dlq=result.get("dlq", []),
+            metrics=result.get("metrics", {}),
+            topic_stats=result.get("topic_stats", {}),
+            schema_evolution=evolution,
+        )
+    except Exception as e:
+        REQUEST_FAILURES.inc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/de/lineage", response_model=DELineageResponse)
+def de_lineage():
+    """Get column-level data lineage DAG for the full pipeline."""
+    from data_engineering.lineage import DataLineageTracker
+
+    tracker = DataLineageTracker()
+    tracker.build_pipeline_lineage()
+    dag = tracker.to_dag()
+    impact = tracker.impact_analysis("raw_input", "heart_rate")
+    pii = tracker.get_pii_columns()
+    return DELineageResponse(dag=dag, impact_analysis=impact, pii_columns=pii)
+
+
+@app.post("/api/de/quality", response_model=DEQualityResponse)
+def de_quality(request: CommandCenterRequest):
+    """Run data quality validation on patient data."""
+    REQUEST_COUNT.inc()
+    start = time.time()
+    try:
+        from data_engineering.quality import DataQualityFramework
+
+        dq = DataQualityFramework()
+        vitals_report = dq.validate_vitals({
+            "heart_rate": request.heart_rate,
+            "respiratory_rate": request.respiratory_rate,
+            "body_temperature": request.body_temperature,
+            "oxygen_saturation": request.oxygen_saturation,
+            "systolic_bp": request.systolic_bp,
+            "diastolic_bp": request.diastolic_bp,
+            "age": request.age,
+        })
+        note_report = dq.validate_clinical_note(request.clinical_note)
+        summary = dq.get_pipeline_quality_summary()
+        REQUEST_LATENCY.observe(time.time() - start)
+        return DEQualityResponse(
+            vitals_quality=vitals_report.to_dict(),
+            note_quality=note_report.to_dict(),
+            pipeline_summary=summary,
+        )
+    except Exception as e:
+        REQUEST_FAILURES.inc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/de/warehouse", response_model=DEWarehouseResponse)
+def de_warehouse_stats():
+    """Get analytics warehouse stats and recent encounters."""
+    from data_engineering.warehouse import ClinicalWarehouse
+
+    wh = ClinicalWarehouse()
+    return DEWarehouseResponse(
+        encounter_id=0,
+        warehouse_stats=wh.get_warehouse_stats(),
+        risk_distribution=wh.query_risk_distribution(),
+        recent_encounters=wh.query_encounters(limit=10),
+    )
+
+
+@app.get("/api/de/orchestrator", response_model=DEOrchestratorResponse)
+def de_orchestrator():
+    """Get ETL pipeline DAG definition and run history."""
+    from data_engineering.orchestrator import build_hera_dag
+
+    dag = build_hera_dag()
+    return DEOrchestratorResponse(
+        dag_definition=dag.get_dag_definition(),
+        run_history=dag.get_run_history(),
+    )
+
+
+@app.get("/api/de/cdc", response_model=DECDCResponse)
+def de_cdc_stream():
+    """Get CDC event log and statistics."""
+    from data_engineering.cdc import cdc_stream
+
+    events = cdc_stream.replay()
+    stats = cdc_stream.get_stats()
+    return DECDCResponse(events=events, stats=stats)
+
+
+@app.get("/api/de/catalog", response_model=DECatalogResponse)
+def de_catalog():
+    """Browse the data catalog with PII and freshness reports."""
+    from data_engineering.catalog import data_catalog
+
+    return DECatalogResponse(
+        catalog=data_catalog.to_dict(),
+        pii_report=data_catalog.get_pii_report(),
+        freshness_report=data_catalog.get_freshness_report(),
+    )
+
+
+@app.get("/api/de/dashboard", response_model=DEDashboardResponse)
+def de_dashboard():
+    """Unified data engineering dashboard — all 7 systems at a glance."""
+    from data_engineering.streaming import event_stream
+    from data_engineering.lineage import DataLineageTracker
+    from data_engineering.quality import DataQualityFramework
+    from data_engineering.warehouse import ClinicalWarehouse
+    from data_engineering.orchestrator import build_hera_dag
+    from data_engineering.cdc import cdc_stream
+    from data_engineering.catalog import data_catalog
+
+    tracker = DataLineageTracker()
+    tracker.build_pipeline_lineage()
+
+    return DEDashboardResponse(
+        streaming=event_stream.get_metrics(),
+        quality=DataQualityFramework().get_pipeline_quality_summary(),
+        lineage={"total_nodes": len(tracker._nodes), "total_edges": len(tracker._edges),
+                 "pii_columns": len(tracker.get_pii_columns())},
+        warehouse=ClinicalWarehouse().get_warehouse_stats(),
+        orchestrator=build_hera_dag().get_dag_definition(),
+        cdc=cdc_stream.get_stats(),
+        catalog=data_catalog.to_dict(),
+        timestamp=datetime.now(),
+    )

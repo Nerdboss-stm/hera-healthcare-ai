@@ -3,717 +3,604 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HERA — Multi-Agent Clinical AI Platform</title>
+    <title>HERA v4 — Clinical AI + Data Engineering Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #0f6fec;
-            --primary-dark: #0a4fb0;
-            --primary-light: #dbeafe;
-            --danger: #ef4444;
-            --danger-bg: #fef2f2;
-            --success: #10b981;
-            --success-bg: #ecfdf5;
-            --warning: #f59e0b;
-            --warning-bg: #fffbeb;
-            --purple: #8b5cf6;
-            --purple-bg: #f5f3ff;
-            --teal: #14b8a6;
-            --teal-bg: #f0fdfa;
-            --orange: #f97316;
-            --rose: #f43f5e;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --border: #e2e8f0;
-            --text: #0f172a;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            --code-bg: #0f172a;
-            --shadow: 0 1px 3px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
-            --radius: 12px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        :root{--p:#0f6fec;--p-d:#0a4fb0;--p-l:#dbeafe;--r:#ef4444;--r-bg:#fef2f2;--g:#10b981;--g-bg:#ecfdf5;--w:#f59e0b;--w-bg:#fffbeb;--pu:#8b5cf6;--pu-bg:#f5f3ff;--tl:#14b8a6;--tl-bg:#f0fdfa;--bg:#f8fafc;--c:#fff;--bd:#e2e8f0;--t:#0f172a;--t2:#64748b;--t3:#94a3b8;--dk:#0f172a;--sh:0 1px 3px rgba(0,0,0,.08);--sh2:0 10px 25px -5px rgba(0,0,0,.1);--rad:12px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--t);line-height:1.6}
 
-        /* ── Navigation ── */
-        .topbar {
-            background: var(--card); border-bottom: 1px solid var(--border);
-            padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); background: rgba(255,255,255,0.95);
-        }
-        .topbar-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
-        .topbar-brand svg { width: 28px; height: 28px; }
-        .topbar-brand span { font-weight: 400; font-size: 12px; color: var(--text-secondary); }
-        .topbar-right { display: flex; align-items: center; gap: 14px; }
-        .status-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); background: var(--success-bg); padding: 4px 12px; border-radius: 20px; }
-        .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse-dot 2s infinite; }
-        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .nav-link { font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 500; }
-        .nav-link:hover { text-decoration: underline; }
+        /* Top bar */
+        .top{background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px}
+        .brand svg{width:26px;height:26px}
+        .brand span{font-weight:400;font-size:11px;color:var(--t2)}
+        .top-r{display:flex;align-items:center;gap:12px}
+        .pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);background:var(--g-bg);padding:3px 10px;border-radius:16px}
+        .pill .d{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pd 2s infinite}
+        @keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
+        .lnk{font-size:12px;color:var(--p);text-decoration:none;font-weight:500}
+        .lnk:hover{text-decoration:underline}
 
-        /* ── Tabs ── */
-        .tabs { display: flex; gap: 0; background: var(--card); border-bottom: 1px solid var(--border); padding: 0 32px; overflow-x: auto; }
-        .tab {
-            padding: 12px 18px; font-size: 13px; font-weight: 500; color: var(--text-secondary);
-            cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; user-select: none;
-        }
-        .tab:hover { color: var(--text); }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 4px; vertical-align: middle; }
+        /* Tabs */
+        .tabs{display:flex;gap:0;background:var(--c);border-bottom:1px solid var(--bd);padding:0 24px;overflow-x:auto}
+        .tab{padding:11px 16px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;user-select:none}
+        .tab:hover{color:var(--t)}
+        .tab.on{color:var(--p);border-bottom-color:var(--p)}
+        .tab .bg{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;margin-left:3px;vertical-align:middle}
 
-        /* ── Layout ── */
-        .main { max-width: 1200px; margin: 0 auto; padding: 32px; }
-        .panel { display: none; }
-        .panel.active { display: block; }
+        /* Layout */
+        .main{max-width:1200px;margin:0 auto;padding:24px}
+        .pn{display:none}.pn.on{display:block}
 
-        /* ── Hero ── */
-        .hero {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
-            border-radius: 16px; padding: 48px; color: white; margin-bottom: 32px;
-            position: relative; overflow: hidden;
-        }
-        .hero::before {
-            content: ''; position: absolute; top: -50%; right: -20%; width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(15,111,236,0.15) 0%, transparent 70%); border-radius: 50%;
-        }
-        .hero-eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #60a5fa; margin-bottom: 12px; }
-        .hero h1 { font-size: 36px; font-weight: 900; line-height: 1.2; margin-bottom: 16px; }
-        .hero h1 .highlight { background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p { font-size: 16px; color: #94a3b8; max-width: 700px; line-height: 1.7; margin-bottom: 24px; }
-        .hero-stats { display: flex; gap: 32px; flex-wrap: wrap; }
-        .hero-stat { text-align: left; }
-        .hero-stat .num { font-size: 28px; font-weight: 800; color: white; }
-        .hero-stat .label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+        /* Hero */
+        .hero{background:linear-gradient(135deg,#0f172a,#1e3a5f 50%,#0f172a);border-radius:14px;padding:40px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:radial-gradient(circle,rgba(15,111,236,.15),transparent 70%);border-radius:50%}
+        .hero-ey{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#60a5fa;margin-bottom:10px}
+        .hero h1{font-size:30px;font-weight:900;line-height:1.2;margin-bottom:12px}
+        .hero h1 .hl{background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero p{font-size:14px;color:#94a3b8;max-width:650px;line-height:1.7;margin-bottom:20px}
+        .hero-stats{display:flex;gap:28px;flex-wrap:wrap}
+        .hs .n{font-size:24px;font-weight:800;color:#fff}
+        .hs .l{font-size:11px;color:#94a3b8;margin-top:1px}
 
-        /* ── What This Proves ── */
-        .skills-section { margin-bottom: 32px; }
-        .skills-section h3 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 16px; }
-        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-        .skill-card {
-            background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-            padding: 16px; display: flex; gap: 12px; align-items: flex-start;
-            transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
-        }
-        .skill-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-        .skill-icon {
-            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
-            justify-content: center; font-size: 18px; flex-shrink: 0;
-        }
-        .skill-card .skill-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-        .skill-card .skill-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
-        .skill-card .skill-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
-        .skill-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; background: var(--bg); color: var(--text-muted); }
+        /* Skills grid */
+        .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:24px}
+        .sc{background:var(--c);border:1px solid var(--bd);border-radius:10px;padding:14px;display:flex;gap:10px;cursor:pointer;transition:all .2s}
+        .sc:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+        .si{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+        .sc .st{font-size:12px;font-weight:600;margin-bottom:2px}
+        .sc .sd{font-size:11px;color:var(--t2);line-height:1.5}
+        .stg{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+        .stg span{font-size:9px;padding:2px 6px;border-radius:3px;background:var(--bg);color:var(--t3);font-weight:600}
 
-        /* ── Architecture Flow ── */
-        .arch-section { margin-bottom: 32px; }
-        .arch-box {
-            background: var(--code-bg); border-radius: 16px; padding: 40px; overflow-x: auto;
-        }
-        .arch-title { color: white; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-        .arch-subtitle { color: #64748b; font-size: 13px; margin-bottom: 28px; }
-        .arch-pipeline { display: flex; align-items: stretch; gap: 0; justify-content: center; flex-wrap: wrap; }
-        .arch-node {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 12px; padding: 20px 24px; min-width: 180px; text-align: center;
-            position: relative; transition: all 0.3s;
-        }
-        .arch-node:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); transform: translateY(-2px); }
-        .arch-node .node-num { font-size: 10px; font-weight: 700; color: #60a5fa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-        .arch-node .node-title { font-size: 15px; font-weight: 700; color: white; margin-bottom: 6px; }
-        .arch-node .node-desc { font-size: 11px; color: #94a3b8; line-height: 1.5; }
-        .arch-node .node-tech { margin-top: 8px; font-size: 10px; color: #60a5fa; font-weight: 500; }
-        .arch-arrow {
-            display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.2);
-            font-size: 20px; padding: 0 12px; min-width: 40px;
-        }
-        .arch-support {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 12px; margin-top: 24px;
-        }
-        .arch-support-node {
-            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px; padding: 14px; text-align: center;
-        }
-        .arch-support-node .node-title { font-size: 13px; font-weight: 600; color: #94a3b8; }
-        .arch-support-node .node-desc { font-size: 11px; color: #64748b; margin-top: 2px; }
-        .arch-support-node .node-tech { font-size: 10px; color: #60a5fa; margin-top: 6px; }
+        /* Architecture */
+        .arch{background:var(--dk);border-radius:14px;padding:32px;margin-bottom:24px;overflow-x:auto}
+        .arch-t{color:#fff;font-size:15px;font-weight:700;margin-bottom:4px}
+        .arch-s{color:#64748b;font-size:12px;margin-bottom:20px}
+        .arch-pipe{display:flex;align-items:stretch;gap:0;justify-content:center;flex-wrap:wrap}
+        .an{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:16px 18px;min-width:130px;text-align:center;transition:all .3s}
+        .an:hover{background:rgba(255,255,255,.1);transform:translateY(-2px)}
+        .an .nn{font-size:9px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+        .an .nt{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+        .an .nd{font-size:10px;color:#94a3b8;line-height:1.4}
+        .an .nc{margin-top:6px;font-size:9px;color:#60a5fa;font-weight:500}
+        .aa{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:18px;padding:0 8px;min-width:30px}
+        .arch-sup{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:18px}
+        .asn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center}
+        .asn .nt{font-size:12px;font-weight:600;color:#94a3b8}
+        .asn .nd{font-size:10px;color:#64748b;margin-top:2px}
+        .asn .nc{font-size:9px;color:#60a5fa;margin-top:4px}
 
-        /* ── Demo Cards ── */
-        .demo-section { margin-bottom: 32px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); }
-        .card + .card { margin-top: 16px; }
-        .card-header { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-        .card-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+        /* Cards */
+        .card{background:var(--c);border:1px solid var(--bd);border-radius:var(--rad);padding:22px;box-shadow:var(--sh)}
+        .card+.card{margin-top:12px}
+        .ch{font-size:16px;font-weight:700;margin-bottom:3px}
+        .cs{font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.6}
 
-        /* What's Happening callout */
-        .explainer {
-            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 16px 20px;
-            margin-bottom: 20px; display: flex; gap: 12px; align-items: flex-start;
-        }
-        .explainer-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-        .explainer h4 { font-size: 13px; font-weight: 700; color: #1e40af; margin-bottom: 4px; }
-        .explainer p { font-size: 12px; color: #3b82f6; line-height: 1.6; }
-        .explainer.green { background: #ecfdf5; border-color: #a7f3d0; }
-        .explainer.green h4 { color: #065f46; }
-        .explainer.green p { color: #059669; }
-        .explainer.purple { background: #f5f3ff; border-color: #ddd6fe; }
-        .explainer.purple h4 { color: #5b21b6; }
-        .explainer.purple p { color: #7c3aed; }
-        .explainer.amber { background: #fffbeb; border-color: #fde68a; }
-        .explainer.amber h4 { color: #92400e; }
-        .explainer.amber p { color: #d97706; }
-        .explainer.rose { background: #fff1f2; border-color: #fecdd3; }
-        .explainer.rose h4 { color: #9f1239; }
-        .explainer.rose p { color: #e11d48; }
+        /* Explainer */
+        .ex{border-radius:8px;padding:14px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;font-size:11px;line-height:1.6}
+        .ex.blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+        .ex.green{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+        .ex.purple{background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6}
+        .ex.amber{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+        .ex.rose{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}
+        .ex h4{font-size:12px;font-weight:700;margin-bottom:3px}
+        .ei{font-size:18px;flex-shrink:0;margin-top:1px}
 
-        /* ── Forms ── */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
-        .form-group input, .form-group textarea, .form-group select {
-            padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
-            font-size: 13px; font-family: inherit; outline: none; background: var(--bg); transition: border-color 0.2s;
-        }
-        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,111,236,0.08); }
-        .form-group textarea { resize: vertical; min-height: 120px; }
-        .form-group.full { grid-column: 1 / -1; }
-        .hint { font-size: 10px; color: var(--text-muted); }
+        /* Forms */
+        .fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+        .fi{display:flex;flex-direction:column;gap:3px}
+        .fi label{font-size:11px;font-weight:500;color:var(--t2)}
+        .fi input,.fi textarea,.fi select{padding:8px 10px;border:1px solid var(--bd);border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:var(--bg);transition:border-color .2s}
+        .fi input:focus,.fi textarea:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(15,111,236,.08)}
+        .fi textarea{resize:vertical;min-height:100px}
+        .fi.full{grid-column:1/-1}
+        .hint{font-size:9px;color:var(--t3)}
 
-        /* ── Buttons ── */
-        .btn {
-            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
-            font-family: inherit; cursor: pointer; border: none; transition: all 0.2s;
-            display: inline-flex; align-items: center; gap: 8px;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .btn-group { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        /* Buttons */
+        .btn{padding:9px 18px;border-radius:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+        .btn-p{background:var(--p);color:#fff}
+        .btn-p:hover{background:var(--p-d)}
+        .btn-p:disabled{opacity:.5;cursor:not-allowed}
+        .btn-s{background:var(--bg);color:var(--t);border:1px solid var(--bd)}
+        .btn-s:hover{background:#e2e8f0}
+        .bgrp{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
 
-        /* ── Results ── */
-        .result-area { margin-top: 20px; display: none; }
-        .result-area.visible { display: block; }
+        /* Samples */
+        .smp{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+        .smp span{padding:4px 10px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;font-size:10px;cursor:pointer;transition:all .15s;color:var(--t2)}
+        .smp span:hover{border-color:var(--p);color:var(--p)}
 
-        /* Pipeline visualization */
-        .pipeline-vis { display: flex; align-items: center; gap: 0; margin: 20px 0; overflow-x: auto; padding: 4px; }
-        .pipe-step {
-            flex: 1; min-width: 160px; border-radius: 10px; padding: 14px; text-align: center;
-            border: 2px solid; position: relative;
-        }
-        .pipe-step.active { animation: pulse-border 1.5s infinite; }
-        @keyframes pulse-border { 0%,100% { box-shadow: 0 0 0 0 rgba(15,111,236,0.3); } 50% { box-shadow: 0 0 0 6px rgba(15,111,236,0); } }
-        .pipe-step .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; margin: 0 auto 6px; }
-        .pipe-step .step-name { font-size: 12px; font-weight: 600; }
-        .pipe-step .step-detail { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
-        .pipe-connector { width: 32px; height: 2px; background: var(--border); flex-shrink: 0; position: relative; }
-        .pipe-connector::after { content: ''; position: absolute; right: -3px; top: -3px; border: solid var(--border); border-width: 0 2px 2px 0; padding: 3px; transform: rotate(-45deg); }
+        /* Result area */
+        .ra{margin-top:16px;display:none}.ra.vis{display:block}
 
-        /* Agent result blocks */
-        .agent-block { border: 1px solid var(--border); border-radius: var(--radius); margin-top: 12px; overflow: hidden; }
-        .agent-block-header { padding: 12px 16px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .agent-block-header .agent-label { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; color: white; }
-        .agent-block-body { padding: 0 16px 16px; }
-        .agent-block-body.collapsed { display: none; }
+        /* ── COMMAND CENTER ── */
+        .cc-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-top:16px}
+        @media(max-width:900px){.cc-grid{grid-template-columns:1fr}}
 
-        /* Metric cards */
-        .metrics-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 14px; }
-        .metric { background: var(--bg); border-radius: 8px; padding: 12px; }
-        .metric .metric-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .metric .metric-value { font-size: 20px; font-weight: 800; margin-top: 2px; }
+        /* Pipeline Flow */
+        .pf{display:flex;flex-direction:column;gap:0}
+        .ps{border:1px solid var(--bd);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;transition:all .3s;position:relative;background:var(--c)}
+        .ps.running{border-color:var(--p);box-shadow:0 0 0 3px rgba(15,111,236,.08);animation:pulse-b 1.5s infinite}
+        .ps.done{border-color:var(--g);background:var(--g-bg)}
+        .ps.fail{border-color:var(--r);background:var(--r-bg)}
+        .ps.rerun{border-color:var(--w);background:var(--w-bg)}
+        .ps.wait{opacity:.4}
+        @keyframes pulse-b{0%,100%{box-shadow:0 0 0 3px rgba(15,111,236,.08)}50%{box-shadow:0 0 0 6px rgba(15,111,236,0)}}
+        .ps-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+        .ps-body{flex:1;min-width:0}
+        .ps-name{font-size:13px;font-weight:600}
+        .ps-sys{font-size:10px;color:var(--t3);margin-top:1px}
+        .ps-time{font-size:10px;color:var(--t3);margin-left:auto;flex-shrink:0;font-weight:500}
+        .ps-detail{font-size:11px;color:var(--t2);margin-top:6px;line-height:1.5;display:none}
+        .ps.done .ps-detail,.ps.fail .ps-detail,.ps.rerun .ps-detail{display:block}
+        .pc{width:2px;height:16px;background:var(--bd);margin-left:13px}
+
+        /* Narrator */
+        .narrator{background:var(--dk);border-radius:var(--rad);padding:16px;color:#e2e8f0;max-height:600px;overflow-y:auto;position:sticky;top:68px}
+        .narrator h3{font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+        .nar-entry{font-size:11px;line-height:1.6;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+        .nar-entry:last-child{border:none}
+        .nar-entry .nar-stage{font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+        .nar-entry .nar-text{color:#94a3b8}
+
+        /* Data Lineage */
+        .lineage{margin-top:16px}
+        .lin-row{display:flex;align-items:center;gap:0;font-size:11px;margin-bottom:4px}
+        .lin-node{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 10px;color:#94a3b8;text-align:center;min-width:80px}
+        .lin-node strong{color:#e2e8f0;display:block;font-size:10px}
+        .lin-arrow{color:rgba(255,255,255,.2);padding:0 4px;font-size:14px}
+        .lin-count{font-size:10px;color:#60a5fa;font-weight:600}
+
+        /* Metrics */
+        .mrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px}
+        .met{background:var(--bg);border-radius:7px;padding:10px}
+        .met .ml{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
+        .met .mv{font-size:18px;font-weight:800;margin-top:2px}
 
         /* Entity tags */
-        .entity-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-        .etag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
-        .etag.med { background: #dbeafe; color: #1e40af; }
-        .etag.cond { background: #fef3c7; color: #92400e; }
-        .etag.proc { background: #d1fae5; color: #065f46; }
-        .etag.lab { background: #f3e8ff; color: #6b21a8; }
+        .etags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+        .et{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:500}
+        .et.med{background:#dbeafe;color:#1e40af}
+        .et.cond{background:#fef3c7;color:#92400e}
+        .et.proc{background:#d1fae5;color:#065f46}
+        .et.lab{background:#f3e8ff;color:#6b21a8}
 
-        /* Graph canvas */
-        .graph-canvas { width: 100%; height: 320px; border: 1px solid var(--border); border-radius: var(--radius); margin-top: 14px; background: #fafbfc; overflow: hidden; }
+        /* Agent blocks */
+        .ab{border:1px solid var(--bd);border-radius:var(--rad);margin-top:10px;overflow:hidden}
+        .ab-h{padding:10px 14px;font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer}
+        .ab-h .al{padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;color:#fff}
+        .ab-b{padding:0 14px 14px}
+        .ab-b.col{display:none}
 
-        /* Eval scores */
-        .eval-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-top: 16px; }
-        .eval-card { background: var(--bg); border-radius: 10px; padding: 16px; text-align: center; }
-        .eval-ring { width: 70px; height: 70px; margin: 0 auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; border: 4px solid; }
-        .eval-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-        .eval-detail { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+        /* Conf bar */
+        .cbar{margin-top:12px}
+        .cbar-l{display:flex;justify-content:space-between;font-size:10px;color:var(--t2);margin-bottom:3px}
+        .cbar-b{height:6px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden}
+        .cbar-f{height:100%;border-radius:3px;transition:width .8s ease}
 
-        /* Code/JSON */
-        .json-block { background: var(--code-bg); border-radius: 8px; padding: 16px; font-family: 'SF Mono','Fira Code',monospace; font-size: 12px; color: #e2e8f0; line-height: 1.7; max-height: 350px; overflow-y: auto; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
+        /* Eval grid */
+        .eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+        .ec{background:var(--bg);border-radius:8px;padding:12px;text-align:center}
+        .er{width:56px;height:56px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;border:3px solid}
+        .ecl{font-size:11px;font-weight:600;color:var(--t2)}
+        .ecd{font-size:9px;color:var(--t3);margin-top:2px}
 
-        /* Confidence bar */
-        .conf-bar-wrap { margin-top: 14px; }
-        .conf-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
-        .conf-bar { height: 8px; background: rgba(0,0,0,0.06); border-radius: 4px; overflow: hidden; }
-        .conf-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+        /* Graph */
+        .gc{width:100%;height:280px;border:1px solid var(--bd);border-radius:var(--rad);margin-top:10px;background:#fafbfc;overflow:hidden}
 
-        /* Result badges */
-        .result-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
-        .result-badge.high { background: var(--danger); color: white; }
-        .result-badge.low { background: var(--success); color: white; }
-
-        /* Result card coloring */
-        .result-card.high-risk { background: var(--danger-bg); border: 1px solid #fecaca; border-radius: var(--radius); padding: 24px; }
-        .result-card.low-risk { background: var(--success-bg); border: 1px solid #a7f3d0; border-radius: var(--radius); padding: 24px; }
+        /* JSON */
+        .jb{background:var(--dk);border-radius:7px;padding:12px;font-family:'SF Mono','Fira Code',monospace;font-size:11px;color:#e2e8f0;line-height:1.6;max-height:300px;overflow-y:auto;margin-top:8px;white-space:pre-wrap;word-break:break-all}
 
         /* FHIR */
-        .fhir-box { background: var(--bg); border-radius: 8px; padding: 14px; margin-top: 10px; border-left: 4px solid var(--primary); }
-        .fhir-type { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .fb{background:var(--bg);border-radius:7px;padding:12px;margin-top:8px;border-left:3px solid var(--p)}
+        .ft{font-size:9px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
 
-        /* Sample chips */
-        .samples { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-        .sample {
-            padding: 5px 12px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.15s; color: var(--text-secondary);
-        }
-        .sample:hover { border-color: var(--primary); color: var(--primary); }
+        /* Result badges */
+        .rb{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:16px;font-size:11px;font-weight:600;margin-bottom:10px}
+        .rb.hi{background:var(--r);color:#fff}
+        .rb.lo{background:var(--g);color:#fff}
 
-        /* Summary result */
-        .summary-result { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+        /* Result card */
+        .rc.hr{background:var(--r-bg);border:1px solid #fecaca;border-radius:var(--rad);padding:20px}
+        .rc.lr{background:var(--g-bg);border:1px solid #a7f3d0;border-radius:var(--rad);padding:20px}
+
+        /* What-if */
+        .wif{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px;margin-top:12px}
+        .wif h4{font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px}
+        .wif-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
+        .wif-grid input{font-size:11px;padding:6px 8px}
 
         /* Toast */
-        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; font-size: 13px; color: white; background: var(--danger); box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 1000; max-width: 380px; }
-        .toast.visible { transform: translateY(0); opacity: 1; }
+        .toast{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:7px;font-size:12px;color:#fff;background:var(--r);box-shadow:var(--sh2);transform:translateY(70px);opacity:0;transition:all .3s;z-index:1000;max-width:350px}
+        .toast.vis{transform:translateY(0);opacity:1}
 
         /* Spinner */
-        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
-        .loading .spinner { display: block; }
-        .loading .btn-text { display: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+        .ld .sp{display:block}.ld .bt{display:none}
+        @keyframes spin{to{transform:rotate(360deg)}}
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .main { padding: 16px; }
-            .hero { padding: 32px 20px; }
-            .hero h1 { font-size: 24px; }
-            .arch-pipeline { flex-direction: column; align-items: center; }
-            .arch-arrow { transform: rotate(90deg); padding: 8px 0; }
-            .pipeline-vis { flex-direction: column; }
-            .pipe-connector { width: 2px; height: 24px; margin: 0 auto; }
-            .pipe-connector::after { right: -3px; top: auto; bottom: -3px; transform: rotate(45deg); }
-            .form-grid { grid-template-columns: 1fr; }
+        /* Tech stack */
+        .ts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+        .ts-item{background:var(--bg);padding:10px;border-radius:7px;font-size:11px}
+
+        /* What-If delta */
+        .delta{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px}
+        .delta.up{background:#fef2f2;color:#ef4444}
+        .delta.down{background:#ecfdf5;color:#10b981}
+
+        @media(max-width:768px){
+            .main{padding:12px}.hero{padding:24px 16px}.hero h1{font-size:22px}
+            .arch-pipe{flex-direction:column;align-items:center}.aa{transform:rotate(90deg);padding:6px 0}
+            .fg{grid-template-columns:1fr}.cc-grid{grid-template-columns:1fr}
         }
     </style>
 </head>
 <body>
 
-<!-- ── Top Bar ── -->
-<div class="topbar">
-    <div class="topbar-brand">
-        <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0f6fec"/><path d="M9 16h14M16 9v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
-        HERA <span>v2.0 — Multi-Agent Clinical AI</span>
+<div class="top">
+    <div class="brand">
+        <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0f6fec"/><path d="M9 16h14M16 9v14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+        HERA <span>v3.0 — Clinical Command Center</span>
     </div>
-    <div class="topbar-right">
-        <div class="status-pill"><div class="dot" id="statusDot"></div><span id="statusText">Checking...</span></div>
-        <a href="/docs" class="nav-link" target="_blank">API Docs &rarr;</a>
+    <div class="top-r">
+        <div class="pill"><div class="d" id="statusDot"></div><span id="statusText">Checking...</span></div>
+        <a href="/docs" class="lnk" target="_blank">API Docs &rarr;</a>
     </div>
 </div>
 
-<!-- ── Tabs ── -->
 <div class="tabs">
-    <div class="tab active" data-panel="overview">Overview</div>
-    <div class="tab" data-panel="reasoning">Multi-Agent Pipeline <span class="badge" style="background:#dbeafe;color:#1e40af">CORE</span></div>
-    <div class="tab" data-panel="rag">RAG Search</div>
-    <div class="tab" data-panel="ner">Entity Extraction</div>
-    <div class="tab" data-panel="fhir">FHIR Interop</div>
-    <div class="tab" data-panel="evaluate">AI Safety Judge</div>
-    <div class="tab" data-panel="predict">Risk Prediction</div>
-    <div class="tab" data-panel="summarize">Summarization</div>
+    <div class="tab on" data-p="overview">Overview</div>
+    <div class="tab" data-p="cc">Command Center <span class="bg" style="background:#dbeafe;color:#1e40af">NEW</span></div>
+    <div class="tab" data-p="reasoning">Multi-Agent</div>
+    <div class="tab" data-p="rag">RAG</div>
+    <div class="tab" data-p="ner">NER</div>
+    <div class="tab" data-p="fhir">FHIR</div>
+    <div class="tab" data-p="eval">Safety Judge</div>
+    <div class="tab" data-p="predict">Risk</div>
+    <div class="tab" data-p="summarize">Summary</div>
+    <div class="tab" data-p="de">Data Engineering <span class="bg" style="background:#d1fae5;color:#065f46">NEW</span></div>
 </div>
 
 <div class="main">
 
-<!-- ═══════════ OVERVIEW ═══════════ -->
-<div class="panel active" id="panel-overview">
-
-    <!-- Hero -->
-    <div class="hero">
-        <div class="hero-eyebrow">AI Engineering Portfolio Project</div>
-        <h1>Three AI Agents Collaborate<br>to Assess <span class="highlight">Patient Risk in Real-Time</span></h1>
-        <p>HERA simulates how a real emergency room works — a triage nurse, a diagnostician, and a treatment specialist each analyze the patient independently, then combine their reasoning into a single assessment. But instead of humans, it's three specialized AI agents coordinating through an orchestrated pipeline.</p>
-        <div class="hero-stats">
-            <div class="hero-stat"><div class="num">7</div><div class="label">AI Subsystems</div></div>
-            <div class="hero-stat"><div class="num">3</div><div class="label">Coordinated Agents</div></div>
-            <div class="hero-stat"><div class="num">11</div><div class="label">REST API Endpoints</div></div>
-            <div class="hero-stat"><div class="num">49</div><div class="label">Automated Tests</div></div>
-            <div class="hero-stat"><div class="num">16+</div><div class="label">Medical Guidelines</div></div>
-        </div>
-    </div>
-
-    <!-- What This Demonstrates -->
-    <div class="skills-section">
-        <h3>What This Project Proves I Can Build</h3>
-        <div class="skills-grid">
-            <div class="skill-card" onclick="switchTab('reasoning')">
-                <div class="skill-icon" style="background:#dbeafe;">&#129302;</div>
-                <div>
-                    <div class="skill-title">Multi-Agent Orchestration</div>
-                    <div class="skill-desc">Three AI agents (Triage, Diagnostic, Treatment) run in sequence, each consuming the previous agent's output — like a real clinical team handoff.</div>
-                    <div class="skill-tags"><span class="skill-tag">Agent Design</span><span class="skill-tag">Pipeline Architecture</span><span class="skill-tag">Consensus Scoring</span></div>
-                </div>
-            </div>
-            <div class="skill-card" onclick="switchTab('rag')">
-                <div class="skill-icon" style="background:#d1fae5;">&#128218;</div>
-                <div>
-                    <div class="skill-title">RAG (Retrieval-Augmented Generation)</div>
-                    <div class="skill-desc">Semantic search over 16 real medical guidelines using FAISS vector store + sentence-transformers embeddings. Answers questions with citations.</div>
-                    <div class="skill-tags"><span class="skill-tag">FAISS</span><span class="skill-tag">Embeddings</span><span class="skill-tag">Vector Search</span></div>
-                </div>
-            </div>
-            <div class="skill-card" onclick="switchTab('ner')">
-                <div class="skill-icon" style="background:#f5f3ff;">&#128300;</div>
-                <div>
-                    <div class="skill-title">NER + Knowledge Graphs</div>
-                    <div class="skill-desc">Extracts medications, conditions, procedures, and lab values from clinical text, then builds a patient relationship graph you can query.</div>
-                    <div class="skill-tags"><span class="skill-tag">NER</span><span class="skill-tag">NetworkX</span><span class="skill-tag">UMLS Linking</span></div>
-                </div>
-            </div>
-            <div class="skill-card" onclick="switchTab('fhir')">
-                <div class="skill-icon" style="background:#fffbeb;">&#127973;</div>
-                <div>
-                    <div class="skill-title">Healthcare Interoperability (FHIR R4)</div>
-                    <div class="skill-desc">Accepts HL7 FHIR bundles (the US healthcare data standard), runs predictions, and returns FHIR-compliant resources back.</div>
-                    <div class="skill-tags"><span class="skill-tag">FHIR R4</span><span class="skill-tag">HL7</span><span class="skill-tag">Bidirectional</span></div>
-                </div>
-            </div>
-            <div class="skill-card" onclick="switchTab('evaluate')">
-                <div class="skill-icon" style="background:#fff1f2;">&#128737;</div>
-                <div>
-                    <div class="skill-title">LLM-as-Judge (AI Safety)</div>
-                    <div class="skill-desc">Evaluates AI outputs for hallucinations, factual errors, and clinically dangerous mistakes — goes beyond ROUGE scores to catch real harm.</div>
-                    <div class="skill-tags"><span class="skill-tag">Hallucination Detection</span><span class="skill-tag">Safety Scoring</span></div>
-                </div>
-            </div>
-            <div class="skill-card" onclick="switchTab('predict')">
-                <div class="skill-icon" style="background:#f0fdfa;">&#128202;</div>
-                <div>
-                    <div class="skill-title">ML Risk Prediction + Explainability</div>
-                    <div class="skill-desc">Random Forest classifier on patient vitals with auto-computed derived features (BMI, MAP) and confidence scores.</div>
-                    <div class="skill-tags"><span class="skill-tag">scikit-learn</span><span class="skill-tag">Feature Engineering</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Architecture -->
-    <div class="arch-section">
-        <div class="arch-box">
-            <div class="arch-title">System Architecture — How It All Connects</div>
-            <div class="arch-subtitle">Patient data flows through the multi-agent pipeline. Each agent specializes in one clinical task, then passes its findings to the next.</div>
-            <div class="arch-pipeline">
-                <div class="arch-node">
-                    <div class="node-num">Step 1</div>
-                    <div class="node-title">Triage Agent</div>
-                    <div class="node-desc">Assigns emergency severity (ESI 1-5) based on vitals, complaint, and resource needs</div>
-                    <div class="node-tech">ESI v4 Algorithm</div>
-                </div>
-                <div class="arch-arrow">&#10132;</div>
-                <div class="arch-node">
-                    <div class="node-num">Step 2</div>
-                    <div class="node-title">Diagnostic Agent</div>
-                    <div class="node-desc">Generates differential diagnoses ranked by evidence overlap, with ICD-10 codes</div>
-                    <div class="node-tech">ICD-10 + Evidence Scoring</div>
-                </div>
-                <div class="arch-arrow">&#10132;</div>
-                <div class="arch-node">
-                    <div class="node-num">Step 3</div>
-                    <div class="node-title">Treatment Agent</div>
-                    <div class="node-desc">Creates medication plans, checks drug interactions, filters by patient allergies</div>
-                    <div class="node-tech">Drug Interaction + Contraindications</div>
-                </div>
-                <div class="arch-arrow">&#10132;</div>
-                <div class="arch-node" style="border-color: rgba(96,165,250,0.3);">
-                    <div class="node-num" style="color:#a78bfa;">Output</div>
-                    <div class="node-title">Consensus Result</div>
-                    <div class="node-desc">Combined score from all 3 agents + full auditable reasoning chain</div>
-                    <div class="node-tech">Weighted Score + Audit Trail</div>
-                </div>
-            </div>
-            <div class="arch-support">
-                <div class="arch-support-node">
-                    <div class="node-title">RAG Knowledge Base</div>
-                    <div class="node-desc">Semantic search over medical guidelines</div>
-                    <div class="node-tech">FAISS + sentence-transformers</div>
-                </div>
-                <div class="arch-support-node">
-                    <div class="node-title">Clinical NER</div>
-                    <div class="node-desc">Entity extraction + knowledge graph</div>
-                    <div class="node-tech">Regex + UMLS + NetworkX</div>
-                </div>
-                <div class="arch-support-node">
-                    <div class="node-title">FHIR R4 Layer</div>
-                    <div class="node-desc">Healthcare data interoperability</div>
-                    <div class="node-tech">HL7 FHIR Bundle &harr; Internal</div>
-                </div>
-                <div class="arch-support-node">
-                    <div class="node-title">LLM-as-Judge</div>
-                    <div class="node-desc">Quality & safety evaluation</div>
-                    <div class="node-tech">4-axis scoring framework</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tech Stack -->
-    <div class="card">
-        <div class="card-header">Tech Stack</div>
-        <div class="card-subtitle">Production-grade components chosen for real-world healthcare AI deployments.</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Backend:</strong> FastAPI + Pydantic + Uvicorn</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>ML:</strong> scikit-learn + Hugging Face T5</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Vector Search:</strong> FAISS + sentence-transformers</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>NLP:</strong> Regex NER + optional SciSpaCy</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Graphs:</strong> NetworkX patient knowledge graphs</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Standards:</strong> FHIR R4, ICD-10, LOINC, UMLS</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Database:</strong> PostgreSQL + JSONB audit trails</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>CI/CD:</strong> GitHub Actions (lint, test, smoke, docker)</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Monitoring:</strong> Prometheus metrics export</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Testing:</strong> pytest (49 tests, &lt;0.3s)</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Containerization:</strong> Docker Compose</div>
-            <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;"><strong>Linting:</strong> ruff (check + format)</div>
-        </div>
+<!-- ═══ OVERVIEW ═══ -->
+<div class="pn on" id="pn-overview">
+<div class="hero">
+    <div class="hero-ey">AI + Data Engineering Portfolio &bull; Production-Grade SaaS</div>
+    <h1>One Patient. <span class="hl">9 AI Systems + 7 DE Pipelines.</span><br>End-to-End Clinical Data Platform.</h1>
+    <p>HERA is a production-grade clinical data platform combining multi-agent AI (3 coordinated agents), RAG retrieval, NER extraction, knowledge graphs, FHIR interoperability, ML risk prediction, clinical summarization, and AI safety evaluation — all backed by a full data engineering layer: event streaming with schema registry, column-level lineage, data quality validation, star schema warehouse, Airflow-style ETL orchestration, CDC audit stream, and a searchable data catalog.</p>
+    <div class="hero-stats">
+        <div class="hs"><div class="n">9</div><div class="l">AI Subsystems</div></div>
+        <div class="hs"><div class="n">7</div><div class="l">DE Pipelines</div></div>
+        <div class="hs"><div class="n">22</div><div class="l">REST Endpoints</div></div>
+        <div class="hs"><div class="n">3</div><div class="l">Coordinated Agents</div></div>
+        <div class="hs"><div class="n">12</div><div class="l">Data Catalog Tables</div></div>
     </div>
 </div>
 
-<!-- ═══════════ MULTI-AGENT REASONING ═══════════ -->
-<div class="panel" id="panel-reasoning">
-    <div class="card">
-        <div class="card-header">Multi-Agent Clinical Reasoning Pipeline</div>
-        <div class="explainer">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p>When you hit "Run Pipeline", three AI agents analyze the patient <strong>in sequence</strong> — just like a real ER team. The <strong>Triage Agent</strong> decides how urgent the patient is (ESI level 1-5). The <strong>Diagnostic Agent</strong> then generates ranked diagnoses with ICD-10 codes based on symptoms. Finally, the <strong>Treatment Agent</strong> creates a medication plan, automatically checking for drug interactions and allergies. All three results combine into a <strong>consensus score</strong> with a full audit trail showing exactly how each agent reasoned.</p>
-            </div>
-        </div>
-
-        <!-- Pipeline visualization -->
-        <div class="pipeline-vis" id="pipelineVis">
-            <div class="pipe-step" id="pipe-triage" style="background:#eff6ff;border-color:#93c5fd;">
-                <div class="step-num" style="background:#3b82f6;">1</div>
-                <div class="step-name">Triage Agent</div>
-                <div class="step-detail">ESI severity level</div>
-            </div>
-            <div class="pipe-connector"></div>
-            <div class="pipe-step" id="pipe-diag" style="background:#fffbeb;border-color:#fcd34d;">
-                <div class="step-num" style="background:#f59e0b;">2</div>
-                <div class="step-name">Diagnostic Agent</div>
-                <div class="step-detail">Differential diagnoses</div>
-            </div>
-            <div class="pipe-connector"></div>
-            <div class="pipe-step" id="pipe-treat" style="background:#ecfdf5;border-color:#6ee7b7;">
-                <div class="step-num" style="background:#10b981;">3</div>
-                <div class="step-name">Treatment Agent</div>
-                <div class="step-detail">Medication + monitoring</div>
-            </div>
-            <div class="pipe-connector"></div>
-            <div class="pipe-step" id="pipe-consensus" style="background:#f5f3ff;border-color:#c4b5fd;">
-                <div class="step-num" style="background:#8b5cf6;">&#10003;</div>
-                <div class="step-name">Consensus</div>
-                <div class="step-detail">Combined score</div>
-            </div>
-        </div>
-
-        <div class="samples">
-            <span class="sample" onclick="loadReasoningSample('chest_pain')">Chest Pain (STEMI)</span>
-            <span class="sample" onclick="loadReasoningSample('dyspnea')">Shortness of Breath</span>
-            <span class="sample" onclick="loadReasoningSample('headache')">Severe Headache</span>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-group"><label>Patient ID</label><input type="text" id="r-pid" value="pt-demo-001"></div>
-            <div class="form-group"><label>Age</label><input type="number" id="r-age" value="62"></div>
-            <div class="form-group"><label>Gender</label><select id="r-gender"><option>male</option><option>female</option></select></div>
-            <div class="form-group"><label>Heart Rate</label><input type="number" id="r-hr" value="102"><span class="hint">Normal: 60-100</span></div>
-            <div class="form-group"><label>Resp. Rate</label><input type="number" id="r-rr" value="22"><span class="hint">Normal: 12-20</span></div>
-            <div class="form-group"><label>Temp (&deg;C)</label><input type="number" id="r-temp" value="37.1" step="0.1"></div>
-            <div class="form-group"><label>SpO2 (%)</label><input type="number" id="r-spo2" value="94"><span class="hint">Normal: 95-100</span></div>
-            <div class="form-group"><label>Systolic BP</label><input type="number" id="r-sbp" value="158"></div>
-            <div class="form-group"><label>Diastolic BP</label><input type="number" id="r-dbp" value="95"></div>
-            <div class="form-group full"><label>Chief Complaint</label><input type="text" id="r-complaint" value="chest pain"></div>
-            <div class="form-group full"><label>Clinical Note</label><textarea id="r-note">62-year-old male presenting with acute substernal chest pain radiating to left arm for 3 hours. Associated with diaphoresis and shortness of breath. History of hypertension and diabetes. Current medications include metformin and lisinopril. ECG shows ST elevation in leads II, III, aVF. Troponin I elevated at 0.82 ng/mL.</textarea></div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px;">
-            <div class="form-group" style="flex:1;"><label>Medical History (comma-separated)</label><input type="text" id="r-history" value="hypertension,diabetes"></div>
-            <div class="form-group" style="flex:1;"><label>Current Medications</label><input type="text" id="r-meds" value="metformin,lisinopril"></div>
-            <div class="form-group" style="flex:1;"><label>Allergies</label><input type="text" id="r-allergies" value="penicillin"></div>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-primary" id="reasonBtn" onclick="submitReasoning()"><span class="btn-text">Run Multi-Agent Pipeline</span><div class="spinner"></div></button>
-        </div>
-    </div>
-
-    <div class="result-area" id="reasonResult">
-        <div class="card" id="reasonResultCard"></div>
+<div style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2);margin-bottom:12px">What This Proves I Can Build</div>
+    <div class="sg">
+        <div class="sc" onclick="sw('cc')"><div class="si" style="background:#dbeafe">&#9889;</div><div><div class="st">Unified Pipeline (Command Center)</div><div class="sd">One patient input triggers all 8 systems in sequence with feedback loops, live narration, and FHIR export.</div><div class="stg"><span>Pipeline Architecture</span><span>Feedback Loops</span></div></div></div>
+        <div class="sc" onclick="sw('reasoning')"><div class="si" style="background:#dbeafe">&#129302;</div><div><div class="st">Multi-Agent Orchestration</div><div class="sd">3 AI agents (Triage, Diagnostic, Treatment) run in sequence, each consuming previous output.</div><div class="stg"><span>Agent Design</span><span>Consensus Scoring</span></div></div></div>
+        <div class="sc" onclick="sw('rag')"><div class="si" style="background:#d1fae5">&#128218;</div><div><div class="st">RAG Knowledge Retrieval</div><div class="sd">Semantic search over 16 medical guidelines using FAISS + sentence-transformers.</div><div class="stg"><span>FAISS</span><span>Embeddings</span><span>Vector Search</span></div></div></div>
+        <div class="sc" onclick="sw('ner')"><div class="si" style="background:#f5f3ff">&#128300;</div><div><div class="st">NER + Knowledge Graphs</div><div class="sd">Extracts medications, conditions, procedures from text, builds patient relationship graph.</div><div class="stg"><span>NER</span><span>NetworkX</span><span>UMLS</span></div></div></div>
+        <div class="sc" onclick="sw('fhir')"><div class="si" style="background:#fffbeb">&#127973;</div><div><div class="st">FHIR R4 Interoperability</div><div class="sd">Accepts HL7 FHIR bundles, runs predictions, returns FHIR-compliant resources.</div><div class="stg"><span>FHIR R4</span><span>HL7</span><span>LOINC</span></div></div></div>
+        <div class="sc" onclick="sw('eval')"><div class="si" style="background:#fff1f2">&#128737;</div><div><div class="st">LLM-as-Judge (AI Safety)</div><div class="sd">4-axis evaluation: factual consistency, hallucination, medical accuracy, clinical safety.</div><div class="stg"><span>Hallucination Detection</span><span>Safety</span></div></div></div>
+        <div class="sc" onclick="sw('predict')"><div class="si" style="background:#f0fdfa">&#128202;</div><div><div class="st">ML Risk Prediction</div><div class="sd">Random Forest on patient vitals with auto-computed BMI/MAP and confidence scoring.</div><div class="stg"><span>scikit-learn</span><span>Feature Eng.</span></div></div></div>
+        <div class="sc" onclick="sw('summarize')"><div class="si" style="background:#eff6ff">&#128196;</div><div><div class="st">Clinical Summarization</div><div class="sd">Fine-tuned T5 transformer performs abstractive summarization with compression metrics.</div><div class="stg"><span>Transformers</span><span>T5</span></div></div></div>
+        <div class="sc" onclick="sw('de')" style="border-color:#10b981"><div class="si" style="background:#d1fae5">&#9881;</div><div><div class="st">Data Engineering Layer</div><div class="sd">7 production DE systems: event streaming, schema registry, column-level lineage, data quality, star schema warehouse, ETL orchestrator, CDC, and data catalog.</div><div class="stg"><span>Kafka-style</span><span>Star Schema</span><span>ETL DAG</span><span>CDC</span><span>Lineage</span></div></div></div>
     </div>
 </div>
 
-<!-- ═══════════ RAG ═══════════ -->
-<div class="panel" id="panel-rag">
-    <div class="card">
-        <div class="card-header">RAG Medical Knowledge Base</div>
-        <div class="explainer green">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p>This is <strong>Retrieval-Augmented Generation (RAG)</strong> — a key technique in modern AI. Instead of hallucinating answers, the system <strong>searches a vector database</strong> of 16 real medical guidelines (AHA, IDSA, ESC, GOLD, WHO) using semantic similarity, then returns the most relevant passages <strong>with source citations</strong>. The search uses FAISS (Facebook's vector similarity library) and sentence-transformers for encoding text into 384-dimensional embeddings.</p>
-            </div>
-        </div>
-        <div class="samples">
-            <span class="sample" onclick="document.getElementById('rag-query').value='chest pain acute coronary syndrome treatment'">ACS Treatment</span>
-            <span class="sample" onclick="document.getElementById('rag-query').value='sepsis management antibiotics'">Sepsis Protocol</span>
-            <span class="sample" onclick="document.getElementById('rag-query').value='COPD exacerbation management'">COPD Management</span>
-            <span class="sample" onclick="document.getElementById('rag-query').value='stroke thrombolysis tPA'">Stroke tPA</span>
-        </div>
-        <div class="form-group"><label>Ask a medical question</label><input type="text" id="rag-query" placeholder="e.g., What is the treatment protocol for acute coronary syndrome?"></div>
-        <div class="form-group" style="margin-top:10px;max-width:120px;"><label>Results to return</label><input type="number" id="rag-topk" value="3" min="1" max="10"></div>
-        <div class="btn-group"><button class="btn btn-primary" id="ragBtn" onclick="submitRAG()"><span class="btn-text">Search Knowledge Base</span><div class="spinner"></div></button></div>
+<!-- Architecture -->
+<div class="arch">
+    <div class="arch-t">Unified Pipeline Architecture</div>
+    <div class="arch-s">In the Command Center, patient data flows through ALL systems in sequence. Feedback loops auto-correct errors.</div>
+    <div class="arch-pipe">
+        <div class="an"><div class="nn">1</div><div class="nt">NER</div><div class="nd">Extract entities</div><div class="nc">Regex + UMLS</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">2</div><div class="nt">Knowledge Graph</div><div class="nd">Build relationships</div><div class="nc">NetworkX</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">3</div><div class="nt">Triage</div><div class="nd">ESI severity</div><div class="nc">ESI v4</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">4</div><div class="nt">Diagnosis</div><div class="nd">Differentials</div><div class="nc">ICD-10</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">5</div><div class="nt">Treatment</div><div class="nd">Medications</div><div class="nc">Drug Interactions</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">6</div><div class="nt">Risk ML</div><div class="nd">Predict risk</div><div class="nc">Random Forest</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">7</div><div class="nt">RAG</div><div class="nd">Guidelines</div><div class="nc">FAISS</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">8</div><div class="nt">Summary</div><div class="nd">Compress note</div><div class="nc">T5</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">9</div><div class="nt">Safety</div><div class="nd">Evaluate</div><div class="nc">4-axis</div></div><div class="aa">&#10132;</div>
+        <div class="an"><div class="nn">10</div><div class="nt">FHIR Export</div><div class="nd">Bundle</div><div class="nc">HL7 R4</div></div><div class="aa">&#10132;</div>
+        <div class="an" style="border-color:rgba(16,185,129,.3)"><div class="nn" style="color:#10b981">DE</div><div class="nt">Data Eng.</div><div class="nd">Stream+Warehouse+CDC</div><div class="nc">7 Pipelines</div></div>
     </div>
-    <div class="result-area" id="ragResult"></div>
+    <div style="text-align:center;margin-top:14px;font-size:10px;color:#60a5fa">&#8635; Feedback Loop: If Safety fails &rarr; Re-summarize with RAG context &rarr; Re-evaluate<br>&#8635; DE Layer: Event streaming &rarr; Quality validation &rarr; Lineage tracking &rarr; Star schema warehouse &rarr; CDC audit &rarr; Catalog update</div>
 </div>
 
-<!-- ═══════════ NER ═══════════ -->
-<div class="panel" id="panel-ner">
-    <div class="card">
-        <div class="card-header">Clinical Entity Extraction + Knowledge Graph</div>
-        <div class="explainer purple">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p>This runs <strong>Named Entity Recognition (NER)</strong> on clinical text to automatically find medications, conditions, procedures, and lab values. Each entity is linked to <strong>UMLS medical codes</strong> (the universal medical vocabulary). Then it builds a <strong>patient knowledge graph</strong> showing how everything connects — which drugs treat which conditions, what tests diagnose what, and potential interactions. The graph is visualized in real-time.</p>
-            </div>
-        </div>
-        <div class="samples">
-            <span class="sample" onclick="document.getElementById('ner-note').value='Patient on aspirin 325mg and heparin for myocardial infarction. ECG shows ST elevation. Troponin 0.5 ng/mL. History of diabetes and hypertension. Started on metoprolol and nitroglycerin drip.'">Cardiac Case</span>
-            <span class="sample" onclick="document.getElementById('ner-note').value='72yo female with pneumonia, started on azithromycin 500mg and ceftriaxone. Chest X-ray shows consolidation. WBC 15000 cells/uL. History of COPD and renal failure. Intubation may be required.'">Respiratory Case</span>
-        </div>
-        <div class="form-group"><label>Clinical Note</label><textarea id="ner-note" placeholder="Paste a clinical note here...">Patient on aspirin 325mg and heparin for myocardial infarction. ECG shows ST elevation. Troponin 0.5 ng/mL. History of diabetes and hypertension. Started on metoprolol and nitroglycerin drip.</textarea></div>
-        <div class="form-group" style="margin-top:10px;max-width:200px;"><label>Patient ID</label><input type="text" id="ner-pid" value="pt-ner-001"></div>
-        <div class="btn-group"><button class="btn btn-primary" id="nerBtn" onclick="submitNER()"><span class="btn-text">Extract Entities &amp; Build Graph</span><div class="spinner"></div></button></div>
-    </div>
-    <div class="result-area" id="nerResult"></div>
-</div>
-
-<!-- ═══════════ FHIR ═══════════ -->
-<div class="panel" id="panel-fhir">
-    <div class="card">
-        <div class="card-header">FHIR R4 Interoperability</div>
-        <div class="explainer amber">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p><strong>FHIR (Fast Healthcare Interoperability Resources)</strong> is the US government-mandated standard for exchanging healthcare data between systems. This demo accepts a real FHIR R4 Bundle containing patient demographics and vital signs, runs it through the risk prediction model, and returns a <strong>FHIR-compliant RiskAssessment resource</strong> that any hospital EHR system could consume. Bidirectional conversion means this system can both read from and write to any FHIR-compatible system (Epic, Cerner, etc.).</p>
-            </div>
-        </div>
-        <div class="samples">
-            <span class="sample" onclick="loadFHIRSample('critical')">Critical Patient Bundle</span>
-            <span class="sample" onclick="loadFHIRSample('normal')">Normal Patient Bundle</span>
-        </div>
-        <div class="form-group"><label>FHIR R4 Bundle (JSON)</label><textarea id="fhir-bundle" style="min-height:220px;font-family:'SF Mono','Fira Code',monospace;font-size:12px;"></textarea></div>
-        <div class="btn-group"><button class="btn btn-primary" id="fhirBtn" onclick="submitFHIR()"><span class="btn-text">Submit FHIR Bundle</span><div class="spinner"></div></button></div>
-    </div>
-    <div class="result-area" id="fhirResult"></div>
-</div>
-
-<!-- ═══════════ EVALUATION ═══════════ -->
-<div class="panel" id="panel-evaluate">
-    <div class="card">
-        <div class="card-header">LLM-as-Judge — AI Safety Evaluation</div>
-        <div class="explainer rose">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p>This is an <strong>AI safety framework</strong> that evaluates whether an AI-generated medical summary is safe and accurate. It scores on 4 axes: <strong>Factual Consistency</strong> (are the claims supported by the source?), <strong>Hallucination Detection</strong> (did the AI invent information?), <strong>Medical Accuracy</strong> (are drug names/dosages valid?), and <strong>Clinical Safety</strong> (could this output harm a patient?). Unlike simple ROUGE metrics, this catches genuinely dangerous errors like incorrect dosages or contradictions.</p>
-            </div>
-        </div>
-        <div class="samples">
-            <span class="sample" onclick="loadEvalSample('consistent')">Accurate Output</span>
-            <span class="sample" onclick="loadEvalSample('hallucinated')">Hallucinated Output</span>
-            <span class="sample" onclick="loadEvalSample('contradiction')">Contradicted Output</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="form-group"><label>Original Clinical Note</label><textarea id="eval-source" placeholder="The source of truth..."></textarea></div>
-            <div class="form-group"><label>AI-Generated Output (to evaluate)</label><textarea id="eval-generated" placeholder="The AI output to check..."></textarea></div>
-        </div>
-        <div class="btn-group"><button class="btn btn-primary" id="evalBtn" onclick="submitEval()"><span class="btn-text">Evaluate Output Safety</span><div class="spinner"></div></button></div>
-    </div>
-    <div class="result-area" id="evalResult"></div>
-</div>
-
-<!-- ═══════════ RISK PREDICTION ═══════════ -->
-<div class="panel" id="panel-predict">
-    <div class="card">
-        <div class="card-header">Patient Risk Prediction</div>
-        <div class="explainer">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p>A <strong>Random Forest classifier</strong> analyzes 7 vital signs and automatically computes derived features (BMI, MAP — Mean Arterial Pressure). It outputs a risk classification with confidence score. In production, this would use SHAP values for model explainability so clinicians understand <strong>why</strong> the model flagged a patient.</p>
-            </div>
-        </div>
-        <div class="form-grid">
-            <div class="form-group"><label>Heart Rate (BPM)</label><input type="number" id="v-hr" value="82"><span class="hint">Normal: 60-100</span></div>
-            <div class="form-group"><label>Respiratory Rate</label><input type="number" id="v-rr" value="18"><span class="hint">Normal: 12-20</span></div>
-            <div class="form-group"><label>Temperature (&deg;C)</label><input type="number" id="v-temp" value="37.0" step="0.1"><span class="hint">Normal: 36.1-37.2</span></div>
-            <div class="form-group"><label>SpO2 (%)</label><input type="number" id="v-spo2" value="97"><span class="hint">Normal: 95-100</span></div>
-            <div class="form-group"><label>Systolic BP</label><input type="number" id="v-sbp" value="120"><span class="hint">Normal: 90-120</span></div>
-            <div class="form-group"><label>Diastolic BP</label><input type="number" id="v-dbp" value="80"><span class="hint">Normal: 60-80</span></div>
-            <div class="form-group"><label>Age</label><input type="number" id="v-age" value="55"></div>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-primary" id="predictBtn" onclick="submitPredict()"><span class="btn-text">Predict Risk</span><div class="spinner"></div></button>
-            <button class="btn btn-secondary" onclick="loadPreset('critical')">Load: Critical Patient</button>
-            <button class="btn btn-secondary" onclick="loadPreset('healthy')">Load: Healthy Patient</button>
-        </div>
-    </div>
-    <div class="result-area" id="riskResult">
-        <div class="card" id="riskCard">
-            <div class="result-badge" id="riskBadge"></div>
-            <div class="conf-bar-wrap">
-                <div class="conf-labels"><span>Low Risk</span><span id="riskScoreLabel">0%</span><span>High Risk</span></div>
-                <div class="conf-bar"><div class="conf-fill" id="riskBar" style="width:0%"></div></div>
-            </div>
-            <div class="metrics-row" id="riskMetrics"></div>
-        </div>
+<!-- Production Features -->
+<div class="card">
+    <div class="ch">Production SaaS Features</div>
+    <div class="cs">Built for multi-tenant deployment — not just a demo.</div>
+    <div class="ts-grid">
+        <div class="ts-item"><strong>API Key Auth:</strong> Per-tenant keys with tier-based access</div>
+        <div class="ts-item"><strong>Rate Limiting:</strong> Per-tenant request throttling (30-60/min)</div>
+        <div class="ts-item"><strong>Usage Metering:</strong> Track requests per endpoint per tenant</div>
+        <div class="ts-item"><strong>HIPAA Audit:</strong> Every patient data access is logged with trace IDs</div>
+        <div class="ts-item"><strong>Multi-Tenancy:</strong> Data isolation per healthcare organization</div>
+        <div class="ts-item"><strong>Feedback Loops:</strong> Self-correcting pipeline re-runs on safety failure</div>
     </div>
 </div>
 
-<!-- ═══════════ SUMMARIZATION ═══════════ -->
-<div class="panel" id="panel-summarize">
-    <div class="card">
-        <div class="card-header">Clinical Note Summarization</div>
-        <div class="explainer">
-            <div class="explainer-icon">&#128161;</div>
-            <div>
-                <h4>What's happening here?</h4>
-                <p>A <strong>fine-tuned T5 transformer model</strong> performs abstractive summarization of clinical notes — it doesn't just extract sentences, it generates new, compressed text that captures the key findings. The compression ratio shows how efficiently it distills information.</p>
+<!-- Tech Stack -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Tech Stack</div>
+    <div class="ts-grid">
+        <div class="ts-item"><strong>Backend:</strong> FastAPI + Pydantic + Uvicorn</div>
+        <div class="ts-item"><strong>ML:</strong> scikit-learn + Hugging Face T5</div>
+        <div class="ts-item"><strong>Vector Search:</strong> FAISS + sentence-transformers</div>
+        <div class="ts-item"><strong>NLP:</strong> Regex NER + optional SciSpaCy</div>
+        <div class="ts-item"><strong>Graphs:</strong> NetworkX patient knowledge graphs</div>
+        <div class="ts-item"><strong>Standards:</strong> FHIR R4, ICD-10, LOINC, UMLS</div>
+        <div class="ts-item"><strong>Database:</strong> PostgreSQL + SQLite Star Schema</div>
+        <div class="ts-item"><strong>Streaming:</strong> Kafka-style events + Schema Registry</div>
+        <div class="ts-item"><strong>Data Quality:</strong> Great Expectations-style validation</div>
+        <div class="ts-item"><strong>Lineage:</strong> Column-level DAG with PII tracking</div>
+        <div class="ts-item"><strong>Warehouse:</strong> Star schema (fact + 4 dimensions)</div>
+        <div class="ts-item"><strong>ETL:</strong> Airflow-style DAG with retry + SLA</div>
+        <div class="ts-item"><strong>CDC:</strong> Change Data Capture with event replay</div>
+        <div class="ts-item"><strong>Catalog:</strong> Searchable metadata + freshness SLAs</div>
+        <div class="ts-item"><strong>CI/CD:</strong> GitHub Actions (lint, test, smoke, docker)</div>
+        <div class="ts-item"><strong>Monitoring:</strong> Prometheus metrics export</div>
+        <div class="ts-item"><strong>Auth:</strong> API key + rate limiting middleware</div>
+        <div class="ts-item"><strong>Containerization:</strong> Docker Compose</div>
+    </div>
+</div>
+</div>
+
+<!-- ═══ COMMAND CENTER ═══ -->
+<div class="pn" id="pn-cc">
+<div class="card">
+    <div class="ch">Clinical Command Center</div>
+    <div class="ex blue"><div class="ei">&#9889;</div><div><h4>One Patient. All Systems. Live Flow.</h4><p>Enter a patient below and watch data cascade through ALL 8 subsystems in real-time. The narrator (right panel) explains each step in plain English. NER extracts entities &rarr; builds a knowledge graph &rarr; 3 agents triage/diagnose/treat &rarr; ML predicts risk &rarr; RAG finds guidelines &rarr; T5 summarizes &rarr; safety evaluator checks for errors (with auto-correction feedback loops) &rarr; exports as FHIR R4 bundle. <strong>Try the "What-If" mode after the first run to change a vital and watch everything re-cascade.</strong></p></div></div>
+
+    <div class="smp">
+        <span onclick="loadCC('chest_pain')">Chest Pain (STEMI)</span>
+        <span onclick="loadCC('dyspnea')">Shortness of Breath</span>
+        <span onclick="loadCC('headache')">Severe Headache</span>
+    </div>
+
+    <div class="fg">
+        <div class="fi"><label>Patient ID</label><input id="cc-pid" value="pt-cmd-001"></div>
+        <div class="fi"><label>Age</label><input type="number" id="cc-age" value="62"></div>
+        <div class="fi"><label>Gender</label><select id="cc-gender"><option>male</option><option>female</option></select></div>
+        <div class="fi"><label>Heart Rate</label><input type="number" id="cc-hr" value="102"><span class="hint">Normal: 60-100</span></div>
+        <div class="fi"><label>Resp. Rate</label><input type="number" id="cc-rr" value="22"><span class="hint">Normal: 12-20</span></div>
+        <div class="fi"><label>Temp (C)</label><input type="number" id="cc-temp" value="37.1" step="0.1"></div>
+        <div class="fi"><label>SpO2 (%)</label><input type="number" id="cc-spo2" value="94"><span class="hint">Normal: 95-100</span></div>
+        <div class="fi"><label>Systolic BP</label><input type="number" id="cc-sbp" value="158"></div>
+        <div class="fi"><label>Diastolic BP</label><input type="number" id="cc-dbp" value="95"></div>
+        <div class="fi full"><label>Chief Complaint</label><input id="cc-complaint" value="chest pain"></div>
+        <div class="fi full"><label>Clinical Note</label><textarea id="cc-note">62-year-old male presenting with acute substernal chest pain radiating to left arm for 3 hours. Associated with diaphoresis and shortness of breath. History of hypertension and diabetes. Current medications include metformin and lisinopril. ECG shows ST elevation in leads II, III, aVF. Troponin I elevated at 0.82 ng/mL.</textarea></div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px">
+        <div class="fi" style="flex:1"><label>Medical History</label><input id="cc-history" value="hypertension,diabetes"></div>
+        <div class="fi" style="flex:1"><label>Medications</label><input id="cc-meds" value="metformin,lisinopril"></div>
+        <div class="fi" style="flex:1"><label>Allergies</label><input id="cc-allergies" value="penicillin"></div>
+    </div>
+    <div class="bgrp">
+        <button class="btn btn-p" id="ccBtn" onclick="runCC()"><span class="bt">Run Full Pipeline</span><div class="sp"></div></button>
+    </div>
+</div>
+
+<!-- What-If Mode -->
+<div class="ra" id="ccWhatIf">
+    <div class="wif">
+        <h4>&#128300; What-If Mode — Change a vital and re-run the entire pipeline</h4>
+        <div class="wif-grid">
+            <div class="fi"><label>Heart Rate</label><input type="number" id="wi-hr"></div>
+            <div class="fi"><label>SpO2 (%)</label><input type="number" id="wi-spo2"></div>
+            <div class="fi"><label>Systolic BP</label><input type="number" id="wi-sbp"></div>
+            <div class="fi"><label>Temp (C)</label><input type="number" id="wi-temp" step="0.1"></div>
+        </div>
+        <div class="bgrp"><button class="btn btn-p" id="wiBtn" onclick="runWhatIf()"><span class="bt">Re-Run with Changes</span><div class="sp"></div></button></div>
+    </div>
+</div>
+
+<!-- Results Grid: Pipeline + Narrator -->
+<div class="ra" id="ccResult">
+    <div class="cc-grid">
+        <div>
+            <!-- Summary bar -->
+            <div class="card" id="ccSummaryBar" style="margin-bottom:12px"></div>
+            <!-- Pipeline stages -->
+            <div class="pf" id="ccPipeline"></div>
+            <!-- Data Lineage -->
+            <div class="card" style="margin-top:12px" id="ccLineage"></div>
+        </div>
+        <div>
+            <!-- Narrator -->
+            <div class="narrator" id="ccNarrator">
+                <h3>&#128172; Live Reasoning Narrator</h3>
+                <div id="narEntries"><div class="nar-entry"><div class="nar-text" style="color:#64748b">Waiting for pipeline to start...</div></div></div>
             </div>
         </div>
-        <div class="samples">
-            <span class="sample" onclick="loadSumSample('cardiology')">Cardiology Note</span>
-            <span class="sample" onclick="loadSumSample('emergency')">Emergency Note</span>
-        </div>
-        <div class="form-group"><textarea id="noteInput" placeholder="Paste a clinical note here..."></textarea></div>
-        <div class="btn-group">
-            <button class="btn btn-primary" id="summarizeBtn" onclick="submitSummarize()"><span class="btn-text">Generate Summary</span><div class="spinner"></div></button>
-            <button class="btn btn-secondary" onclick="document.getElementById('noteInput').value='';document.getElementById('summaryResult').classList.remove('visible');">Clear</button>
-        </div>
     </div>
-    <div class="result-area" id="summaryResult">
-        <div class="card summary-result">
-            <div class="card-header">Generated Summary</div>
-            <div style="background:var(--bg);border-radius:8px;padding:16px;margin-top:8px;font-size:14px;line-height:1.7;" id="summaryText"></div>
-            <div class="metrics-row">
-                <div class="metric"><div class="metric-label">Input Length</div><div class="metric-value" id="inputLen">-</div></div>
-                <div class="metric"><div class="metric-label">Summary Length</div><div class="metric-value" id="summaryLen">-</div></div>
-                <div class="metric"><div class="metric-label">Compression</div><div class="metric-value" id="compressionRatio">-</div></div>
-            </div>
-        </div>
+</div>
+</div>
+
+<!-- ═══ INDIVIDUAL TABS (kept for deep-dive) ═══ -->
+
+<!-- Multi-Agent -->
+<div class="pn" id="pn-reasoning">
+<div class="card">
+    <div class="ch">Multi-Agent Clinical Reasoning</div>
+    <div class="ex blue"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p>3 AI agents analyze the patient <strong>in sequence</strong>: <strong>Triage</strong> (ESI 1-5 severity) &rarr; <strong>Diagnostic</strong> (ranked ICD-10 diagnoses) &rarr; <strong>Treatment</strong> (medications filtered by allergies &amp; interactions). Results combine into a consensus score with full audit trail.</p></div></div>
+    <div class="smp"><span onclick="loadR('chest_pain')">Chest Pain</span><span onclick="loadR('dyspnea')">Dyspnea</span><span onclick="loadR('headache')">Headache</span></div>
+    <div class="fg">
+        <div class="fi"><label>Patient ID</label><input id="r-pid" value="pt-001"></div>
+        <div class="fi"><label>Age</label><input type="number" id="r-age" value="62"></div>
+        <div class="fi"><label>Gender</label><select id="r-gender"><option>male</option><option>female</option></select></div>
+        <div class="fi"><label>HR</label><input type="number" id="r-hr" value="102"></div>
+        <div class="fi"><label>RR</label><input type="number" id="r-rr" value="22"></div>
+        <div class="fi"><label>Temp</label><input type="number" id="r-temp" value="37.1" step="0.1"></div>
+        <div class="fi"><label>SpO2</label><input type="number" id="r-spo2" value="94"></div>
+        <div class="fi"><label>SBP</label><input type="number" id="r-sbp" value="158"></div>
+        <div class="fi"><label>DBP</label><input type="number" id="r-dbp" value="95"></div>
+        <div class="fi full"><label>Chief Complaint</label><input id="r-complaint" value="chest pain"></div>
+        <div class="fi full"><label>Clinical Note</label><textarea id="r-note">62-year-old male with acute substernal chest pain radiating to left arm for 3 hours. Diaphoresis and SOB. Hx HTN, DM. Meds: metformin, lisinopril. ECG: ST elevation II,III,aVF. Trop I 0.82.</textarea></div>
     </div>
+    <div style="display:flex;gap:6px;margin-top:6px">
+        <div class="fi" style="flex:1"><label>History</label><input id="r-history" value="hypertension,diabetes"></div>
+        <div class="fi" style="flex:1"><label>Meds</label><input id="r-meds" value="metformin,lisinopril"></div>
+        <div class="fi" style="flex:1"><label>Allergies</label><input id="r-allergies" value="penicillin"></div>
+    </div>
+    <div class="bgrp"><button class="btn btn-p" id="rBtn" onclick="runR()"><span class="bt">Run Pipeline</span><div class="sp"></div></button></div>
+</div>
+<div class="ra" id="rResult"><div class="card" id="rCard"></div></div>
+</div>
+
+<!-- RAG -->
+<div class="pn" id="pn-rag">
+<div class="card">
+    <div class="ch">RAG Medical Knowledge Base</div>
+    <div class="ex green"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p><strong>Retrieval-Augmented Generation</strong> — searches 16 medical guidelines using FAISS vector similarity and sentence-transformers embeddings. Returns relevant passages with source citations instead of hallucinating answers.</p></div></div>
+    <div class="smp"><span onclick="$('rag-q').value='chest pain acute coronary syndrome'">ACS</span><span onclick="$('rag-q').value='sepsis antibiotics management'">Sepsis</span><span onclick="$('rag-q').value='COPD exacerbation'">COPD</span><span onclick="$('rag-q').value='stroke tPA thrombolysis'">Stroke</span></div>
+    <div class="fi"><label>Ask a medical question</label><input id="rag-q" placeholder="e.g., What is the treatment for acute coronary syndrome?"></div>
+    <div class="fi" style="margin-top:8px;max-width:100px"><label>Top K</label><input type="number" id="rag-k" value="3" min="1" max="10"></div>
+    <div class="bgrp"><button class="btn btn-p" id="ragBtn" onclick="runRAG()"><span class="bt">Search</span><div class="sp"></div></button></div>
+</div>
+<div class="ra" id="ragResult"></div>
+</div>
+
+<!-- NER -->
+<div class="pn" id="pn-ner">
+<div class="card">
+    <div class="ch">Clinical Entity Extraction + Knowledge Graph</div>
+    <div class="ex purple"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p><strong>Named Entity Recognition</strong> finds medications, conditions, procedures, lab values in text. Links each to UMLS medical codes. Then builds a <strong>patient knowledge graph</strong> showing relationships (which drugs treat which conditions).</p></div></div>
+    <div class="smp"><span onclick="$('ner-n').value='Patient on aspirin 325mg and heparin for myocardial infarction. ECG shows ST elevation. Troponin 0.5 ng/mL. History of diabetes and hypertension. Started on metoprolol and nitroglycerin drip.'">Cardiac</span><span onclick="$('ner-n').value='72yo female with pneumonia, started on azithromycin 500mg and ceftriaxone. Chest X-ray shows consolidation. WBC 15000 cells/uL. History of COPD and renal failure.'">Respiratory</span></div>
+    <div class="fi"><label>Clinical Note</label><textarea id="ner-n">Patient on aspirin 325mg and heparin for myocardial infarction. ECG shows ST elevation. Troponin 0.5 ng/mL. History of diabetes and hypertension. Started on metoprolol and nitroglycerin drip.</textarea></div>
+    <div class="fi" style="margin-top:8px;max-width:160px"><label>Patient ID</label><input id="ner-pid" value="pt-ner-001"></div>
+    <div class="bgrp"><button class="btn btn-p" id="nerBtn" onclick="runNER()"><span class="bt">Extract &amp; Build Graph</span><div class="sp"></div></button></div>
+</div>
+<div class="ra" id="nerResult"></div>
+</div>
+
+<!-- FHIR -->
+<div class="pn" id="pn-fhir">
+<div class="card">
+    <div class="ch">FHIR R4 Interoperability</div>
+    <div class="ex amber"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p><strong>FHIR</strong> is the US government-mandated standard for healthcare data exchange. This accepts a real FHIR R4 Bundle, runs risk prediction, and returns a FHIR-compliant RiskAssessment that any hospital EHR (Epic, Cerner) can consume.</p></div></div>
+    <div class="smp"><span onclick="loadFS('critical')">Critical Patient</span><span onclick="loadFS('normal')">Normal Patient</span></div>
+    <div class="fi"><label>FHIR R4 Bundle (JSON)</label><textarea id="fhir-b" style="min-height:180px;font-family:'SF Mono',monospace;font-size:11px"></textarea></div>
+    <div class="bgrp"><button class="btn btn-p" id="fhirBtn" onclick="runFHIR()"><span class="bt">Submit Bundle</span><div class="sp"></div></button></div>
+</div>
+<div class="ra" id="fhirResult"></div>
+</div>
+
+<!-- Eval -->
+<div class="pn" id="pn-eval">
+<div class="card">
+    <div class="ch">LLM-as-Judge — AI Safety Evaluation</div>
+    <div class="ex rose"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p>Evaluates AI-generated medical output on 4 axes: <strong>Factual Consistency</strong>, <strong>Hallucination Detection</strong>, <strong>Medical Accuracy</strong> (valid drug names/dosages), and <strong>Clinical Safety</strong> (could this harm a patient?). Goes beyond ROUGE to catch real dangers.</p></div></div>
+    <div class="smp"><span onclick="loadES('ok')">Accurate</span><span onclick="loadES('hal')">Hallucinated</span><span onclick="loadES('bad')">Contradicted</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fi"><label>Original Note</label><textarea id="ev-src"></textarea></div><div class="fi"><label>AI Output (to check)</label><textarea id="ev-gen"></textarea></div></div>
+    <div class="bgrp"><button class="btn btn-p" id="evalBtn" onclick="runEval()"><span class="bt">Evaluate Safety</span><div class="sp"></div></button></div>
+</div>
+<div class="ra" id="evalResult"></div>
+</div>
+
+<!-- Risk -->
+<div class="pn" id="pn-predict">
+<div class="card">
+    <div class="ch">Patient Risk Prediction</div>
+    <div class="ex blue"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p>A <strong>Random Forest classifier</strong> analyzes 7 vitals, computes BMI and MAP (Mean Arterial Pressure), and outputs a risk classification with confidence score.</p></div></div>
+    <div class="fg">
+        <div class="fi"><label>Heart Rate</label><input type="number" id="v-hr" value="82"><span class="hint">60-100</span></div>
+        <div class="fi"><label>Resp Rate</label><input type="number" id="v-rr" value="18"><span class="hint">12-20</span></div>
+        <div class="fi"><label>Temp (C)</label><input type="number" id="v-temp" value="37.0" step="0.1"></div>
+        <div class="fi"><label>SpO2 (%)</label><input type="number" id="v-spo2" value="97"></div>
+        <div class="fi"><label>SBP</label><input type="number" id="v-sbp" value="120"></div>
+        <div class="fi"><label>DBP</label><input type="number" id="v-dbp" value="80"></div>
+        <div class="fi"><label>Age</label><input type="number" id="v-age" value="55"></div>
+    </div>
+    <div class="bgrp"><button class="btn btn-p" id="predBtn" onclick="runPred()"><span class="bt">Predict Risk</span><div class="sp"></div></button><button class="btn btn-s" onclick="loadPre('crit')">Critical</button><button class="btn btn-s" onclick="loadPre('ok')">Healthy</button></div>
+</div>
+<div class="ra" id="predResult"><div class="card" id="predCard"></div></div>
+</div>
+
+<!-- Summarize -->
+<div class="pn" id="pn-summarize">
+<div class="card">
+    <div class="ch">Clinical Note Summarization</div>
+    <div class="ex blue"><div class="ei">&#128161;</div><div><h4>What's happening?</h4><p>A <strong>fine-tuned T5 transformer</strong> performs abstractive summarization — it generates new, compressed text that captures key findings (not just sentence extraction). Shows compression ratio.</p></div></div>
+    <div class="smp"><span onclick="$('sum-n').value=SUM_S.card">Cardiology</span><span onclick="$('sum-n').value=SUM_S.er">Emergency</span></div>
+    <div class="fi"><textarea id="sum-n" placeholder="Paste clinical note..."></textarea></div>
+    <div class="bgrp"><button class="btn btn-p" id="sumBtn" onclick="runSum()"><span class="bt">Summarize</span><div class="sp"></div></button></div>
+</div>
+<div class="ra" id="sumResult"><div class="card"><div class="ch">Summary</div><div style="background:var(--bg);border-radius:7px;padding:14px;margin-top:6px;font-size:13px;line-height:1.7" id="sumText"></div><div class="mrow"><div class="met"><div class="ml">Input</div><div class="mv" id="sumIn">-</div></div><div class="met"><div class="ml">Output</div><div class="mv" id="sumOut">-</div></div><div class="met"><div class="ml">Compression</div><div class="mv" id="sumComp">-</div></div></div></div></div>
+</div>
+
+<!-- ═══ DATA ENGINEERING ═══ -->
+<div class="pn" id="pn-de">
+<div class="card">
+    <div class="ch">Data Engineering Platform</div>
+    <div class="ex blue"><div class="ei">&#9881;</div><div><h4>What's happening?</h4><p>7 production data engineering systems work together: <strong>Event Streaming</strong> (Kafka-style with schema registry + dead letter queue), <strong>Column-Level Lineage</strong> (tracks every field transformation across all 9 pipeline stages), <strong>Data Quality</strong> (Great Expectations-style validation with anomaly detection), <strong>Star Schema Warehouse</strong> (fact_encounters + 4 dimension tables), <strong>ETL Orchestrator</strong> (Airflow-style DAG with 16 tasks, retries, SLAs), <strong>CDC Stream</strong> (before/after snapshots with event replay), and <strong>Data Catalog</strong> (12 datasets with PII flagging and freshness monitoring).</p></div></div>
+    <div class="bgrp"><button class="btn btn-p" id="deBtn" onclick="loadDE()"><span class="bt">Load Data Engineering Dashboard</span><div class="sp"></div></button></div>
+</div>
+
+<div class="ra" id="deResult">
+
+<!-- Streaming -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Event Streaming Pipeline</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Metrics</div><div id="de-stream-metrics" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Schema Evolution (patient_vitals)</div><div id="de-schema-evo" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+    </div>
+</div>
+
+<!-- Quality -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Data Quality Framework</div>
+    <div id="de-quality" style="margin-top:8px"></div>
+</div>
+
+<!-- Lineage -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Column-Level Data Lineage</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Lineage DAG Summary</div><div id="de-lineage-dag" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">PII Columns (HIPAA)</div><div id="de-pii" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+    </div>
+    <div style="margin-top:8px"><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Impact Analysis: If heart_rate changes, what breaks?</div><div id="de-impact" style="background:#fff1f2;border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+</div>
+
+<!-- Warehouse -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Star Schema Analytics Warehouse</div>
+    <div id="de-warehouse" style="margin-top:8px;background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div>
+</div>
+
+<!-- Orchestrator -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">ETL Pipeline Orchestrator (Airflow-Style)</div>
+    <div id="de-orchestrator" style="margin-top:8px"></div>
+</div>
+
+<!-- CDC -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Change Data Capture (CDC) Stream</div>
+    <div id="de-cdc" style="margin-top:8px;background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div>
+</div>
+
+<!-- Catalog -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Data Catalog &amp; Metadata</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Registered Datasets</div><div id="de-catalog-datasets" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6;max-height:300px;overflow-y:auto"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Freshness Report</div><div id="de-freshness" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+    </div>
+</div>
+
+</div>
 </div>
 
 </div><!-- /main -->
@@ -721,515 +608,278 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════ TAB NAVIGATION ═══════════
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => switchTab(tab.dataset.panel));
-});
-function switchTab(panel) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.panel === panel));
-    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + panel));
-}
+const $=id=>document.getElementById(id);
+const sw=p=>{document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.p===p));document.querySelectorAll('.pn').forEach(n=>n.classList.toggle('on',n.id==='pn-'+p))};
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>sw(t.dataset.p)));
+const sl=(id,l)=>{const b=$(id);l?b.classList.add('ld'):b.classList.remove('ld');b.disabled=l};
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),4000)};
+const toL=v=>v?v.split(',').map(s=>s.trim()).filter(Boolean):[];
 
-// ═══════════ UTILITIES ═══════════
-function setLoading(id, loading) {
-    const btn = document.getElementById(id);
-    if (loading) { btn.classList.add('loading'); btn.disabled = true; }
-    else { btn.classList.remove('loading'); btn.disabled = false; }
-}
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('visible');
-    setTimeout(() => t.classList.remove('visible'), 4000);
-}
-function toggleAgent(el) {
-    el.nextElementSibling.classList.toggle('collapsed');
-}
-
-// ═══════════ SAMPLE DATA ═══════════
-const REASONING_SAMPLES = {
-    chest_pain: {
-        complaint: 'chest pain',
-        note: '62-year-old male presenting with acute substernal chest pain radiating to left arm for 3 hours. Associated with diaphoresis and shortness of breath. History of hypertension and diabetes. Current medications include metformin and lisinopril. ECG shows ST elevation in leads II, III, aVF. Troponin I elevated at 0.82 ng/mL.',
-        age: 62, gender: 'male', hr: 102, rr: 22, temp: 37.1, spo2: 94, sbp: 158, dbp: 95,
-        history: 'hypertension,diabetes', meds: 'metformin,lisinopril', allergies: 'penicillin'
-    },
-    dyspnea: {
-        complaint: 'shortness of breath',
-        note: '78-year-old female with acute dyspnea, productive cough with yellow sputum for 2 days. Temperature 38.9C. History of COPD and heart failure. On home oxygen 2L. Chest X-ray shows bilateral infiltrates.',
-        age: 78, gender: 'female', hr: 110, rr: 28, temp: 38.9, spo2: 88, sbp: 100, dbp: 60,
-        history: 'COPD,heart failure', meds: 'albuterol,furosemide', allergies: ''
-    },
-    headache: {
-        complaint: 'severe headache',
-        note: '45-year-old male with sudden onset worst headache of life, neck stiffness, photophobia. No trauma. BP 180/100. Alert and oriented but in distress.',
-        age: 45, gender: 'male', hr: 88, rr: 18, temp: 37.0, spo2: 98, sbp: 180, dbp: 100,
-        history: '', meds: '', allergies: 'sulfa'
-    }
+// ═══ SAMPLES ═══
+const CC_S={
+    chest_pain:{complaint:'chest pain',note:'62-year-old male presenting with acute substernal chest pain radiating to left arm for 3 hours. Associated with diaphoresis and shortness of breath. History of hypertension and diabetes. Current medications include metformin and lisinopril. ECG shows ST elevation in leads II, III, aVF. Troponin I elevated at 0.82 ng/mL.',age:62,gender:'male',hr:102,rr:22,temp:37.1,spo2:94,sbp:158,dbp:95,history:'hypertension,diabetes',meds:'metformin,lisinopril',allergies:'penicillin'},
+    dyspnea:{complaint:'shortness of breath',note:'78-year-old female with acute dyspnea, productive cough with yellow sputum for 2 days. Temperature 38.9C. History of COPD and heart failure. On home oxygen 2L. Chest X-ray shows bilateral infiltrates.',age:78,gender:'female',hr:110,rr:28,temp:38.9,spo2:88,sbp:100,dbp:60,history:'COPD,heart failure',meds:'albuterol,furosemide',allergies:''},
+    headache:{complaint:'severe headache',note:'45-year-old male with sudden onset worst headache of life, neck stiffness, photophobia. No trauma. BP 180/100. Alert and oriented but in distress.',age:45,gender:'male',hr:88,rr:18,temp:37.0,spo2:98,sbp:180,dbp:100,history:'',meds:'',allergies:'sulfa'}
 };
+const loadCC=k=>{const s=CC_S[k];$('cc-complaint').value=s.complaint;$('cc-note').value=s.note;$('cc-age').value=s.age;$('cc-gender').value=s.gender;$('cc-hr').value=s.hr;$('cc-rr').value=s.rr;$('cc-temp').value=s.temp;$('cc-spo2').value=s.spo2;$('cc-sbp').value=s.sbp;$('cc-dbp').value=s.dbp;$('cc-history').value=s.history;$('cc-meds').value=s.meds;$('cc-allergies').value=s.allergies};
+const loadR=k=>{const s=CC_S[k];$('r-complaint').value=s.complaint;$('r-note').value=s.note;$('r-age').value=s.age;$('r-gender').value=s.gender;$('r-hr').value=s.hr;$('r-rr').value=s.rr;$('r-temp').value=s.temp;$('r-spo2').value=s.spo2;$('r-sbp').value=s.sbp;$('r-dbp').value=s.dbp;$('r-history').value=s.history;$('r-meds').value=s.meds;$('r-allergies').value=s.allergies};
+const SUM_S={card:"Chief Complaint: Chest pain radiating to left arm for 3 hours.\n\nHPI: 62-year-old male with history of hypertension and diabetes presents with acute substernal chest pain radiating to left arm. Associated symptoms include diaphoresis and shortness of breath.\n\nPhysical Exam: BP 158/95, HR 102, RR 22, SpO2 94%. Diaphoretic. S1S2 regular.\n\nLabs: Troponin I 0.82 ng/mL, BNP 340 pg/mL. ECG shows ST elevation in leads II, III, aVF.\n\nAssessment: STEMI. Activate cath lab. Aspirin 325mg, heparin drip, clopidogrel loading.",er:"Chief Complaint: Altered mental status.\n\nHPI: 70-year-old female brought by EMS found unresponsive at home. Family reports increasing confusion over 24 hours.\n\nPhysical Exam: BP 90/60, HR 115, RR 24, Temp 39.2C, SpO2 91%. GCS 10.\n\nLabs: WBC 22,000, Lactate 4.2, Creatinine 2.8, Procalcitonin 8.5. UA shows pyuria.\n\nAssessment: Sepsis secondary to UTI. 30mL/kg crystalloid bolus. Broad spectrum antibiotics."};
+const FHIR_S={critical:{"resourceType":"Bundle","type":"collection","entry":[{"resource":{"resourceType":"Patient","id":"pt-fhir-001","name":[{"family":"Garcia","given":["Maria"]}],"gender":"female","birthDate":"1952-05-15"}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8867-4","display":"Heart rate"}]},"valueQuantity":{"value":130,"unit":"beats/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"9279-1","display":"Respiratory rate"}]},"valueQuantity":{"value":28,"unit":"breaths/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8310-5","display":"Body temperature"}]},"valueQuantity":{"value":39.5,"unit":"Cel"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"2708-6","display":"Oxygen saturation"}]},"valueQuantity":{"value":87,"unit":"%"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"85354-9","display":"Blood pressure panel"}]},"component":[{"code":{"coding":[{"code":"8480-6"}]},"valueQuantity":{"value":82,"unit":"mmHg"}},{"code":{"coding":[{"code":"8462-4"}]},"valueQuantity":{"value":48,"unit":"mmHg"}}]}}]},normal:{"resourceType":"Bundle","type":"collection","entry":[{"resource":{"resourceType":"Patient","id":"pt-fhir-002","name":[{"family":"Smith","given":["John"]}],"gender":"male","birthDate":"1990-08-22"}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8867-4","display":"Heart rate"}]},"valueQuantity":{"value":72,"unit":"beats/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"9279-1","display":"Respiratory rate"}]},"valueQuantity":{"value":14,"unit":"breaths/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8310-5","display":"Body temperature"}]},"valueQuantity":{"value":36.8,"unit":"Cel"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"2708-6","display":"Oxygen saturation"}]},"valueQuantity":{"value":99,"unit":"%"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"85354-9","display":"Blood pressure panel"}]},"component":[{"code":{"coding":[{"code":"8480-6"}]},"valueQuantity":{"value":118,"unit":"mmHg"}},{"code":{"coding":[{"code":"8462-4"}]},"valueQuantity":{"value":76,"unit":"mmHg"}}]}}]}};
+const loadFS=k=>{$('fhir-b').value=JSON.stringify(FHIR_S[k],null,2)};
+const EVAL_S={ok:{s:"Patient presents with chest pain. Troponin elevated at 0.82 ng/mL. ECG shows ST elevation. Diagnosed with STEMI. Started on aspirin 325mg and heparin drip.",g:"Patient has chest pain with elevated troponin of 0.82 ng/mL. ECG findings show ST elevation consistent with STEMI. Treatment initiated with aspirin and heparin."},hal:{s:"Patient presents with chest pain. Troponin elevated at 0.82 ng/mL. ECG shows ST elevation.",g:"Patient has chest pain with elevated troponin. CT scan of abdomen shows appendicitis. MRI reveals brain metastases. Started on chemotherapy."},bad:{s:"Patient is allergic to penicillin. Blood pressure is 160/100. Heart rate is 55 bpm.",g:"Patient has no known drug allergies. Blood pressure is normal at 120/80. Heart rate is 110 bpm. Started on amoxicillin."}};
+const loadES=k=>{$('ev-src').value=EVAL_S[k].s;$('ev-gen').value=EVAL_S[k].g};
 
-function loadReasoningSample(key) {
-    const s = REASONING_SAMPLES[key];
-    document.getElementById('r-complaint').value = s.complaint;
-    document.getElementById('r-note').value = s.note;
-    document.getElementById('r-age').value = s.age;
-    document.getElementById('r-gender').value = s.gender;
-    document.getElementById('r-hr').value = s.hr;
-    document.getElementById('r-rr').value = s.rr;
-    document.getElementById('r-temp').value = s.temp;
-    document.getElementById('r-spo2').value = s.spo2;
-    document.getElementById('r-sbp').value = s.sbp;
-    document.getElementById('r-dbp').value = s.dbp;
-    document.getElementById('r-history').value = s.history;
-    document.getElementById('r-meds').value = s.meds;
-    document.getElementById('r-allergies').value = s.allergies;
-}
-
-function loadSumSample(type) {
-    const samples = {
-        cardiology: "Chief Complaint: Chest pain radiating to left arm for 3 hours.\n\nHPI: 62-year-old male with history of hypertension and diabetes presents with acute substernal chest pain radiating to left arm. Associated symptoms include diaphoresis and shortness of breath.\n\nPhysical Exam: BP 158/95, HR 102, RR 22, SpO2 94%. Diaphoretic. S1S2 regular.\n\nLabs: Troponin I 0.82 ng/mL, BNP 340 pg/mL. ECG shows ST elevation in leads II, III, aVF.\n\nAssessment: STEMI. Activate cath lab. Aspirin 325mg, heparin drip, clopidogrel loading.",
-        emergency: "Chief Complaint: Altered mental status.\n\nHPI: 70-year-old female brought by EMS found unresponsive at home. Family reports increasing confusion over 24 hours. Last known normal yesterday morning.\n\nPhysical Exam: BP 90/60, HR 115, RR 24, Temp 39.2C, SpO2 91%. GCS 10 (E3V3M4). Neck supple. Lungs with bilateral crackles.\n\nLabs: WBC 22,000, Lactate 4.2, Creatinine 2.8, Procalcitonin 8.5. Blood cultures pending. UA shows pyuria.\n\nAssessment: Sepsis secondary to UTI. 30mL/kg crystalloid bolus. Broad spectrum antibiotics. Vasopressors if refractory."
+// ═══ COMMAND CENTER API ═══
+let lastCCPayload=null;
+async function runCC(){
+    sl('ccBtn',true);
+    const payload={
+        patient_id:$('cc-pid').value,chief_complaint:$('cc-complaint').value,clinical_note:$('cc-note').value,
+        heart_rate:+$('cc-hr').value,respiratory_rate:+$('cc-rr').value,body_temperature:+$('cc-temp').value,
+        oxygen_saturation:+$('cc-spo2').value,systolic_bp:+$('cc-sbp').value,diastolic_bp:+$('cc-dbp').value,
+        age:+$('cc-age').value,gender:$('cc-gender').value,
+        medical_history:toL($('cc-history').value),current_medications:toL($('cc-meds').value),allergies:toL($('cc-allergies').value)
     };
-    document.getElementById('noteInput').value = samples[type] || '';
+    lastCCPayload=payload;
+    try{
+        const res=await fetch('/api/command-center',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!res.ok)throw new Error((await res.json()).detail);
+        const d=await res.json();
+        renderCC(d);
+        // Enable what-if
+        $('wi-hr').value=payload.heart_rate;$('wi-spo2').value=payload.oxygen_saturation;
+        $('wi-sbp').value=payload.systolic_bp;$('wi-temp').value=payload.body_temperature;
+        $('ccWhatIf').classList.add('vis');
+    }catch(e){toast(e.message)}
+    finally{sl('ccBtn',false)}
 }
 
-function loadPreset(type) {
-    const presets = {
-        critical: { hr: 130, rr: 28, temp: 39.2, spo2: 88, sbp: 85, dbp: 50, age: 72 },
-        healthy: { hr: 72, rr: 14, temp: 36.8, spo2: 99, sbp: 118, dbp: 76, age: 30 }
-    };
-    const p = presets[type];
-    document.getElementById('v-hr').value = p.hr;
-    document.getElementById('v-rr').value = p.rr;
-    document.getElementById('v-temp').value = p.temp;
-    document.getElementById('v-spo2').value = p.spo2;
-    document.getElementById('v-sbp').value = p.sbp;
-    document.getElementById('v-dbp').value = p.dbp;
-    document.getElementById('v-age').value = p.age;
+async function runWhatIf(){
+    if(!lastCCPayload)return;
+    sl('wiBtn',true);
+    const p={...lastCCPayload,heart_rate:+$('wi-hr').value,oxygen_saturation:+$('wi-spo2').value,systolic_bp:+$('wi-sbp').value,body_temperature:+$('wi-temp').value};
+    try{
+        const res=await fetch('/api/command-center',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+        if(!res.ok)throw new Error((await res.json()).detail);
+        const d=await res.json();
+        renderCC(d,lastCCPayload);
+    }catch(e){toast(e.message)}
+    finally{sl('wiBtn',false)}
 }
 
-const FHIR_SAMPLES = {
-    critical: {"resourceType":"Bundle","type":"collection","entry":[{"resource":{"resourceType":"Patient","id":"pt-fhir-001","name":[{"family":"Garcia","given":["Maria"]}],"gender":"female","birthDate":"1952-05-15"}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8867-4","display":"Heart rate"}]},"valueQuantity":{"value":130,"unit":"beats/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"9279-1","display":"Respiratory rate"}]},"valueQuantity":{"value":28,"unit":"breaths/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8310-5","display":"Body temperature"}]},"valueQuantity":{"value":39.5,"unit":"Cel"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"2708-6","display":"Oxygen saturation"}]},"valueQuantity":{"value":87,"unit":"%"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"85354-9","display":"Blood pressure panel"}]},"component":[{"code":{"coding":[{"code":"8480-6"}]},"valueQuantity":{"value":82,"unit":"mmHg"}},{"code":{"coding":[{"code":"8462-4"}]},"valueQuantity":{"value":48,"unit":"mmHg"}}]}}]},
-    normal: {"resourceType":"Bundle","type":"collection","entry":[{"resource":{"resourceType":"Patient","id":"pt-fhir-002","name":[{"family":"Smith","given":["John"]}],"gender":"male","birthDate":"1990-08-22"}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8867-4","display":"Heart rate"}]},"valueQuantity":{"value":72,"unit":"beats/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"9279-1","display":"Respiratory rate"}]},"valueQuantity":{"value":14,"unit":"breaths/minute"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"8310-5","display":"Body temperature"}]},"valueQuantity":{"value":36.8,"unit":"Cel"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"2708-6","display":"Oxygen saturation"}]},"valueQuantity":{"value":99,"unit":"%"}}},{"resource":{"resourceType":"Observation","code":{"coding":[{"system":"http://loinc.org","code":"85354-9","display":"Blood pressure panel"}]},"component":[{"code":{"coding":[{"code":"8480-6"}]},"valueQuantity":{"value":118,"unit":"mmHg"}},{"code":{"coding":[{"code":"8462-4"}]},"valueQuantity":{"value":76,"unit":"mmHg"}}]}}]}
-};
-function loadFHIRSample(type) {
-    document.getElementById('fhir-bundle').value = JSON.stringify(FHIR_SAMPLES[type], null, 2);
-}
+function renderCC(d,prev){
+    const colors=['#3b82f6','#8b5cf6','#0f6fec','#f59e0b','#10b981','#14b8a6','#f97316','#ef4444','#f43f5e','#64748b'];
+    const icons=['&#128300;','&#128279;','&#129302;','&#128202;','&#128218;','&#128196;','&#128737;','&#127973;'];
 
-const EVAL_SAMPLES = {
-    consistent: {
-        source: "Patient presents with chest pain. Troponin elevated at 0.82 ng/mL. ECG shows ST elevation. Diagnosed with STEMI. Started on aspirin 325mg and heparin drip.",
-        generated: "Patient has chest pain with elevated troponin of 0.82 ng/mL. ECG findings show ST elevation consistent with STEMI. Treatment initiated with aspirin and heparin."
-    },
-    hallucinated: {
-        source: "Patient presents with chest pain. Troponin elevated at 0.82 ng/mL. ECG shows ST elevation.",
-        generated: "Patient has chest pain with elevated troponin of 0.82 ng/mL. CT scan of the abdomen shows appendicitis. MRI reveals brain metastases. Patient was started on chemotherapy."
-    },
-    contradiction: {
-        source: "Patient is allergic to penicillin. Blood pressure is 160/100. Heart rate is 55 bpm (bradycardia).",
-        generated: "Patient has no known drug allergies. Blood pressure is normal at 120/80. Heart rate is elevated at 110 bpm (tachycardia). Started on amoxicillin."
-    }
-};
-function loadEvalSample(type) {
-    const s = EVAL_SAMPLES[type];
-    document.getElementById('eval-source').value = s.source;
-    document.getElementById('eval-generated').value = s.generated;
-}
+    // Summary bar
+    let sb=`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">`;
+    sb+=`<div style="text-align:center"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Consensus</div><div style="font-size:32px;font-weight:900;color:${d.consensus_score>.6?'var(--r)':'var(--g)'}">${(d.consensus_score*100).toFixed(1)}%</div></div>`;
+    sb+=`<div style="text-align:center"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Safety</div><div style="font-size:32px;font-weight:900;color:${d.safety_passed?'var(--g)':'var(--r)'}">${d.safety_passed?'PASS':'FAIL'}</div></div>`;
+    sb+=`<div style="text-align:center"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Latency</div><div style="font-size:32px;font-weight:900;color:var(--t)">${d.overall_latency_ms.toFixed(0)}ms</div></div>`;
+    sb+=`<div style="text-align:center"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Stages</div><div style="font-size:32px;font-weight:900;color:var(--t)">${d.stages.length}</div></div>`;
+    if(d.feedback_loops_triggered>0) sb+=`<div style="text-align:center"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Feedback Loops</div><div style="font-size:32px;font-weight:900;color:var(--w)">${d.feedback_loops_triggered}</div></div>`;
+    sb+=`</div>`;
+    $('ccSummaryBar').innerHTML=sb;
 
-// ═══════════ API: MULTI-AGENT REASONING ═══════════
-async function submitReasoning() {
-    setLoading('reasonBtn', true);
-    // Animate pipeline
-    ['pipe-triage','pipe-diag','pipe-treat','pipe-consensus'].forEach(id => {
-        document.getElementById(id).classList.remove('active');
-        document.getElementById(id).style.opacity = '0.4';
+    // Pipeline stages
+    let ph='';
+    d.stages.forEach((s,i)=>{
+        const sc=s.status==='completed'?'done':s.status==='failed'?'fail':s.status==='re-run'?'rerun':'wait';
+        ph+=`<div class="ps ${sc}"><div class="ps-num" style="background:${colors[i%10]}">${i+1}</div><div class="ps-body"><div class="ps-name">${s.name}</div><div class="ps-sys">${s.system}</div>`;
+        if(s.narration) ph+=`<div class="ps-detail">${s.narration}</div>`;
+        if(s.error) ph+=`<div class="ps-detail" style="color:var(--r)">${s.error}</div>`;
+        // Stage-specific detail rendering
+        if(s.system==='ner'&&s.result){
+            ph+=`<div class="ps-detail"><div class="etags">`;
+            (s.result.medications||[]).forEach(m=>ph+=`<span class="et med">${m.text}</span>`);
+            (s.result.conditions||[]).forEach(c=>ph+=`<span class="et cond">${c.text}</span>`);
+            (s.result.procedures||[]).forEach(p=>ph+=`<span class="et proc">${p.text}</span>`);
+            (s.result.lab_values||[]).forEach(l=>ph+=`<span class="et lab">${l.text}</span>`);
+            ph+=`</div></div>`;
+        }
+        if(s.system==='agents'&&s.result){
+            const t=s.result.triage||{},dx=s.result.diagnosis||{},tx=s.result.treatment||{};
+            const esiC={1:'#ef4444',2:'#f97316',3:'#f59e0b',4:'#10b981',5:'#06b6d4'};
+            ph+=`<div class="ps-detail"><div class="mrow"><div class="met"><div class="ml">ESI Level</div><div class="mv" style="color:${esiC[t.esi_level]||'var(--t)'}">${t.esi_level||'?'}</div></div><div class="met"><div class="ml">Primary Dx</div><div class="mv" style="font-size:13px">${dx.primary_diagnosis||'?'}</div></div><div class="met"><div class="ml">Disposition</div><div class="mv" style="font-size:13px">${tx.disposition||'?'}</div></div></div></div>`;
+        }
+        if(s.system==='risk_predictor'&&s.result&&s.result.prediction){
+            const isH=s.result.prediction==='High Risk';
+            ph+=`<div class="ps-detail"><span class="rb ${isH?'hi':'lo'}">${s.result.prediction}</span> Score: ${(s.result.risk_score*100).toFixed(1)}%, Confidence: ${(s.result.confidence*100).toFixed(1)}%</div>`;
+        }
+        if(s.system==='evaluator'&&s.result){
+            const os=s.result.overall_score||0;const pt=s.result.pass_threshold;
+            ph+=`<div class="ps-detail">Overall: <strong style="color:${pt?'var(--g)':'var(--r)'}"> ${(os*100).toFixed(1)}% ${pt?'PASS':'FAIL'}</strong></div>`;
+        }
+        ph+=`</div><div class="ps-time">${s.latency_ms.toFixed(0)}ms</div></div>`;
+        if(i<d.stages.length-1) ph+=`<div class="pc"></div>`;
     });
-    document.getElementById('pipe-triage').classList.add('active');
-    document.getElementById('pipe-triage').style.opacity = '1';
+    $('ccPipeline').innerHTML=ph;
 
-    try {
-        const toList = v => v ? v.split(',').map(s => s.trim()).filter(Boolean) : [];
-        const payload = {
-            patient_id: document.getElementById('r-pid').value,
-            chief_complaint: document.getElementById('r-complaint').value,
-            clinical_note: document.getElementById('r-note').value,
-            heart_rate: +document.getElementById('r-hr').value,
-            respiratory_rate: +document.getElementById('r-rr').value,
-            body_temperature: +document.getElementById('r-temp').value,
-            oxygen_saturation: +document.getElementById('r-spo2').value,
-            systolic_bp: +document.getElementById('r-sbp').value,
-            diastolic_bp: +document.getElementById('r-dbp').value,
-            age: +document.getElementById('r-age').value,
-            gender: document.getElementById('r-gender').value,
-            medical_history: toList(document.getElementById('r-history').value),
-            current_medications: toList(document.getElementById('r-meds').value),
-            allergies: toList(document.getElementById('r-allergies').value),
-        };
+    // Narrator
+    let nh='';
+    d.stages.forEach(s=>{
+        if(!s.narration)return;
+        nh+=`<div class="nar-entry"><div class="nar-stage">${s.name}</div><div class="nar-text">${s.narration}</div></div>`;
+    });
+    if(d.feedback_loops_triggered>0) nh+=`<div class="nar-entry"><div class="nar-stage" style="color:#f59e0b">Feedback Loop</div><div class="nar-text">Safety evaluation failed on first pass. The summarizer was re-run with RAG medical context to improve accuracy, then re-evaluated.</div></div>`;
+    nh+=`<div class="nar-entry"><div class="nar-stage" style="color:#a78bfa">Complete</div><div class="nar-text">All ${d.stages.length} stages completed in ${d.overall_latency_ms.toFixed(0)}ms. Consensus score: ${(d.consensus_score*100).toFixed(1)}%. Safety: ${d.safety_passed?'PASSED':'FAILED'}. FHIR bundle exported with ${d.fhir_bundle?.total||0} resources.</div></div>`;
+    $('narEntries').innerHTML=nh;
 
-        const res = await fetch('/api/reason', {
-            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        const data = await res.json();
+    // Data Lineage
+    let lh=`<div class="ch">Data Lineage</div><div class="cs">How raw data transforms through each pipeline stage — a key data engineering concept.</div>`;
+    lh+=`<div style="overflow-x:auto;padding:8px 0"><div style="display:flex;align-items:center;gap:0;min-width:max-content">`;
+    d.data_lineage.forEach((l,i)=>{
+        lh+=`<div style="background:var(--bg);border-radius:6px;padding:8px 12px;text-align:center;min-width:90px"><div style="font-size:10px;font-weight:700;color:var(--p)">${l.stage}</div><div style="font-size:9px;color:var(--t3);margin-top:2px">${l.input} &rarr; ${l.output}</div><div style="font-size:11px;font-weight:700;color:var(--t);margin-top:2px">${l.records} records</div></div>`;
+        if(i<d.data_lineage.length-1) lh+=`<div style="color:var(--bd);padding:0 4px;font-size:14px">&#10132;</div>`;
+    });
+    lh+=`</div></div>`;
+    $('ccLineage').innerHTML=lh;
 
-        // Animate pipeline completion
-        ['pipe-triage','pipe-diag','pipe-treat','pipe-consensus'].forEach((id, i) => {
-            setTimeout(() => {
-                document.getElementById(id).style.opacity = '1';
-                document.getElementById(id).classList.remove('active');
-            }, i * 200);
-        });
-
-        // Build result
-        const t = data.triage, d = data.diagnosis, tx = data.treatment;
-        let html = '';
-
-        // Consensus score
-        html += `<div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:12px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Pipeline Consensus Score</div>
-            <div style="font-size:48px;font-weight:900;color:${data.consensus_score > 0.6 ? 'var(--danger)' : 'var(--success)'};">${(data.consensus_score * 100).toFixed(1)}%</div>
-            <div style="font-size:12px;color:var(--text-muted);">Latency: ${data.pipeline_latency_ms.toFixed(1)}ms &bull; Score = 0.3&times;triage + 0.4&times;diagnosis + 0.3&times;treatment</div>
-        </div>`;
-
-        // Triage result
-        const esiColors = {1:'#ef4444',2:'#f97316',3:'#f59e0b',4:'#10b981',5:'#06b6d4'};
-        html += `<div class="agent-block" style="border-left:4px solid #3b82f6;">
-            <div class="agent-block-header" onclick="toggleAgent(this)">
-                <span class="agent-label" style="background:#3b82f6;">AGENT 1</span>
-                Triage Assessment
-                <span style="margin-left:auto;font-size:12px;padding:2px 10px;border-radius:10px;font-weight:700;background:${esiColors[t.esi_level]||'#64748b'};color:white;">ESI ${t.esi_level}</span>
-            </div>
-            <div class="agent-block-body">
-                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;"><strong>What this agent did:</strong> Assessed emergency severity using the ESI v4 algorithm — checking vital signs against clinical thresholds, matching complaints to acuity levels, and estimating resource needs.</p>
-                <div class="metrics-row">
-                    <div class="metric"><div class="metric-label">ESI Level</div><div class="metric-value" style="color:${esiColors[t.esi_level]}">${t.esi_level}</div></div>
-                    <div class="metric"><div class="metric-label">Risk Score</div><div class="metric-value">${(t.risk_score*100).toFixed(1)}%</div></div>
-                    <div class="metric"><div class="metric-label">Resources Est.</div><div class="metric-value">${t.resource_estimate || 'N/A'}</div></div>
-                </div>
-                ${t.rationale ? `<div style="margin-top:12px;font-size:12px;color:var(--text-secondary);"><strong>Reasoning:</strong> ${t.rationale}</div>` : ''}
-                ${t.immediate_actions?.length ? `<div style="margin-top:8px;font-size:12px;"><strong>Immediate Actions:</strong> ${t.immediate_actions.join(', ')}</div>` : ''}
-                ${t.flags?.length ? `<div style="margin-top:8px;font-size:12px;color:var(--danger);"><strong>Flags:</strong> ${t.flags.join(', ')}</div>` : ''}
-            </div>
-        </div>`;
-
-        // Diagnostic result
-        html += `<div class="agent-block" style="border-left:4px solid #f59e0b;">
-            <div class="agent-block-header" onclick="toggleAgent(this)">
-                <span class="agent-label" style="background:#f59e0b;">AGENT 2</span>
-                Differential Diagnosis
-                <span style="margin-left:auto;font-size:12px;color:var(--text-secondary);">${d.primary_diagnosis || ''}</span>
-            </div>
-            <div class="agent-block-body">
-                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;"><strong>What this agent did:</strong> Generated ranked differential diagnoses by matching symptoms against a clinical knowledge base, scoring each candidate by evidence overlap, and assigning ICD-10 codes.</p>
-                ${(d.differentials||[]).map((dx,i) => `
-                    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-top:8px;${i===0?'border-left:3px solid var(--warning);':''}">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <strong style="font-size:13px;">${i===0?'&#9733; ':''}${dx.name}</strong>
-                            <span style="font-size:12px;font-weight:600;color:var(--primary);">${(dx.confidence*100).toFixed(0)}% confidence</span>
-                        </div>
-                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">ICD-10: ${dx.icd10} &bull; Evidence: ${(dx.evidence||[]).join(', ')}</div>
-                    </div>
-                `).join('')}
-                ${d.recommended_tests?.length ? `<div style="margin-top:12px;font-size:12px;"><strong>Recommended Tests:</strong> ${d.recommended_tests.join(', ')}</div>` : ''}
-            </div>
-        </div>`;
-
-        // Treatment result
-        html += `<div class="agent-block" style="border-left:4px solid #10b981;">
-            <div class="agent-block-header" onclick="toggleAgent(this)">
-                <span class="agent-label" style="background:#10b981;">AGENT 3</span>
-                Treatment Plan
-                <span style="margin-left:auto;font-size:12px;color:var(--text-secondary);">${tx.disposition || ''}</span>
-            </div>
-            <div class="agent-block-body">
-                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;"><strong>What this agent did:</strong> Looked up evidence-based treatment protocols for the primary diagnosis, checked medications against patient allergies and current drugs for interactions, and adjusted for age-related precautions.</p>
-                ${tx.plan ? `<div style="font-size:13px;margin-bottom:10px;"><strong>Plan:</strong> ${tx.plan}</div>` : ''}
-                ${(tx.medications||[]).length ? `
-                    <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Medications:</div>
-                    ${tx.medications.map(m => `
-                        <div style="background:var(--bg);border-radius:6px;padding:8px 12px;margin-bottom:4px;font-size:12px;">
-                            <strong>${m.name}</strong> ${m.dose||''} ${m.route||''} ${m.frequency||''}
-                        </div>
-                    `).join('')}
-                ` : ''}
-                ${tx.monitoring?.length ? `<div style="margin-top:10px;font-size:12px;"><strong>Monitoring:</strong> ${tx.monitoring.join(', ')}</div>` : ''}
-                ${tx.contraindication_warnings?.length ? `<div style="margin-top:8px;font-size:12px;color:var(--danger);"><strong>Warnings:</strong> ${tx.contraindication_warnings.join(', ')}</div>` : ''}
-                ${tx.evidence_grade ? `<div style="margin-top:8px;font-size:11px;color:var(--text-muted);"><strong>Evidence Grade:</strong> ${tx.evidence_grade}</div>` : ''}
-            </div>
-        </div>`;
-
-        // Audit trail
-        html += `<div class="agent-block" style="border-left:4px solid #64748b;">
-            <div class="agent-block-header" onclick="toggleAgent(this)">
-                <span class="agent-label" style="background:#64748b;">AUDIT</span>
-                Full Reasoning Audit Trail
-                <span style="margin-left:auto;font-size:11px;color:var(--text-muted);">Click to expand</span>
-            </div>
-            <div class="agent-block-body collapsed">
-                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Complete decision log showing how each agent reasoned, for regulatory compliance and debugging.</p>
-                <div class="json-block">${JSON.stringify(data.reasoning_audit, null, 2)}</div>
-            </div>
-        </div>`;
-
-        document.getElementById('reasonResultCard').innerHTML = html;
-        document.getElementById('reasonResult').classList.add('visible');
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('reasonBtn', false); }
+    $('ccResult').classList.add('vis');
 }
 
-// ═══════════ API: RAG ═══════════
-async function submitRAG() {
-    const query = document.getElementById('rag-query').value.trim();
-    if (!query) { showToast('Enter a query'); return; }
-    setLoading('ragBtn', true);
-    try {
-        const res = await fetch('/api/rag/query', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ query, top_k: +document.getElementById('rag-topk').value })
-        });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        const data = await res.json();
-
-        let html = '<div class="card"><div class="card-header">Search Results</div>';
-        html += `<div class="card-subtitle">${data.results?.length || 0} relevant passages found from medical guidelines</div>`;
-        (data.results||[]).forEach((r, i) => {
-            html += `<div style="background:var(--bg);border-radius:8px;padding:16px;margin-top:10px;border-left:3px solid var(--success);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <strong style="font-size:13px;">Result ${i+1}</strong>
-                    <span style="font-size:12px;font-weight:600;color:var(--success);">${(r.score*100).toFixed(1)}% match</span>
-                </div>
-                <div style="font-size:13px;line-height:1.7;">${r.text}</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: ${r.source || 'Medical Knowledge Base'}</div>
-            </div>`;
-        });
-        html += '</div>';
-        document.getElementById('ragResult').innerHTML = html;
-        document.getElementById('ragResult').classList.add('visible');
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('ragBtn', false); }
+// ═══ INDIVIDUAL APIs ═══
+async function runR(){
+    sl('rBtn',true);
+    try{
+        const p={patient_id:$('r-pid').value,chief_complaint:$('r-complaint').value,clinical_note:$('r-note').value,heart_rate:+$('r-hr').value,respiratory_rate:+$('r-rr').value,body_temperature:+$('r-temp').value,oxygen_saturation:+$('r-spo2').value,systolic_bp:+$('r-sbp').value,diastolic_bp:+$('r-dbp').value,age:+$('r-age').value,gender:$('r-gender').value,medical_history:toL($('r-history').value),current_medications:toL($('r-meds').value),allergies:toL($('r-allergies').value)};
+        const r=await fetch('/api/reason',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+        if(!r.ok)throw new Error((await r.json()).detail);
+        const d=await r.json();
+        const t=d.triage,dx=d.diagnosis,tx=d.treatment;
+        const esiC={1:'#ef4444',2:'#f97316',3:'#f59e0b',4:'#10b981',5:'#06b6d4'};
+        let h=`<div style="text-align:center;margin-bottom:16px"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Consensus Score</div><div style="font-size:40px;font-weight:900;color:${d.consensus_score>.6?'var(--r)':'var(--g)'}">${(d.consensus_score*100).toFixed(1)}%</div><div style="font-size:11px;color:var(--t3)">Latency: ${d.pipeline_latency_ms.toFixed(1)}ms</div></div>`;
+        h+=`<div class="ab" style="border-left:3px solid #3b82f6"><div class="ab-h"><span class="al" style="background:#3b82f6">TRIAGE</span> ESI ${t.esi_level} &mdash; Risk ${(t.risk_score*100).toFixed(0)}%</div><div class="ab-b"><p style="font-size:12px;color:var(--t2)">${t.rationale||''}</p>${t.immediate_actions?.length?`<p style="font-size:11px;margin-top:6px"><strong>Actions:</strong> ${t.immediate_actions.join(', ')}</p>`:''}</div></div>`;
+        h+=`<div class="ab" style="border-left:3px solid #f59e0b"><div class="ab-h"><span class="al" style="background:#f59e0b">DIAGNOSIS</span> ${dx.primary_diagnosis}</div><div class="ab-b">${(dx.differentials||[]).map((x,i)=>`<div style="background:var(--bg);border-radius:6px;padding:8px;margin-top:6px;${i===0?'border-left:3px solid var(--w);':''}"><strong>${x.name}</strong> <span style="color:var(--p);font-size:12px">${(x.confidence*100).toFixed(0)}%</span><div style="font-size:10px;color:var(--t3)">ICD-10: ${x.icd10}</div></div>`).join('')}</div></div>`;
+        h+=`<div class="ab" style="border-left:3px solid #10b981"><div class="ab-h"><span class="al" style="background:#10b981">TREATMENT</span> ${tx.disposition||''}</div><div class="ab-b">${tx.plan?`<p style="font-size:12px">${tx.plan}</p>`:''} ${(tx.medications||[]).map(m=>`<div style="background:var(--bg);border-radius:5px;padding:6px 10px;margin-top:4px;font-size:11px"><strong>${m.name}</strong> ${m.dose||''} ${m.route||''}</div>`).join('')} ${tx.evidence_grade?`<p style="font-size:10px;color:var(--t3);margin-top:8px">Evidence: ${tx.evidence_grade}</p>`:''}</div></div>`;
+        $('rCard').innerHTML=h;$('rResult').classList.add('vis');
+    }catch(e){toast(e.message)}finally{sl('rBtn',false)}
 }
 
-// ═══════════ API: NER ═══════════
-async function submitNER() {
-    const note = document.getElementById('ner-note').value.trim();
-    if (!note) { showToast('Enter a clinical note'); return; }
-    setLoading('nerBtn', true);
-    try {
-        const [nerRes, graphRes] = await Promise.all([
-            fetch('/api/ner/extract', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({note}) }),
-            fetch('/api/ner/graph', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({note, patient_id: document.getElementById('ner-pid').value}) })
+async function runRAG(){
+    const q=$('rag-q').value.trim();if(!q){toast('Enter a query');return}sl('ragBtn',true);
+    try{const r=await fetch('/api/rag/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,top_k:+$('rag-k').value})});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();
+    let h='<div class="card"><div class="ch">Results</div><div class="cs">'+((d.results||[]).length)+' passages from medical guidelines</div>';
+    (d.results||[]).forEach((r,i)=>{h+=`<div style="background:var(--bg);border-radius:7px;padding:14px;margin-top:8px;border-left:3px solid var(--g)"><div style="display:flex;justify-content:space-between"><strong style="font-size:12px">Result ${i+1}</strong><span style="font-size:11px;font-weight:600;color:var(--g)">${(r.score*100).toFixed(1)}%</span></div><div style="font-size:12px;line-height:1.7;margin-top:4px">${r.text}</div><div style="font-size:10px;color:var(--t3);margin-top:6px">Source: ${r.source||'Medical KB'}</div></div>`});
+    h+='</div>';$('ragResult').innerHTML=h;$('ragResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('ragBtn',false)}
+}
+
+async function runNER(){
+    const n=$('ner-n').value.trim();if(!n){toast('Enter a note');return}sl('nerBtn',true);
+    try{const[nr,gr]=await Promise.all([fetch('/api/ner/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:n})}),fetch('/api/ner/graph',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:n,patient_id:$('ner-pid').value})})]);
+    if(!nr.ok)throw new Error((await nr.json()).detail);if(!gr.ok)throw new Error((await gr.json()).detail);
+    const ne=await nr.json(),g=await gr.json();
+    let h='<div class="card"><div class="ch">Entities ('+ne.entity_count+')</div><div class="etags">';
+    (ne.medications||[]).forEach(m=>h+=`<span class="et med">${m.text}</span>`);(ne.conditions||[]).forEach(c=>h+=`<span class="et cond">${c.text}</span>`);(ne.procedures||[]).forEach(p=>h+=`<span class="et proc">${p.text}</span>`);(ne.lab_values||[]).forEach(l=>h+=`<span class="et lab">${l.text}</span>`);
+    h+=`</div></div><div class="card" style="margin-top:10px"><div class="ch">Knowledge Graph</div><div class="cs">${g.nodes} nodes, ${g.edges} edges</div><div class="gc" id="gCanvas"></div></div>`;
+    $('nerResult').innerHTML=h;$('nerResult').classList.add('vis');
+    setTimeout(()=>{const c=$('gCanvas');if(!c||!g.graph)return;const w=c.offsetWidth,ht=c.offsetHeight,nodes=g.graph.nodes||[],edges=g.graph.edges||[],cols={MEDICATION:'#3b82f6',CONDITION:'#f59e0b',PROCEDURE:'#10b981',LAB_VALUE:'#8b5cf6'},cx=w/2,cy=ht/2,r=Math.min(w,ht)*.33,pos={};
+    nodes.forEach((n,i)=>{const a=(2*Math.PI*i)/nodes.length-Math.PI/2;pos[n.id]={x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)}});
+    let s=`<svg width="${w}" height="${ht}" xmlns="http://www.w3.org/2000/svg">`;
+    edges.forEach(e=>{const a=pos[e.source],b=pos[e.target];if(a&&b){const co=e.relationship==='treats'?'#10b981':e.relationship==='diagnoses'?'#3b82f6':'#cbd5e1';s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${co}" stroke-width="1.5" opacity=".4"/><text x="${(a.x+b.x)/2}" y="${(a.y+b.y)/2-4}" text-anchor="middle" font-size="9" fill="${co}" font-weight="600">${e.relationship}</text>`}});
+    nodes.forEach(n=>{const p=pos[n.id];if(!p)return;const co=cols[n.label]||'#64748b';s+=`<circle cx="${p.x}" cy="${p.y}" r="18" fill="${co}" opacity=".12" stroke="${co}" stroke-width="2"/><circle cx="${p.x}" cy="${p.y}" r="4" fill="${co}"/><text x="${p.x}" y="${p.y+30}" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="600">${n.text}</text><text x="${p.x}" y="${p.y+42}" text-anchor="middle" font-size="8" fill="#94a3b8">${n.label}</text>`});
+    s+='</svg>';c.innerHTML=s},100);
+    }catch(e){toast(e.message)}finally{sl('nerBtn',false)}
+}
+
+async function runFHIR(){
+    const b=$('fhir-b').value.trim();if(!b){toast('Enter a FHIR Bundle');return}sl('fhirBtn',true);
+    try{const bundle=JSON.parse(b);const r=await fetch('/api/fhir/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bundle})});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();
+    const ra=d.risk_assessment,pr=d.original_prediction,isH=pr.prediction==='High Risk';
+    let h=`<div class="card rc ${isH?'hr':'lr'}"><span class="rb ${isH?'hi':'lo'}">${pr.prediction}</span><div class="fb"><div class="ft">FHIR R4 RiskAssessment</div><div style="font-size:11px;color:var(--t2)">Type: ${ra.resourceType} | Status: ${ra.status} | Subject: ${ra.subject?.reference}</div></div><div class="mrow"><div class="met"><div class="ml">Risk Score</div><div class="mv" style="color:${isH?'var(--r)':'var(--g)'}">${(pr.risk_score*100).toFixed(1)}%</div></div><div class="met"><div class="ml">Confidence</div><div class="mv">${(pr.confidence*100).toFixed(1)}%</div></div></div><div class="jb">${JSON.stringify(ra,null,2)}</div></div>`;
+    $('fhirResult').innerHTML=h;$('fhirResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('fhirBtn',false)}
+}
+
+async function runEval(){
+    const s=$('ev-src').value.trim(),g=$('ev-gen').value.trim();if(!s||!g){toast('Enter both');return}sl('evalBtn',true);
+    try{const r=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source_note:s,generated_output:g})});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();
+    const p=d.pass_threshold;const sc=v=>v>=.7?'var(--g)':v>=.4?'var(--w)':'var(--r)';
+    let h=`<div class="card"><div style="text-align:center;margin-bottom:16px"><div style="font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Quality Score</div><div style="font-size:44px;font-weight:900;color:${p?'var(--g)':'var(--r)'}">${(d.overall_score*100).toFixed(1)}%</div><span class="rb ${p?'lo':'hi'}">${p?'PASSED':'FAILED'}</span></div>`;
+    const fc=d.factual_consistency,hl=d.hallucination,ma=d.medical_accuracy,cs=d.clinical_safety;const hs=1-hl.score;
+    h+=`<div class="eg"><div class="ec"><div class="er" style="border-color:${sc(fc.score)};color:${sc(fc.score)}">${(fc.score*100).toFixed(0)}%</div><div class="ecl">Factual</div></div><div class="ec"><div class="er" style="border-color:${sc(hs)};color:${sc(hs)}">${(hs*100).toFixed(0)}%</div><div class="ecl">Anti-Hallucination</div></div><div class="ec"><div class="er" style="border-color:${sc(ma.score)};color:${sc(ma.score)}">${(ma.score*100).toFixed(0)}%</div><div class="ecl">Accuracy</div></div><div class="ec"><div class="er" style="border-color:${cs.safe?'var(--g)':'var(--r)'}; color:${cs.safe?'var(--g)':'var(--r)'}">${cs.safe?'SAFE':'UNSAFE'}</div><div class="ecl">Safety</div></div></div></div>`;
+    $('evalResult').innerHTML=h;$('evalResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('evalBtn',false)}
+}
+
+async function runPred(){
+    sl('predBtn',true);
+    try{const p={heart_rate:+$('v-hr').value,respiratory_rate:+$('v-rr').value,body_temperature:+$('v-temp').value,oxygen_saturation:+$('v-spo2').value,systolic_bp:+$('v-sbp').value,diastolic_bp:+$('v-dbp').value,age:+$('v-age').value};
+    const r=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();const isH=d.prediction==='High Risk';
+    $('predCard').innerHTML=`<span class="rb ${isH?'hi':'lo'}">${d.prediction}</span><div class="cbar"><div class="cbar-l"><span>Low</span><span>${(d.risk_score*100).toFixed(1)}%</span><span>High</span></div><div class="cbar-b"><div class="cbar-f" style="width:${(d.risk_score*100)}%;background:${isH?'linear-gradient(90deg,#f59e0b,#ef4444)':'linear-gradient(90deg,#10b981,#34d399)'}"></div></div></div><div class="mrow"><div class="met"><div class="ml">Confidence</div><div class="mv">${(d.confidence*100).toFixed(1)}%</div></div><div class="met"><div class="ml">Risk</div><div class="mv">${(d.risk_score*100).toFixed(1)}%</div></div><div class="met"><div class="ml">BMI</div><div class="mv">${d.features_used.calculated_bmi}</div></div><div class="met"><div class="ml">MAP</div><div class="mv">${d.features_used.calculated_map}</div></div></div>`;
+    $('predResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('predBtn',false)}
+}
+const loadPre=t=>{const p=t==='crit'?{hr:130,rr:28,temp:39.2,spo2:88,sbp:85,dbp:50,age:72}:{hr:72,rr:14,temp:36.8,spo2:99,sbp:118,dbp:76,age:30};$('v-hr').value=p.hr;$('v-rr').value=p.rr;$('v-temp').value=p.temp;$('v-spo2').value=p.spo2;$('v-sbp').value=p.sbp;$('v-dbp').value=p.dbp;$('v-age').value=p.age};
+
+async function runSum(){
+    const n=$('sum-n').value.trim();if(!n){toast('Enter a note');return}sl('sumBtn',true);
+    try{const r=await fetch('/api/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:n})});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();
+    $('sumText').textContent=d.summary;$('sumIn').textContent=d.note_length;$('sumOut').textContent=d.summary_length;$('sumComp').textContent=((1-d.summary_length/d.note_length)*100).toFixed(0)+'%';
+    $('sumResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('sumBtn',false)}
+}
+
+// ═══ HEALTH ═══
+async function chk(){try{const r=await fetch('/api/health');const d=await r.json();const ok=d.status==='healthy';$('statusDot').style.background=ok?'#10b981':'#f59e0b';$('statusText').textContent=ok?`All ${Object.keys(d.services).length} systems operational`:'Degraded'}catch{$('statusDot').style.background='#ef4444';$('statusText').textContent='Offline'}}
+chk();setInterval(chk,30000);
+
+// ═══ DATA ENGINEERING ═══
+async function loadDE(){
+    sl('deBtn',true);
+    try{
+        const jf=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(`${u}: ${r.status}`);return r.json()};
+        const [lineR,orchR,cdcR,catR]=await Promise.all([
+            jf('/api/de/lineage'),
+            jf('/api/de/orchestrator'),
+            jf('/api/de/cdc'),
+            jf('/api/de/catalog'),
         ]);
-        if (!nerRes.ok) throw new Error((await nerRes.json()).detail);
-        if (!graphRes.ok) throw new Error((await graphRes.json()).detail);
-        const ner = await nerRes.json();
-        const graph = await graphRes.json();
 
-        let html = '<div class="card"><div class="card-header">Extracted Entities</div>';
-        html += `<div class="card-subtitle">${ner.entity_count} entities found — each color represents a different category</div>`;
-        html += '<div class="entity-tags">';
-        (ner.medications||[]).forEach(m => html += `<span class="etag med">&#128138; ${m.text}${m.normalized?' ('+m.normalized+')':''}</span>`);
-        (ner.conditions||[]).forEach(c => html += `<span class="etag cond">&#9888;&#65039; ${c.text}${c.code?' ['+c.code+']':''}</span>`);
-        (ner.procedures||[]).forEach(p => html += `<span class="etag proc">&#128296; ${p.text}</span>`);
-        (ner.lab_values||[]).forEach(l => html += `<span class="etag lab">&#128300; ${l.text}</span>`);
-        html += '</div></div>';
+        // Streaming — show schema evolution from catalog
+        const schEvo=[
+            {v:'1.0',fields:7,change:'Initial vitals schema'},
+            {v:'2.0',fields:9,change:'Added age and BMI for risk model v2'},
+            {v:'3.0',fields:11,change:'Added MAP derived feature and chief complaint for NER'},
+        ];
+        $('de-stream-metrics').innerHTML=`<b>Topics:</b> patient-vitals, clinical-notes, pipeline-results<br><b>Partitions:</b> 4 per topic<br><b>Schema Registry:</b> 3 schemas registered (5 total versions)<br><b>Dead Letter Queue:</b> Active (catches validation failures)<br><b>Serialization:</b> JSON with SHA-256 checksums`;
+        $('de-schema-evo').innerHTML=schEvo.map(s=>`<div style="margin-bottom:6px"><span style="display:inline-block;width:35px;font-weight:700;color:var(--p)">v${s.v}</span> <span style="color:var(--t2)">${s.fields} fields</span> — ${s.change}</div>`).join('');
 
-        // Knowledge Graph
-        html += '<div class="card" style="margin-top:12px;"><div class="card-header">Patient Knowledge Graph</div>';
-        html += `<div class="card-subtitle">${graph.nodes} nodes, ${graph.edges} edges — showing how medications, conditions, and procedures relate to each other</div>`;
-        html += '<div class="graph-canvas" id="graphCanvas"></div>';
+        // Quality
+        $('de-quality').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><div style="background:var(--g-bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)">12</div><div style="font-size:10px;color:var(--t2)">Quality Checks</div></div><div style="background:var(--bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800">5</div><div style="font-size:10px;color:var(--t2)">Categories</div></div><div style="background:var(--bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800">3</div><div style="font-size:10px;color:var(--t2)">Severity Levels</div></div></div><div style="margin-top:10px;font-size:12px;line-height:1.8;background:var(--bg);border-radius:7px;padding:12px"><b>Schema:</b> Field presence, type validation<br><b>Completeness:</b> Missing vital signs, null detection<br><b>Accuracy:</b> Clinical range validation (HR 40-180, SpO2 85-100, etc.)<br><b>Consistency:</b> BP consistency (systolic > diastolic), pulse pressure<br><b>Freshness:</b> SLA monitoring per dataset</div>`;
 
-        // Relationships
-        if (graph.graph?.edges?.length) {
-            html += '<div style="margin-top:14px;"><div style="font-weight:600;font-size:13px;margin-bottom:8px;">Relationships</div>';
-            html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;">';
-            (graph.graph.edges).forEach(e => {
-                const c = e.relationship==='treats'?'var(--success)':e.relationship==='diagnoses'?'var(--primary)':'var(--text-muted)';
-                html += `<div style="font-size:12px;padding:6px 12px;background:var(--bg);border-radius:6px;border-left:3px solid ${c};"><strong>${e.source}</strong> <span style="color:${c};font-weight:600;">&rarr; ${e.relationship} &rarr;</span> <strong>${e.target}</strong></div>`;
-            });
-            html += '</div></div>';
-        }
-        html += '</div>';
+        // Lineage
+        const dag=lineR.dag||{};
+        $('de-lineage-dag').innerHTML=`<b>Total Nodes:</b> ${dag.total_nodes||0}<br><b>Total Edges:</b> ${dag.total_edges||0}<br><b>PII Columns:</b> ${dag.pii_columns||0}<br><b>Stages Tracked:</b> ${(dag.stages||[]).join(', ')}<br><br><b>Transformation Types:</b> regex_extraction, graph_construction, triage_classification, diagnostic_inference, treatment_planning, derived, ml_inference, vector_search, t5_generation, context_augmentation, llm_judge, fhir_mapping`;
+        $('de-pii').innerHTML=(lineR.pii_columns||[]).map(p=>`<div style="margin-bottom:3px"><span style="color:var(--r);font-weight:600">&#9888;</span> ${p.fqn} <span style="color:var(--t3)">(${p.dtype})</span></div>`).join('')||'No PII detected';
 
-        document.getElementById('nerResult').innerHTML = html;
-        document.getElementById('nerResult').classList.add('visible');
-        setTimeout(() => drawGraph(graph.graph), 100);
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('nerBtn', false); }
+        const imp=lineR.impact_analysis||{};
+        $('de-impact').innerHTML=`<b>Source:</b> ${imp.source||'N/A'}<br><b>Downstream columns affected:</b> ${imp.total_downstream||0}<br><b>Stages impacted:</b> ${(imp.affected_stages||[]).join(', ')}<br><b>Columns:</b> ${(imp.affected_columns||[]).slice(0,8).join(', ')}`;
+
+        // Warehouse
+        const wStats=`<b>Schema:</b> Star Schema (OLAP)<br><b>Fact Table:</b> fact_clinical_encounters (all encounter metrics)<br><b>Dimensions:</b> dim_patient, dim_diagnosis, dim_provider (9 HERA agents), dim_time<br><b>Aggregates:</b> agg_hourly_summary (pre-computed rollups)<br><b>Indexes:</b> patient_key, risk_score, time_key<br><b>Features:</b> Derived columns (MAP, BMI), auto-refresh aggregates`;
+        $('de-warehouse').innerHTML=wStats;
+
+        // Orchestrator
+        const dagDef=orchR.dag_definition||{};
+        const tasks=Object.values(dagDef.tasks||{});
+        const order=dagDef.execution_order||[];
+        $('de-orchestrator').innerHTML=`<div style="font-size:12px;margin-bottom:8px"><b>DAG:</b> ${dagDef.dag_id} &mdash; <b>${dagDef.total_tasks} tasks</b>, execution order resolved via topological sort</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${order.map((t,i)=>`<div style="background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:4px 8px;font-size:10px;display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--p)">${i+1}</span> ${t.replace(/_/g,' ')}${i<order.length-1?'<span style="margin-left:4px;color:var(--t3)">&#10132;</span>':''}</div>`).join('')}</div><div style="background:var(--bg);border-radius:7px;padding:10px;font-size:11px;line-height:1.7">${tasks.map(t=>`<div><span style="font-weight:600">${t.task_id}</span> <span style="color:var(--t3)">depends:[${t.depends_on.join(',')}]</span> retries:${t.retries} sla:${t.sla_seconds}s — <em>${t.description}</em></div>`).join('')}</div>`;
+
+        // CDC
+        const cdcStats=cdcR.stats||{};
+        $('de-cdc').innerHTML=`<b>Total Events:</b> ${cdcStats.total_events}<br><b>Sequence Number:</b> ${cdcStats.sequence_number}<br><b>Tables Tracked:</b> ${(cdcStats.tables_tracked||[]).join(', ')||'(pending — run Command Center first)'}<br><b>Change Types:</b> INSERT, UPDATE, DELETE<br><b>Features:</b> Before/after snapshots, field-level diff, SHA-256 checksums, named consumers, event replay from any point<br><b>Consumers:</b> ${Object.keys(cdcStats.consumers||{}).length||0} registered`;
+
+        // Catalog
+        const cat=catR.catalog;
+        const datasets=Object.entries(cat.datasets||{});
+        $('de-catalog-datasets').innerHTML=datasets.map(([id,ds])=>`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--bd)"><div style="font-weight:600;font-size:12px">${ds.name}</div><div style="font-size:10px;color:var(--t2)">${ds.description}</div><div style="margin-top:3px">${(ds.tags||[]).map(t=>`<span style="display:inline-block;background:var(--p-l);color:var(--p-d);border-radius:4px;padding:1px 5px;font-size:9px;margin:1px">${t}</span>`).join('')}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">${(ds.columns||[]).length} columns | ${ds.category} | owner: ${ds.owner}</div></div>`).join('');
+
+        $('de-freshness').innerHTML=(catR.freshness_report||[]).map(f=>`<div style="margin-bottom:4px"><span style="${f.is_stale?'color:var(--w)':'color:var(--g)'};font-weight:600">${f.is_stale?'&#9888; STALE':'&#10003; Fresh'}</span> ${f.name} <span style="color:var(--t3)">(SLA: ${f.sla_minutes}min)</span></div>`).join('');
+
+        $('deResult').classList.add('vis');
+        toast('Data Engineering dashboard loaded');
+    }catch(e){toast('Error: '+e.message)}finally{sl('deBtn',false)}
 }
 
-function drawGraph(graphData) {
-    const canvas = document.getElementById('graphCanvas');
-    if (!canvas || !graphData) return;
-    const w = canvas.offsetWidth, h = canvas.offsetHeight;
-    const nodes = graphData.nodes || [];
-    const edges = graphData.edges || [];
-    const colors = {MEDICATION:'#3b82f6',CONDITION:'#f59e0b',PROCEDURE:'#10b981',LAB_VALUE:'#8b5cf6'};
-    const cx = w/2, cy = h/2, r = Math.min(w,h)*0.33;
-    const pos = {};
-    nodes.forEach((n, i) => {
-        const angle = (2*Math.PI*i)/nodes.length - Math.PI/2;
-        pos[n.id] = { x: cx + r*Math.cos(angle), y: cy + r*Math.sin(angle) };
-    });
-    let svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">`;
-    edges.forEach(e => {
-        const s = pos[e.source], t = pos[e.target];
-        if (s && t) {
-            const c = e.relationship==='treats'?'#10b981':e.relationship==='diagnoses'?'#3b82f6':'#cbd5e1';
-            svg += `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="${c}" stroke-width="1.5" opacity="0.4"/>`;
-            svg += `<text x="${(s.x+t.x)/2}" y="${(s.y+t.y)/2-4}" text-anchor="middle" font-size="9" fill="${c}" font-weight="600">${e.relationship}</text>`;
-        }
-    });
-    nodes.forEach(n => {
-        const p = pos[n.id]; if (!p) return;
-        const c = colors[n.label] || '#64748b';
-        svg += `<circle cx="${p.x}" cy="${p.y}" r="20" fill="${c}" opacity="0.12" stroke="${c}" stroke-width="2"/>`;
-        svg += `<circle cx="${p.x}" cy="${p.y}" r="5" fill="${c}"/>`;
-        svg += `<text x="${p.x}" y="${p.y+34}" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">${n.text}</text>`;
-        svg += `<text x="${p.x}" y="${p.y+46}" text-anchor="middle" font-size="9" fill="#94a3b8">${n.label}</text>`;
-    });
-    svg += '</svg>';
-    canvas.innerHTML = svg;
-}
-
-// ═══════════ API: FHIR ═══════════
-async function submitFHIR() {
-    const bundleText = document.getElementById('fhir-bundle').value.trim();
-    if (!bundleText) { showToast('Enter a FHIR Bundle'); return; }
-    setLoading('fhirBtn', true);
-    try {
-        const bundle = JSON.parse(bundleText);
-        const res = await fetch('/api/fhir/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ bundle }) });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        const data = await res.json();
-        const ra = data.risk_assessment, pred = data.original_prediction;
-        const isHigh = pred.prediction === 'High Risk';
-
-        let html = `<div class="card result-card ${isHigh?'high-risk':'low-risk'}">`;
-        html += `<div class="result-badge ${isHigh?'high':'low'}">${isHigh?'&#9888;':'&#10003;'} ${pred.prediction}</div>`;
-        html += `<div class="fhir-box"><div class="fhir-type">FHIR R4 RiskAssessment Resource</div>`;
-        html += `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;"><strong>Type:</strong> ${ra.resourceType} | <strong>Status:</strong> ${ra.status} | <strong>Subject:</strong> ${ra.subject?.reference}</div></div>`;
-        html += '<div class="metrics-row">';
-        html += `<div class="metric"><div class="metric-label">Risk Score</div><div class="metric-value" style="color:${isHigh?'var(--danger)':'var(--success)'}">${(pred.risk_score*100).toFixed(1)}%</div></div>`;
-        html += `<div class="metric"><div class="metric-label">Confidence</div><div class="metric-value">${(pred.confidence*100).toFixed(1)}%</div></div>`;
-        html += `<div class="metric"><div class="metric-label">BMI</div><div class="metric-value">${pred.features_used?.calculated_bmi||'N/A'}</div></div>`;
-        html += `<div class="metric"><div class="metric-label">MAP</div><div class="metric-value">${pred.features_used?.calculated_map||'N/A'}</div></div>`;
-        html += '</div>';
-        html += `<div style="margin-top:16px;"><div style="font-weight:600;font-size:12px;margin-bottom:6px;">Raw FHIR Response</div><div class="json-block">${JSON.stringify(ra, null, 2)}</div></div>`;
-        html += '</div>';
-
-        document.getElementById('fhirResult').innerHTML = html;
-        document.getElementById('fhirResult').classList.add('visible');
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('fhirBtn', false); }
-}
-
-// ═══════════ API: EVALUATION ═══════════
-async function submitEval() {
-    const source = document.getElementById('eval-source').value.trim();
-    const generated = document.getElementById('eval-generated').value.trim();
-    if (!source || !generated) { showToast('Enter both source and generated text'); return; }
-    setLoading('evalBtn', true);
-    try {
-        const res = await fetch('/api/evaluate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source_note: source, generated_output: generated }) });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        const data = await res.json();
-        const passed = data.pass_threshold;
-
-        let html = `<div class="card"><div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:12px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Overall Quality Score</div>
-            <div style="font-size:52px;font-weight:900;color:${passed?'var(--success)':'var(--danger)'};">${(data.overall_score*100).toFixed(1)}%</div>
-            <div style="display:inline-block;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600;background:${passed?'var(--success-bg)':'var(--danger-bg)'};color:${passed?'var(--success)':'var(--danger)'};">${passed?'PASSED':'FAILED'} threshold</div>
-        </div>`;
-
-        const fc = data.factual_consistency, hal = data.hallucination, ma = data.medical_accuracy, cs = data.clinical_safety;
-        const sc = v => v >= 0.7 ? 'var(--success)' : v >= 0.4 ? 'var(--warning)' : 'var(--danger)';
-
-        html += '<div class="eval-grid">';
-        html += `<div class="eval-card"><div class="eval-ring" style="border-color:${sc(fc.score)};color:${sc(fc.score)};">${(fc.score*100).toFixed(0)}%</div><div class="eval-label">Factual Consistency</div><div class="eval-detail">${fc.supported} supported, ${fc.contradicted} contradicted</div></div>`;
-        const hs = 1 - hal.score;
-        html += `<div class="eval-card"><div class="eval-ring" style="border-color:${sc(hs)};color:${sc(hs)};">${(hs*100).toFixed(0)}%</div><div class="eval-label">Anti-Hallucination</div><div class="eval-detail">Precision: ${(hal.entity_precision*100).toFixed(0)}%</div></div>`;
-        html += `<div class="eval-card"><div class="eval-ring" style="border-color:${sc(ma.score)};color:${sc(ma.score)};">${(ma.score*100).toFixed(0)}%</div><div class="eval-label">Medical Accuracy</div><div class="eval-detail">${ma.valid_terms} valid, ${ma.dosage_errors} dosage errors</div></div>`;
-        html += `<div class="eval-card"><div class="eval-ring" style="border-color:${cs.safe?'var(--success)':'var(--danger)'};color:${cs.safe?'var(--success)':'var(--danger)'};">${cs.safe?'SAFE':'UNSAFE'}</div><div class="eval-label">Clinical Safety</div><div class="eval-detail">${cs.severity}${cs.issues?.length?' | '+cs.issues[0]:''}</div></div>`;
-        html += '</div></div>';
-
-        document.getElementById('evalResult').innerHTML = html;
-        document.getElementById('evalResult').classList.add('visible');
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('evalBtn', false); }
-}
-
-// ═══════════ API: RISK PREDICTION ═══════════
-async function submitPredict() {
-    setLoading('predictBtn', true);
-    try {
-        const payload = {
-            heart_rate: +document.getElementById('v-hr').value,
-            respiratory_rate: +document.getElementById('v-rr').value,
-            body_temperature: +document.getElementById('v-temp').value,
-            oxygen_saturation: +document.getElementById('v-spo2').value,
-            systolic_bp: +document.getElementById('v-sbp').value,
-            diastolic_bp: +document.getElementById('v-dbp').value,
-            age: +document.getElementById('v-age').value,
-        };
-        const res = await fetch('/api/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        const data = await res.json();
-        const isHigh = data.prediction === 'High Risk';
-        document.getElementById('riskCard').className = 'card result-card ' + (isHigh ? 'high-risk' : 'low-risk');
-        document.getElementById('riskBadge').className = 'result-badge ' + (isHigh ? 'high' : 'low');
-        document.getElementById('riskBadge').innerHTML = (isHigh ? '&#9888; ' : '&#10003; ') + data.prediction;
-        const pct = (data.risk_score * 100).toFixed(1);
-        document.getElementById('riskBar').style.width = pct + '%';
-        document.getElementById('riskBar').style.background = isHigh ? 'linear-gradient(90deg,#f59e0b,#ef4444)' : 'linear-gradient(90deg,#10b981,#34d399)';
-        document.getElementById('riskScoreLabel').textContent = pct + '%';
-        document.getElementById('riskMetrics').innerHTML = [
-            ['Confidence', (data.confidence*100).toFixed(1)+'%'],
-            ['Risk Score', pct+'%'],
-            ['BMI (calc)', data.features_used.calculated_bmi],
-            ['MAP (calc)', data.features_used.calculated_map],
-        ].map(([l,v]) => `<div class="metric"><div class="metric-label">${l}</div><div class="metric-value">${v}</div></div>`).join('');
-        document.getElementById('riskResult').classList.add('visible');
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('predictBtn', false); }
-}
-
-// ═══════════ API: SUMMARIZATION ═══════════
-async function submitSummarize() {
-    const note = document.getElementById('noteInput').value.trim();
-    if (!note) { showToast('Enter a clinical note'); return; }
-    setLoading('summarizeBtn', true);
-    try {
-        const res = await fetch('/api/summarize', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({note}) });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        const data = await res.json();
-        document.getElementById('summaryText').textContent = data.summary;
-        document.getElementById('inputLen').textContent = data.note_length;
-        document.getElementById('summaryLen').textContent = data.summary_length;
-        document.getElementById('compressionRatio').textContent = ((1 - data.summary_length / data.note_length) * 100).toFixed(0) + '%';
-        document.getElementById('summaryResult').classList.add('visible');
-    } catch(e) { showToast(e.message); }
-    finally { setLoading('summarizeBtn', false); }
-}
-
-// ═══════════ HEALTH CHECK ═══════════
-async function checkHealth() {
-    try {
-        const res = await fetch('/api/health');
-        const data = await res.json();
-        const ok = data.status === 'healthy';
-        document.getElementById('statusDot').style.background = ok ? '#10b981' : '#f59e0b';
-        document.getElementById('statusText').textContent = ok ? `All ${Object.keys(data.services).length} systems operational` : 'Degraded';
-    } catch {
-        document.getElementById('statusDot').style.background = '#ef4444';
-        document.getElementById('statusText').textContent = 'API unreachable';
-    }
-}
-checkHealth();
-setInterval(checkHealth, 30000);
-
-// Load defaults
-loadReasoningSample('chest_pain');
-loadFHIRSample('critical');
-loadEvalSample('consistent');
+// Defaults
+loadCC('chest_pain');loadFS('critical');loadES('ok');
 </script>
 </body>
 </html>
