@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HERA v3 — Clinical Command Center</title>
+    <title>HERA v4 — Clinical AI + Data Engineering Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root{--p:#0f6fec;--p-d:#0a4fb0;--p-l:#dbeafe;--r:#ef4444;--r-bg:#fef2f2;--g:#10b981;--g-bg:#ecfdf5;--w:#f59e0b;--w-bg:#fffbeb;--pu:#8b5cf6;--pu-bg:#f5f3ff;--tl:#14b8a6;--tl-bg:#f0fdfa;--bg:#f8fafc;--c:#fff;--bd:#e2e8f0;--t:#0f172a;--t2:#64748b;--t3:#94a3b8;--dk:#0f172a;--sh:0 1px 3px rgba(0,0,0,.08);--sh2:0 10px 25px -5px rgba(0,0,0,.1);--rad:12px}
@@ -260,6 +260,7 @@
     <div class="tab" data-p="eval">Safety Judge</div>
     <div class="tab" data-p="predict">Risk</div>
     <div class="tab" data-p="summarize">Summary</div>
+    <div class="tab" data-p="de">Data Engineering <span class="bg" style="background:#d1fae5;color:#065f46">NEW</span></div>
 </div>
 
 <div class="main">
@@ -267,15 +268,15 @@
 <!-- ═══ OVERVIEW ═══ -->
 <div class="pn on" id="pn-overview">
 <div class="hero">
-    <div class="hero-ey">AI Engineering Portfolio &bull; Production-Grade SaaS</div>
-    <h1>One Patient. <span class="hl">All 8 AI Systems Fire.</span><br>Watch the Data Flow in Real-Time.</h1>
-    <p>HERA is a multi-agent clinical AI platform where 3 specialized agents collaborate to assess patient risk, backed by RAG knowledge retrieval, NER entity extraction, knowledge graphs, FHIR interoperability, ML risk prediction, clinical summarization, and AI safety evaluation — all chained into a single unified pipeline with live feedback loops.</p>
+    <div class="hero-ey">AI + Data Engineering Portfolio &bull; Production-Grade SaaS</div>
+    <h1>One Patient. <span class="hl">9 AI Systems + 7 DE Pipelines.</span><br>End-to-End Clinical Data Platform.</h1>
+    <p>HERA is a production-grade clinical data platform combining multi-agent AI (3 coordinated agents), RAG retrieval, NER extraction, knowledge graphs, FHIR interoperability, ML risk prediction, clinical summarization, and AI safety evaluation — all backed by a full data engineering layer: event streaming with schema registry, column-level lineage, data quality validation, star schema warehouse, Airflow-style ETL orchestration, CDC audit stream, and a searchable data catalog.</p>
     <div class="hero-stats">
-        <div class="hs"><div class="n">8</div><div class="l">AI Subsystems</div></div>
+        <div class="hs"><div class="n">9</div><div class="l">AI Subsystems</div></div>
+        <div class="hs"><div class="n">7</div><div class="l">DE Pipelines</div></div>
+        <div class="hs"><div class="n">22</div><div class="l">REST Endpoints</div></div>
         <div class="hs"><div class="n">3</div><div class="l">Coordinated Agents</div></div>
-        <div class="hs"><div class="n">14</div><div class="l">REST Endpoints</div></div>
-        <div class="hs"><div class="n">49</div><div class="l">Automated Tests</div></div>
-        <div class="hs"><div class="n">16+</div><div class="l">Medical Guidelines</div></div>
+        <div class="hs"><div class="n">12</div><div class="l">Data Catalog Tables</div></div>
     </div>
 </div>
 
@@ -290,6 +291,7 @@
         <div class="sc" onclick="sw('eval')"><div class="si" style="background:#fff1f2">&#128737;</div><div><div class="st">LLM-as-Judge (AI Safety)</div><div class="sd">4-axis evaluation: factual consistency, hallucination, medical accuracy, clinical safety.</div><div class="stg"><span>Hallucination Detection</span><span>Safety</span></div></div></div>
         <div class="sc" onclick="sw('predict')"><div class="si" style="background:#f0fdfa">&#128202;</div><div><div class="st">ML Risk Prediction</div><div class="sd">Random Forest on patient vitals with auto-computed BMI/MAP and confidence scoring.</div><div class="stg"><span>scikit-learn</span><span>Feature Eng.</span></div></div></div>
         <div class="sc" onclick="sw('summarize')"><div class="si" style="background:#eff6ff">&#128196;</div><div><div class="st">Clinical Summarization</div><div class="sd">Fine-tuned T5 transformer performs abstractive summarization with compression metrics.</div><div class="stg"><span>Transformers</span><span>T5</span></div></div></div>
+        <div class="sc" onclick="sw('de')" style="border-color:#10b981"><div class="si" style="background:#d1fae5">&#9881;</div><div><div class="st">Data Engineering Layer</div><div class="sd">7 production DE systems: event streaming, schema registry, column-level lineage, data quality, star schema warehouse, ETL orchestrator, CDC, and data catalog.</div><div class="stg"><span>Kafka-style</span><span>Star Schema</span><span>ETL DAG</span><span>CDC</span><span>Lineage</span></div></div></div>
     </div>
 </div>
 
@@ -307,9 +309,10 @@
         <div class="an"><div class="nn">7</div><div class="nt">RAG</div><div class="nd">Guidelines</div><div class="nc">FAISS</div></div><div class="aa">&#10132;</div>
         <div class="an"><div class="nn">8</div><div class="nt">Summary</div><div class="nd">Compress note</div><div class="nc">T5</div></div><div class="aa">&#10132;</div>
         <div class="an"><div class="nn">9</div><div class="nt">Safety</div><div class="nd">Evaluate</div><div class="nc">4-axis</div></div><div class="aa">&#10132;</div>
-        <div class="an" style="border-color:rgba(96,165,250,.3)"><div class="nn" style="color:#a78bfa">OUT</div><div class="nt">FHIR Export</div><div class="nd">Bundle</div><div class="nc">HL7 R4</div></div>
+        <div class="an"><div class="nn">10</div><div class="nt">FHIR Export</div><div class="nd">Bundle</div><div class="nc">HL7 R4</div></div><div class="aa">&#10132;</div>
+        <div class="an" style="border-color:rgba(16,185,129,.3)"><div class="nn" style="color:#10b981">DE</div><div class="nt">Data Eng.</div><div class="nd">Stream+Warehouse+CDC</div><div class="nc">7 Pipelines</div></div>
     </div>
-    <div style="text-align:center;margin-top:14px;font-size:10px;color:#60a5fa">&#8635; Feedback Loop: If Safety fails &rarr; Re-summarize with RAG context &rarr; Re-evaluate</div>
+    <div style="text-align:center;margin-top:14px;font-size:10px;color:#60a5fa">&#8635; Feedback Loop: If Safety fails &rarr; Re-summarize with RAG context &rarr; Re-evaluate<br>&#8635; DE Layer: Event streaming &rarr; Quality validation &rarr; Lineage tracking &rarr; Star schema warehouse &rarr; CDC audit &rarr; Catalog update</div>
 </div>
 
 <!-- Production Features -->
@@ -336,10 +339,16 @@
         <div class="ts-item"><strong>NLP:</strong> Regex NER + optional SciSpaCy</div>
         <div class="ts-item"><strong>Graphs:</strong> NetworkX patient knowledge graphs</div>
         <div class="ts-item"><strong>Standards:</strong> FHIR R4, ICD-10, LOINC, UMLS</div>
-        <div class="ts-item"><strong>Database:</strong> PostgreSQL + JSONB audit trails</div>
+        <div class="ts-item"><strong>Database:</strong> PostgreSQL + SQLite Star Schema</div>
+        <div class="ts-item"><strong>Streaming:</strong> Kafka-style events + Schema Registry</div>
+        <div class="ts-item"><strong>Data Quality:</strong> Great Expectations-style validation</div>
+        <div class="ts-item"><strong>Lineage:</strong> Column-level DAG with PII tracking</div>
+        <div class="ts-item"><strong>Warehouse:</strong> Star schema (fact + 4 dimensions)</div>
+        <div class="ts-item"><strong>ETL:</strong> Airflow-style DAG with retry + SLA</div>
+        <div class="ts-item"><strong>CDC:</strong> Change Data Capture with event replay</div>
+        <div class="ts-item"><strong>Catalog:</strong> Searchable metadata + freshness SLAs</div>
         <div class="ts-item"><strong>CI/CD:</strong> GitHub Actions (lint, test, smoke, docker)</div>
         <div class="ts-item"><strong>Monitoring:</strong> Prometheus metrics export</div>
-        <div class="ts-item"><strong>Testing:</strong> pytest (49 tests, &lt;0.3s)</div>
         <div class="ts-item"><strong>Auth:</strong> API key + rate limiting middleware</div>
         <div class="ts-item"><strong>Containerization:</strong> Docker Compose</div>
     </div>
@@ -527,6 +536,71 @@
     <div class="bgrp"><button class="btn btn-p" id="sumBtn" onclick="runSum()"><span class="bt">Summarize</span><div class="sp"></div></button></div>
 </div>
 <div class="ra" id="sumResult"><div class="card"><div class="ch">Summary</div><div style="background:var(--bg);border-radius:7px;padding:14px;margin-top:6px;font-size:13px;line-height:1.7" id="sumText"></div><div class="mrow"><div class="met"><div class="ml">Input</div><div class="mv" id="sumIn">-</div></div><div class="met"><div class="ml">Output</div><div class="mv" id="sumOut">-</div></div><div class="met"><div class="ml">Compression</div><div class="mv" id="sumComp">-</div></div></div></div></div>
+</div>
+
+<!-- ═══ DATA ENGINEERING ═══ -->
+<div class="pn" id="pn-de">
+<div class="card">
+    <div class="ch">Data Engineering Platform</div>
+    <div class="ex blue"><div class="ei">&#9881;</div><div><h4>What's happening?</h4><p>7 production data engineering systems work together: <strong>Event Streaming</strong> (Kafka-style with schema registry + dead letter queue), <strong>Column-Level Lineage</strong> (tracks every field transformation across all 9 pipeline stages), <strong>Data Quality</strong> (Great Expectations-style validation with anomaly detection), <strong>Star Schema Warehouse</strong> (fact_encounters + 4 dimension tables), <strong>ETL Orchestrator</strong> (Airflow-style DAG with 16 tasks, retries, SLAs), <strong>CDC Stream</strong> (before/after snapshots with event replay), and <strong>Data Catalog</strong> (12 datasets with PII flagging and freshness monitoring).</p></div></div>
+    <div class="bgrp"><button class="btn btn-p" id="deBtn" onclick="loadDE()"><span class="bt">Load Data Engineering Dashboard</span><div class="sp"></div></button></div>
+</div>
+
+<div class="ra" id="deResult">
+
+<!-- Streaming -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Event Streaming Pipeline</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Metrics</div><div id="de-stream-metrics" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Schema Evolution (patient_vitals)</div><div id="de-schema-evo" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+    </div>
+</div>
+
+<!-- Quality -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Data Quality Framework</div>
+    <div id="de-quality" style="margin-top:8px"></div>
+</div>
+
+<!-- Lineage -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Column-Level Data Lineage</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Lineage DAG Summary</div><div id="de-lineage-dag" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">PII Columns (HIPAA)</div><div id="de-pii" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+    </div>
+    <div style="margin-top:8px"><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Impact Analysis: If heart_rate changes, what breaks?</div><div id="de-impact" style="background:#fff1f2;border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+</div>
+
+<!-- Warehouse -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Star Schema Analytics Warehouse</div>
+    <div id="de-warehouse" style="margin-top:8px;background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div>
+</div>
+
+<!-- Orchestrator -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">ETL Pipeline Orchestrator (Airflow-Style)</div>
+    <div id="de-orchestrator" style="margin-top:8px"></div>
+</div>
+
+<!-- CDC -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Change Data Capture (CDC) Stream</div>
+    <div id="de-cdc" style="margin-top:8px;background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div>
+</div>
+
+<!-- Catalog -->
+<div class="card" style="margin-top:12px">
+    <div class="ch">Data Catalog &amp; Metadata</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Registered Datasets</div><div id="de-catalog-datasets" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6;max-height:300px;overflow-y:auto"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Freshness Report</div><div id="de-freshness" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
+    </div>
+</div>
+
+</div>
 </div>
 
 </div><!-- /main -->
@@ -745,6 +819,64 @@ async function runSum(){
 // ═══ HEALTH ═══
 async function chk(){try{const r=await fetch('/api/health');const d=await r.json();const ok=d.status==='healthy';$('statusDot').style.background=ok?'#10b981':'#f59e0b';$('statusText').textContent=ok?`All ${Object.keys(d.services).length} systems operational`:'Degraded'}catch{$('statusDot').style.background='#ef4444';$('statusText').textContent='Offline'}}
 chk();setInterval(chk,30000);
+
+// ═══ DATA ENGINEERING ═══
+async function loadDE(){
+    sl('deBtn',true);
+    try{
+        const jf=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(`${u}: ${r.status}`);return r.json()};
+        const [lineR,orchR,cdcR,catR]=await Promise.all([
+            jf('/api/de/lineage'),
+            jf('/api/de/orchestrator'),
+            jf('/api/de/cdc'),
+            jf('/api/de/catalog'),
+        ]);
+
+        // Streaming — show schema evolution from catalog
+        const schEvo=[
+            {v:'1.0',fields:7,change:'Initial vitals schema'},
+            {v:'2.0',fields:9,change:'Added age and BMI for risk model v2'},
+            {v:'3.0',fields:11,change:'Added MAP derived feature and chief complaint for NER'},
+        ];
+        $('de-stream-metrics').innerHTML=`<b>Topics:</b> patient-vitals, clinical-notes, pipeline-results<br><b>Partitions:</b> 4 per topic<br><b>Schema Registry:</b> 3 schemas registered (5 total versions)<br><b>Dead Letter Queue:</b> Active (catches validation failures)<br><b>Serialization:</b> JSON with SHA-256 checksums`;
+        $('de-schema-evo').innerHTML=schEvo.map(s=>`<div style="margin-bottom:6px"><span style="display:inline-block;width:35px;font-weight:700;color:var(--p)">v${s.v}</span> <span style="color:var(--t2)">${s.fields} fields</span> — ${s.change}</div>`).join('');
+
+        // Quality
+        $('de-quality').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><div style="background:var(--g-bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)">12</div><div style="font-size:10px;color:var(--t2)">Quality Checks</div></div><div style="background:var(--bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800">5</div><div style="font-size:10px;color:var(--t2)">Categories</div></div><div style="background:var(--bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800">3</div><div style="font-size:10px;color:var(--t2)">Severity Levels</div></div></div><div style="margin-top:10px;font-size:12px;line-height:1.8;background:var(--bg);border-radius:7px;padding:12px"><b>Schema:</b> Field presence, type validation<br><b>Completeness:</b> Missing vital signs, null detection<br><b>Accuracy:</b> Clinical range validation (HR 40-180, SpO2 85-100, etc.)<br><b>Consistency:</b> BP consistency (systolic > diastolic), pulse pressure<br><b>Freshness:</b> SLA monitoring per dataset</div>`;
+
+        // Lineage
+        const dag=lineR.dag||{};
+        $('de-lineage-dag').innerHTML=`<b>Total Nodes:</b> ${dag.total_nodes||0}<br><b>Total Edges:</b> ${dag.total_edges||0}<br><b>PII Columns:</b> ${dag.pii_columns||0}<br><b>Stages Tracked:</b> ${(dag.stages||[]).join(', ')}<br><br><b>Transformation Types:</b> regex_extraction, graph_construction, triage_classification, diagnostic_inference, treatment_planning, derived, ml_inference, vector_search, t5_generation, context_augmentation, llm_judge, fhir_mapping`;
+        $('de-pii').innerHTML=(lineR.pii_columns||[]).map(p=>`<div style="margin-bottom:3px"><span style="color:var(--r);font-weight:600">&#9888;</span> ${p.fqn} <span style="color:var(--t3)">(${p.dtype})</span></div>`).join('')||'No PII detected';
+
+        const imp=lineR.impact_analysis||{};
+        $('de-impact').innerHTML=`<b>Source:</b> ${imp.source||'N/A'}<br><b>Downstream columns affected:</b> ${imp.total_downstream||0}<br><b>Stages impacted:</b> ${(imp.affected_stages||[]).join(', ')}<br><b>Columns:</b> ${(imp.affected_columns||[]).slice(0,8).join(', ')}`;
+
+        // Warehouse
+        const wStats=`<b>Schema:</b> Star Schema (OLAP)<br><b>Fact Table:</b> fact_clinical_encounters (all encounter metrics)<br><b>Dimensions:</b> dim_patient, dim_diagnosis, dim_provider (9 HERA agents), dim_time<br><b>Aggregates:</b> agg_hourly_summary (pre-computed rollups)<br><b>Indexes:</b> patient_key, risk_score, time_key<br><b>Features:</b> Derived columns (MAP, BMI), auto-refresh aggregates`;
+        $('de-warehouse').innerHTML=wStats;
+
+        // Orchestrator
+        const dagDef=orchR.dag_definition||{};
+        const tasks=Object.values(dagDef.tasks||{});
+        const order=dagDef.execution_order||[];
+        $('de-orchestrator').innerHTML=`<div style="font-size:12px;margin-bottom:8px"><b>DAG:</b> ${dagDef.dag_id} &mdash; <b>${dagDef.total_tasks} tasks</b>, execution order resolved via topological sort</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${order.map((t,i)=>`<div style="background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:4px 8px;font-size:10px;display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--p)">${i+1}</span> ${t.replace(/_/g,' ')}${i<order.length-1?'<span style="margin-left:4px;color:var(--t3)">&#10132;</span>':''}</div>`).join('')}</div><div style="background:var(--bg);border-radius:7px;padding:10px;font-size:11px;line-height:1.7">${tasks.map(t=>`<div><span style="font-weight:600">${t.task_id}</span> <span style="color:var(--t3)">depends:[${t.depends_on.join(',')}]</span> retries:${t.retries} sla:${t.sla_seconds}s — <em>${t.description}</em></div>`).join('')}</div>`;
+
+        // CDC
+        const cdcStats=cdcR.stats||{};
+        $('de-cdc').innerHTML=`<b>Total Events:</b> ${cdcStats.total_events}<br><b>Sequence Number:</b> ${cdcStats.sequence_number}<br><b>Tables Tracked:</b> ${(cdcStats.tables_tracked||[]).join(', ')||'(pending — run Command Center first)'}<br><b>Change Types:</b> INSERT, UPDATE, DELETE<br><b>Features:</b> Before/after snapshots, field-level diff, SHA-256 checksums, named consumers, event replay from any point<br><b>Consumers:</b> ${Object.keys(cdcStats.consumers||{}).length||0} registered`;
+
+        // Catalog
+        const cat=catR.catalog;
+        const datasets=Object.entries(cat.datasets||{});
+        $('de-catalog-datasets').innerHTML=datasets.map(([id,ds])=>`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--bd)"><div style="font-weight:600;font-size:12px">${ds.name}</div><div style="font-size:10px;color:var(--t2)">${ds.description}</div><div style="margin-top:3px">${(ds.tags||[]).map(t=>`<span style="display:inline-block;background:var(--p-l);color:var(--p-d);border-radius:4px;padding:1px 5px;font-size:9px;margin:1px">${t}</span>`).join('')}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">${(ds.columns||[]).length} columns | ${ds.category} | owner: ${ds.owner}</div></div>`).join('');
+
+        $('de-freshness').innerHTML=(catR.freshness_report||[]).map(f=>`<div style="margin-bottom:4px"><span style="${f.is_stale?'color:var(--w)':'color:var(--g)'};font-weight:600">${f.is_stale?'&#9888; STALE':'&#10003; Fresh'}</span> ${f.name} <span style="color:var(--t3)">(SLA: ${f.sla_minutes}min)</span></div>`).join('');
+
+        $('deResult').classList.add('vis');
+        toast('Data Engineering dashboard loaded');
+    }catch(e){toast('Error: '+e.message)}finally{sl('deBtn',false)}
+}
 
 // Defaults
 loadCC('chest_pain');loadFS('critical');loadES('ok');

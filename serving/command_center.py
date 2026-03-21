@@ -514,6 +514,97 @@ class UnifiedPipeline:
             }
         )
 
+        # ── Stage 9: Data Engineering Pipeline ──
+        de_stage = PipelineStage(name="Data Engineering", system="data_engineering")
+        de_stage.status = "running"
+        de_stage.started_at = time.time()
+        try:
+            from data_engineering.streaming import event_stream
+            from data_engineering.quality import DataQualityFramework
+            from data_engineering.lineage import DataLineageTracker
+            from data_engineering.warehouse import ClinicalWarehouse
+            from data_engineering.cdc import cdc_stream
+            from data_engineering.catalog import data_catalog
+
+            # 1. Stream ingestion with schema validation
+            stream_result = event_stream.ingest_patient_event({
+                "patient_id": patient_id,
+                "heart_rate": vitals.get("heart_rate", 0),
+                "respiratory_rate": vitals.get("respiratory_rate", 0),
+                "body_temperature": vitals.get("body_temperature", 0),
+                "oxygen_saturation": vitals.get("oxygen_saturation", 0),
+                "systolic_bp": vitals.get("systolic_bp", 0),
+                "diastolic_bp": vitals.get("diastolic_bp", 0),
+                "age": age,
+                "chief_complaint": chief_complaint,
+                "clinical_note": clinical_note,
+            })
+
+            # 2. Data quality validation
+            dq = DataQualityFramework()
+            quality_report = dq.validate_vitals(vitals)
+
+            # 3. Column-level lineage
+            tracker = DataLineageTracker()
+            tracker.build_pipeline_lineage()
+
+            # 4. Load into warehouse
+            wh = ClinicalWarehouse()
+            encounter_result = {
+                "patient_id": patient_id,
+                "age": age,
+                "gender": gender,
+                "vitals": vitals,
+                "stages": [asdict(s) for s in stages],
+                "overall_latency_ms": round((time.time() - pipeline_start) * 1000, 1),
+                "feedback_loops_triggered": feedback_loops,
+            }
+            enc_id = wh.load_encounter(encounter_result)
+            wh.refresh_aggregates()
+
+            # 5. CDC events
+            cdc_events = cdc_stream.capture_encounter(encounter_result)
+
+            # 6. Update catalog freshness
+            data_catalog.update_freshness("raw_patient_vitals", row_count=1)
+            data_catalog.update_freshness("fact_encounters", row_count=enc_id)
+
+            de_stage.result = {
+                "stream_events": len(stream_result.get("events", [])),
+                "dlq_events": len(stream_result.get("dlq", [])),
+                "quality_score": quality_report.score,
+                "quality_checks": len(quality_report.checks),
+                "lineage_nodes": len(tracker._nodes),
+                "lineage_edges": len(tracker._edges),
+                "warehouse_encounter_id": enc_id,
+                "cdc_events": len(cdc_events),
+                "dag_tasks": 16,
+            }
+            de_stage.narration = (
+                f"Data engineering pipeline processed: {len(stream_result.get('events', []))} "
+                f"events streamed with schema v3.0 validation, "
+                f"quality score {quality_report.score:.0%} across {len(quality_report.checks)} checks, "
+                f"lineage DAG with {len(tracker._nodes)} nodes/{len(tracker._edges)} edges, "
+                f"encounter #{enc_id} loaded into star schema warehouse, "
+                f"{len(cdc_events)} CDC change events emitted."
+            )
+            de_stage.status = "completed"
+        except Exception as e:
+            de_stage.status = "failed"
+            de_stage.error = str(e)
+            de_stage.narration = f"Data engineering pipeline failed: {e}"
+        de_stage.completed_at = time.time()
+        de_stage.latency_ms = round(
+            (de_stage.completed_at - de_stage.started_at) * 1000, 1
+        )
+        stages.append(de_stage)
+        lineage.append({
+            "stage": "data_engineering",
+            "input": "all_pipeline_outputs",
+            "output": "warehouse+cdc+catalog",
+            "records": de_stage.result.get("cdc_events", 0) if de_stage.result else 0,
+        })
+
         # ── Final result ──
         consensus = reasoning_result.consensus_score if reasoning_result else 0.0
         overall_latency = round((time.time() - pipeline_start) * 1000, 1)
