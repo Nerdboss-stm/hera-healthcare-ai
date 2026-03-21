@@ -24,6 +24,9 @@ from serving.schemas import (
     FHIRPredictResponse,
     EvaluationRequest,
     EvaluationResponse,
+    CommandCenterRequest,
+    CommandCenterResponse,
+    UsageResponse,
 )
 from serving.summarizer import generate_summary
 from serving.risk_predictor import predict_risk
@@ -37,15 +40,20 @@ from serving.metrics import (
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 
+from serving.middleware import AuthMiddleware, AuditMiddleware, usage_tracker  # noqa: E402
+
 app = FastAPI(
     title="HERA — Healthcare Risk Analytics",
     description=(
-        "AI-powered clinical platform with multi-agent reasoning, "
+        "Production-grade multi-agent clinical AI platform with unified pipeline, "
         "RAG knowledge retrieval, NER entity extraction, FHIR R4 interoperability, "
-        "and LLM-as-Judge evaluation."
+        "LLM-as-Judge evaluation, API key auth, rate limiting, and usage metering."
     ),
-    version="2.0.0",
+    version="3.0.0",
 )
+
+app.add_middleware(AuditMiddleware)
+app.add_middleware(AuthMiddleware)
 
 # Serve the frontend
 app.mount("/static", StaticFiles(directory=os.path.join(_dir, "static")), name="static")
@@ -80,6 +88,7 @@ def health_check():
     return HealthResponse(
         status="healthy",
         services={
+            "command_center": "available",
             "summarizer": summarizer_status,
             "risk_predictor": risk_status,
             "clinical_reasoning": "available",
@@ -87,8 +96,10 @@ def health_check():
             "ner_extraction": "available",
             "fhir_converter": "available",
             "clinical_evaluator": "available",
+            "auth_middleware": "available",
+            "usage_metering": "available",
         },
-        version="2.0.0",
+        version="3.0.0",
     )
 
 
@@ -419,3 +430,65 @@ def evaluate_output(request: EvaluationRequest):
         REQUEST_FAILURES.inc()
         REQUEST_LATENCY.observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Unified Command Center ─────────────────────────────────────
+
+
+@app.post("/api/command-center", response_model=CommandCenterResponse)
+def command_center(request: CommandCenterRequest):
+    """Run the unified pipeline — all 7 subsystems on one patient.
+
+    NER → Knowledge Graph → Multi-Agent Reasoning → Risk Prediction →
+    RAG Retrieval → Summarization → Safety Evaluation → FHIR Export.
+    Includes feedback loops: if safety evaluation fails, the summarizer
+    re-runs with RAG context for better accuracy.
+    """
+    REQUEST_COUNT.inc()
+    start = time.time()
+    try:
+        from serving.command_center import UnifiedPipeline
+
+        pipeline = UnifiedPipeline(
+            risk_predictor=predict_risk,
+            summarizer_fn=generate_summary,
+        )
+        result = pipeline.execute(
+            patient_id=request.patient_id,
+            clinical_note=request.clinical_note,
+            chief_complaint=request.chief_complaint,
+            vitals={
+                "heart_rate": request.heart_rate,
+                "respiratory_rate": request.respiratory_rate,
+                "body_temperature": request.body_temperature,
+                "oxygen_saturation": request.oxygen_saturation,
+                "systolic_bp": request.systolic_bp,
+                "diastolic_bp": request.diastolic_bp,
+            },
+            age=request.age,
+            gender=request.gender,
+            medical_history=request.medical_history,
+            current_medications=request.current_medications,
+            allergies=request.allergies,
+        )
+        REQUEST_LATENCY.observe(time.time() - start)
+        return CommandCenterResponse(
+            **result.to_dict(),
+            timestamp=datetime.now(),
+        )
+    except Exception as e:
+        REQUEST_FAILURES.inc()
+        REQUEST_LATENCY.observe(time.time() - start)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Usage & Admin ──────────────────────────────────────────────
+
+
+@app.get("/api/usage", response_model=UsageResponse)
+def get_usage():
+    """Get API usage metrics per tenant. Production: dashboard for billing."""
+    return UsageResponse(
+        tenants=usage_tracker.get_all_usage(),
+        timestamp=datetime.now(),
+    )
