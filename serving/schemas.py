@@ -208,3 +208,61 @@ class CommandCenterResponse(BaseModel):
 class UsageResponse(BaseModel):
     tenants: Dict[str, Any]
     timestamp: datetime
+
+
+# ── Data Engineering ──────────────────────────────────────────
+
+
+class DEStreamingResponse(BaseModel):
+    patient_id: str
+    events: List[Dict[str, Any]]
+    dlq: List[Dict[str, Any]]
+    metrics: Dict[str, Any]
+    topic_stats: Dict[str, Any]
+    schema_evolution: List[Dict[str, Any]]
+
+
+class DELineageResponse(BaseModel):
+    dag: Dict[str, Any]
+    impact_analysis: Dict[str, Any]
+    pii_columns: List[Dict[str, Any]]
+
+
+class DEQualityResponse(BaseModel):
+    vitals_quality: Dict[str, Any]
+    note_quality: Dict[str, Any]
+    pipeline_summary: Dict[str, Any]
+
+
+class DEWarehouseResponse(BaseModel):
+    encounter_id: int
+    warehouse_stats: Dict[str, Any]
+    risk_distribution: Dict[str, Any]
+    recent_encounters: List[Dict[str, Any]]
+
+
+class DEOrchestratorResponse(BaseModel):
+    dag_definition: Dict[str, Any]
+    run_history: List[Dict[str, Any]]
+
+
+class DECDCResponse(BaseModel):
+    events: List[Dict[str, Any]]
+    stats: Dict[str, Any]
+
+
+class DECatalogResponse(BaseModel):
+    catalog: Dict[str, Any]
+    pii_report: List[Dict[str, Any]]
+    freshness_report: List[Dict[str, Any]]
+
+
+class DEDashboardResponse(BaseModel):
+    streaming: Dict[str, Any]
+    quality: Dict[str, Any]
+    lineage: Dict[str, Any]
+    warehouse: Dict[str, Any]
+    orchestrator: Dict[str, Any]
+    cdc: Dict[str, Any]
+    catalog: Dict[str, Any]
+    timestamp: datetime

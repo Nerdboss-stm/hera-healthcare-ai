@@ -101,7 +101,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/docs",
             "/openapi.json",
             "/metrics",
-        ) or path.startswith("/static"):
+        ) or path.startswith("/static") or path.startswith("/api/de/"):
             response = await call_next(request)
             return response
 
