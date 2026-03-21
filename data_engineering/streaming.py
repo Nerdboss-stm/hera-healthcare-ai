@@ -52,11 +52,17 @@ class SchemaDefinition:
             if key in self.fields:
                 expected = self.fields[key]
                 if expected == "float" and not isinstance(val, (int, float)):
-                    errors.append(f"Field '{key}' expected {expected}, got {type(val).__name__}")
+                    errors.append(
+                        f"Field '{key}' expected {expected}, got {type(val).__name__}"
+                    )
                 elif expected == "int" and not isinstance(val, int):
-                    errors.append(f"Field '{key}' expected {expected}, got {type(val).__name__}")
+                    errors.append(
+                        f"Field '{key}' expected {expected}, got {type(val).__name__}"
+                    )
                 elif expected == "str" and not isinstance(val, str):
-                    errors.append(f"Field '{key}' expected {expected}, got {type(val).__name__}")
+                    errors.append(
+                        f"Field '{key}' expected {expected}, got {type(val).__name__}"
+                    )
         return (len(errors) == 0, errors)
 
 
@@ -100,82 +106,92 @@ class SchemaRegistry:
 
     def _register_defaults(self):
         """Register default clinical data schemas."""
-        self.register(SchemaDefinition(
-            name="patient_vitals",
-            version="1.0",
-            fields={
-                "patient_id": "str",
-                "heart_rate": "float",
-                "respiratory_rate": "float",
-                "body_temperature": "float",
-                "oxygen_saturation": "float",
-                "systolic_bp": "float",
-                "diastolic_bp": "float",
-            },
-            required=["patient_id", "heart_rate"],
-            changelog="Initial vitals schema",
-        ))
-        self.register(SchemaDefinition(
-            name="patient_vitals",
-            version="2.0",
-            fields={
-                "patient_id": "str",
-                "heart_rate": "float",
-                "respiratory_rate": "float",
-                "body_temperature": "float",
-                "oxygen_saturation": "float",
-                "systolic_bp": "float",
-                "diastolic_bp": "float",
-                "age": "int",
-                "bmi": "float",
-            },
-            required=["patient_id", "heart_rate", "age"],
-            changelog="Added age and BMI fields for risk model v2",
-        ))
-        self.register(SchemaDefinition(
-            name="patient_vitals",
-            version="3.0",
-            fields={
-                "patient_id": "str",
-                "heart_rate": "float",
-                "respiratory_rate": "float",
-                "body_temperature": "float",
-                "oxygen_saturation": "float",
-                "systolic_bp": "float",
-                "diastolic_bp": "float",
-                "age": "int",
-                "bmi": "float",
-                "mean_arterial_pressure": "float",
-                "chief_complaint": "str",
-            },
-            required=["patient_id", "heart_rate", "age", "chief_complaint"],
-            changelog="Added MAP derived feature and chief complaint for NER",
-        ))
-        self.register(SchemaDefinition(
-            name="clinical_note",
-            version="1.0",
-            fields={
-                "patient_id": "str",
-                "note_text": "str",
-                "author": "str",
-                "encounter_id": "str",
-            },
-            required=["patient_id", "note_text"],
-            changelog="Initial clinical note schema",
-        ))
-        self.register(SchemaDefinition(
-            name="pipeline_result",
-            version="1.0",
-            fields={
-                "patient_id": "str",
-                "stage": "str",
-                "status": "str",
-                "latency_ms": "float",
-                "output": "str",
-            },
-            required=["patient_id", "stage", "status"],
-            changelog="Pipeline stage result event",
-        ))
+        self.register(
+            SchemaDefinition(
+                name="patient_vitals",
+                version="1.0",
+                fields={
+                    "patient_id": "str",
+                    "heart_rate": "float",
+                    "respiratory_rate": "float",
+                    "body_temperature": "float",
+                    "oxygen_saturation": "float",
+                    "systolic_bp": "float",
+                    "diastolic_bp": "float",
+                },
+                required=["patient_id", "heart_rate"],
+                changelog="Initial vitals schema",
+            )
+        )
+        self.register(
+            SchemaDefinition(
+                name="patient_vitals",
+                version="2.0",
+                fields={
+                    "patient_id": "str",
+                    "heart_rate": "float",
+                    "respiratory_rate": "float",
+                    "body_temperature": "float",
+                    "oxygen_saturation": "float",
+                    "systolic_bp": "float",
+                    "diastolic_bp": "float",
+                    "age": "int",
+                    "bmi": "float",
+                },
+                required=["patient_id", "heart_rate", "age"],
+                changelog="Added age and BMI fields for risk model v2",
+            )
+        )
+        self.register(
+            SchemaDefinition(
+                name="patient_vitals",
+                version="3.0",
+                fields={
+                    "patient_id": "str",
+                    "heart_rate": "float",
+                    "respiratory_rate": "float",
+                    "body_temperature": "float",
+                    "oxygen_saturation": "float",
+                    "systolic_bp": "float",
+                    "diastolic_bp": "float",
+                    "age": "int",
+                    "bmi": "float",
+                    "mean_arterial_pressure": "float",
+                    "chief_complaint": "str",
+                },
+                required=["patient_id", "heart_rate", "age", "chief_complaint"],
+                changelog="Added MAP derived feature and chief complaint for NER",
+            )
+        )
+        self.register(
+            SchemaDefinition(
+                name="clinical_note",
+                version="1.0",
+                fields={
+                    "patient_id": "str",
+                    "note_text": "str",
+                    "author": "str",
+                    "encounter_id": "str",
+                },
+                required=["patient_id", "note_text"],
+                changelog="Initial clinical note schema",
+            )
+        )
+        self.register(
+            SchemaDefinition(
+                name="pipeline_result",
+                version="1.0",
+                fields={
+                    "patient_id": "str",
+                    "stage": "str",
+                    "status": "str",
+                    "latency_ms": "float",
+                    "output": "str",
+                },
+                required=["patient_id", "stage", "status"],
+                changelog="Pipeline stage result event",
+            )
+        )
 
     def register(self, schema: SchemaDefinition):
         with self._lock:
@@ -259,11 +275,13 @@ class EventStream:
                 sv = schema.version
                 valid, errors = schema.validate(value)
                 if not valid:
-                    self._dead_letter.append(DeadLetterEntry(
-                        event={"topic": topic, "key": key, "value": value},
-                        error=f"Schema validation failed: {'; '.join(errors)}",
-                        failed_at=datetime.now(timezone.utc).isoformat(),
-                    ))
+                    self._dead_letter.append(
+                        DeadLetterEntry(
+                            event={"topic": topic, "key": key, "value": value},
+                            error=f"Schema validation failed: {'; '.join(errors)}",
+                            failed_at=datetime.now(timezone.utc).isoformat(),
+                        )
+                    )
                     self._metrics["events_failed"] += 1
                     logger.warning("Event sent to DLQ: %s", errors)
                     return None
@@ -300,7 +318,7 @@ class EventStream:
         for part_idx, partition in enumerate(self._topics[topic]):
             offset_key = f"{part_idx}"
             current_offset = self._offsets[f"{consumer_group}:{topic}"][offset_key]
-            for evt in partition[current_offset: current_offset + max_events]:
+            for evt in partition[current_offset : current_offset + max_events]:
                 events.append(evt)
                 self._offsets[f"{consumer_group}:{topic}"][offset_key] += 1
                 self._metrics["events_consumed"] += 1
@@ -365,21 +383,33 @@ class EventStream:
         vitals["mean_arterial_pressure"] = round(dbp + (sbp - dbp) / 3, 1)
         vitals["bmi"] = patient_data.get("bmi", 25.0)
 
-        evt = self.produce("patient-vitals", patient_id, vitals,
-                           schema_name="patient_vitals", schema_version="3.0")
+        evt = self.produce(
+            "patient-vitals",
+            patient_id,
+            vitals,
+            schema_name="patient_vitals",
+            schema_version="3.0",
+        )
         if evt:
             results["events"].append(asdict(evt))
         else:
-            results["dlq"].append(self._dead_letter[-1].__dict__ if self._dead_letter else {})
+            results["dlq"].append(
+                self._dead_letter[-1].__dict__ if self._dead_letter else {}
+            )
 
         # Clinical note event
         if patient_data.get("clinical_note"):
-            note_evt = self.produce("clinical-notes", patient_id, {
-                "patient_id": patient_id,
-                "note_text": patient_data["clinical_note"],
-                "author": "system",
-                "encounter_id": f"enc-{patient_id}-{int(time.time())}",
-            }, schema_name="clinical_note")
+            note_evt = self.produce(
+                "clinical-notes",
+                patient_id,
+                {
+                    "patient_id": patient_id,
+                    "note_text": patient_data["clinical_note"],
+                    "author": "system",
+                    "encounter_id": f"enc-{patient_id}-{int(time.time())}",
+                },
+                schema_name="clinical_note",
+            )
             if note_evt:
                 results["events"].append(asdict(note_evt))
 

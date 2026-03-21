@@ -520,18 +520,20 @@ def de_stream_ingest(request: CommandCenterRequest):
     try:
         from data_engineering.streaming import event_stream
 
-        result = event_stream.ingest_patient_event({
-            "patient_id": request.patient_id,
-            "heart_rate": request.heart_rate,
-            "respiratory_rate": request.respiratory_rate,
-            "body_temperature": request.body_temperature,
-            "oxygen_saturation": request.oxygen_saturation,
-            "systolic_bp": request.systolic_bp,
-            "diastolic_bp": request.diastolic_bp,
-            "age": request.age,
-            "chief_complaint": request.chief_complaint,
-            "clinical_note": request.clinical_note,
-        })
+        result = event_stream.ingest_patient_event(
+            {
+                "patient_id": request.patient_id,
+                "heart_rate": request.heart_rate,
+                "respiratory_rate": request.respiratory_rate,
+                "body_temperature": request.body_temperature,
+                "oxygen_saturation": request.oxygen_saturation,
+                "systolic_bp": request.systolic_bp,
+                "diastolic_bp": request.diastolic_bp,
+                "age": request.age,
+                "chief_complaint": request.chief_complaint,
+                "clinical_note": request.clinical_note,
+            }
+        )
         evolution = event_stream.registry.get_evolution("patient_vitals")
         REQUEST_LATENCY.observe(time.time() - start)
         return DEStreamingResponse(
@@ -569,15 +571,17 @@ def de_quality(request: CommandCenterRequest):
         from data_engineering.quality import DataQualityFramework
 
         dq = DataQualityFramework()
-        vitals_report = dq.validate_vitals({
-            "heart_rate": request.heart_rate,
-            "respiratory_rate": request.respiratory_rate,
-            "body_temperature": request.body_temperature,
-            "oxygen_saturation": request.oxygen_saturation,
-            "systolic_bp": request.systolic_bp,
-            "diastolic_bp": request.diastolic_bp,
-            "age": request.age,
-        })
+        vitals_report = dq.validate_vitals(
+            {
+                "heart_rate": request.heart_rate,
+                "respiratory_rate": request.respiratory_rate,
+                "body_temperature": request.body_temperature,
+                "oxygen_saturation": request.oxygen_saturation,
+                "systolic_bp": request.systolic_bp,
+                "diastolic_bp": request.diastolic_bp,
+                "age": request.age,
+            }
+        )
         note_report = dq.validate_clinical_note(request.clinical_note)
         summary = dq.get_pipeline_quality_summary()
         REQUEST_LATENCY.observe(time.time() - start)
@@ -656,8 +660,11 @@ def de_dashboard():
     return DEDashboardResponse(
         streaming=event_stream.get_metrics(),
         quality=DataQualityFramework().get_pipeline_quality_summary(),
-        lineage={"total_nodes": len(tracker._nodes), "total_edges": len(tracker._edges),
-                 "pii_columns": len(tracker.get_pii_columns())},
+        lineage={
+            "total_nodes": len(tracker._nodes),
+            "total_edges": len(tracker._edges),
+            "pii_columns": len(tracker.get_pii_columns()),
+        },
         warehouse=ClinicalWarehouse().get_warehouse_stats(),
         orchestrator=build_hera_dag().get_dag_definition(),
         cdc=cdc_stream.get_stats(),

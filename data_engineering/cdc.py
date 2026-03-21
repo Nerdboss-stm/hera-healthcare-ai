@@ -28,8 +28,8 @@ class ChangeEvent:
     record_key: str
     change_type: str  # INSERT, UPDATE, DELETE
     before: dict | None  # state before change (None for INSERT)
-    after: dict | None   # state after change (None for DELETE)
-    diff: dict           # changed fields only
+    after: dict | None  # state after change (None for DELETE)
+    diff: dict  # changed fields only
     timestamp: str = ""
     sequence_number: int = 0
     checksum: str = ""
@@ -38,12 +38,15 @@ class ChangeEvent:
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
         if not self.checksum:
-            payload = json.dumps({
-                "table": self.table,
-                "key": self.record_key,
-                "type": self.change_type,
-                "after": self.after,
-            }, sort_keys=True)
+            payload = json.dumps(
+                {
+                    "table": self.table,
+                    "key": self.record_key,
+                    "type": self.change_type,
+                    "after": self.after,
+                },
+                sort_keys=True,
+            )
             self.checksum = hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
@@ -52,7 +55,9 @@ class CDCStream:
 
     def __init__(self):
         self._log: list[ChangeEvent] = []
-        self._snapshots: dict[str, dict[str, dict]] = {}  # table -> key -> current_state
+        self._snapshots: dict[
+            str, dict[str, dict]
+        ] = {}  # table -> key -> current_state
         self._sequence = 0
         self._consumers: dict[str, int] = {}  # consumer_name -> last_read_sequence
 
@@ -115,43 +120,59 @@ class CDCStream:
         patient_id = encounter_data.get("patient_id", "unknown")
 
         # Patient record change
-        events.append(self.capture_change(
-            table="patients",
-            record_key=patient_id,
-            change_type=ChangeType.INSERT,
-            new_state={
-                "patient_id": patient_id,
-                "age": encounter_data.get("age", 0),
-                "gender": encounter_data.get("gender", "unknown"),
-            },
-        ))
+        events.append(
+            self.capture_change(
+                table="patients",
+                record_key=patient_id,
+                change_type=ChangeType.INSERT,
+                new_state={
+                    "patient_id": patient_id,
+                    "age": encounter_data.get("age", 0),
+                    "gender": encounter_data.get("gender", "unknown"),
+                },
+            )
+        )
 
         # Vitals record
-        vitals = {k: v for k, v in encounter_data.items()
-                  if k in ("heart_rate", "respiratory_rate", "body_temperature",
-                           "oxygen_saturation", "systolic_bp", "diastolic_bp")}
+        vitals = {
+            k: v
+            for k, v in encounter_data.items()
+            if k
+            in (
+                "heart_rate",
+                "respiratory_rate",
+                "body_temperature",
+                "oxygen_saturation",
+                "systolic_bp",
+                "diastolic_bp",
+            )
+        }
         if vitals:
-            events.append(self.capture_change(
-                table="vitals",
-                record_key=f"{patient_id}-vitals",
-                change_type=ChangeType.INSERT,
-                new_state={"patient_id": patient_id, **vitals},
-            ))
+            events.append(
+                self.capture_change(
+                    table="vitals",
+                    record_key=f"{patient_id}-vitals",
+                    change_type=ChangeType.INSERT,
+                    new_state={"patient_id": patient_id, **vitals},
+                )
+            )
 
         # Pipeline results
         for stage in encounter_data.get("stages", []):
             stage_name = stage.get("system", stage.get("name", "unknown"))
-            events.append(self.capture_change(
-                table="pipeline_results",
-                record_key=f"{patient_id}-{stage_name}",
-                change_type=ChangeType.INSERT,
-                new_state={
-                    "patient_id": patient_id,
-                    "stage": stage_name,
-                    "status": stage.get("status", "unknown"),
-                    "latency_ms": stage.get("latency_ms", 0),
-                },
-            ))
+            events.append(
+                self.capture_change(
+                    table="pipeline_results",
+                    record_key=f"{patient_id}-{stage_name}",
+                    change_type=ChangeType.INSERT,
+                    new_state={
+                        "patient_id": patient_id,
+                        "stage": stage_name,
+                        "status": stage.get("status", "unknown"),
+                        "latency_ms": stage.get("latency_ms", 0),
+                    },
+                )
+            )
 
         return events
 
@@ -187,7 +208,8 @@ class CDCStream:
     def get_record_history(self, table: str, record_key: str) -> list[dict]:
         """Get full change history for a specific record."""
         return [
-            asdict(evt) for evt in self._log
+            asdict(evt)
+            for evt in self._log
             if evt.table == table and evt.record_key == record_key
         ]
 
@@ -200,7 +222,9 @@ class CDCStream:
 
         by_type = {}
         for ct in ChangeType:
-            by_type[ct.value] = sum(1 for evt in self._log if evt.change_type == ct.value)
+            by_type[ct.value] = sum(
+                1 for evt in self._log if evt.change_type == ct.value
+            )
 
         return {
             "total_events": len(self._log),
@@ -209,8 +233,7 @@ class CDCStream:
             "events_by_table": by_table,
             "events_by_type": by_type,
             "consumers": {
-                name: {"last_sequence": seq}
-                for name, seq in self._consumers.items()
+                name: {"last_sequence": seq} for name, seq in self._consumers.items()
             },
             "snapshot_tables": {
                 t: len(records) for t, records in self._snapshots.items()
