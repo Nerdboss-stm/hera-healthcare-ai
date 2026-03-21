@@ -5,14 +5,14 @@ class TestFastAPIEndpoints:
     """Tests for the serving API layer."""
 
     def test_root_endpoint(self):
-        """Test the health check endpoint returns 200."""
+        """Test the root serves the UI HTML."""
         from serving.api import app
         from fastapi.testclient import TestClient
 
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
-        assert "message" in response.json()
+        assert "HERA" in response.text
 
     def test_metrics_endpoint(self):
         """Test the Prometheus metrics endpoint returns 200."""
@@ -35,7 +35,7 @@ class TestFastAPIEndpoints:
 
         client = TestClient(app)
         response = client.post(
-            "/summarize",
+            "/api/summarize",
             json={"note": "Patient is a 65-year-old male presenting with chest pain."},
         )
         assert response.status_code == 200
@@ -49,5 +49,5 @@ class TestFastAPIEndpoints:
         from fastapi.testclient import TestClient
 
         client = TestClient(app)
-        response = client.post("/summarize")
+        response = client.post("/api/summarize")
         assert response.status_code == 422
