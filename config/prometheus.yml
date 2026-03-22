@@ -2,10 +2,7 @@ global:
   scrape_interval: 5s
 
 scrape_configs:
-  - job_name: "clinical_summarizer_api"
+  - job_name: "hera-api"
     static_configs:
       - targets: ["hera-api:8000"]
-
-  - job_name: "risk_prediction_monitor"
-    static_configs:
-      - targets: ["hera-api:9100"]
+    metrics_path: /metrics

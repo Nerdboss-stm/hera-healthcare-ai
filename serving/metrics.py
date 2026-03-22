@@ -2,33 +2,34 @@ from prometheus_client import Counter, Histogram, generate_latest
 import time
 
 REQUEST_COUNT = Counter(
-    "summarizer_requests_total", "Total number of requests to the summarizer endpoint"
+    "hera_requests_total",
+    "Total API requests",
+    ["endpoint"],
 )
 
 REQUEST_FAILURES = Counter(
-    "summarizer_failures_total", "Number of failed summarization requests"
+    "hera_request_failures_total",
+    "Failed API requests",
+    ["endpoint"],
 )
 
 REQUEST_LATENCY = Histogram(
-    "summarizer_request_latency_seconds", "Latency of summarization requests"
+    "hera_request_latency_seconds",
+    "API request latency",
+    ["endpoint"],
+    buckets=[0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0],
 )
 
-
-def track_metrics(func):
-    def wrapper(*args, **kwargs):
-        REQUEST_COUNT.inc()
-        start_time = time.time()
-        try:
-            response = func(*args, **kwargs)
-            return response
-        except Exception:
-            REQUEST_FAILURES.inc()
-            raise
-        finally:
-            duration = time.time() - start_time
-            REQUEST_LATENCY.observe(duration)
-
-    return wrapper
+# Keep old names for backward compatibility with existing Prometheus queries
+SUMMARIZER_COUNT = Counter(
+    "summarizer_requests_total", "Total summarizer requests"
+)
+SUMMARIZER_FAILURES = Counter(
+    "summarizer_failures_total", "Failed summarizer requests"
+)
+SUMMARIZER_LATENCY = Histogram(
+    "summarizer_request_latency_seconds", "Summarizer request latency"
+)
 
 
 def prometheus_metrics():

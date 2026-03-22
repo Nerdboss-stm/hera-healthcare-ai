@@ -1,5 +1,6 @@
 import os
 import time
+import hashlib
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
@@ -38,7 +39,13 @@ from serving.schemas import (
 )
 from serving.summarizer import generate_summary
 from serving.risk_predictor import predict_risk
-from serving.db_logger import log_to_db
+from serving.db_logger import (
+    log_to_db,
+    log_prediction,
+    log_reasoning,
+    log_ner,
+    log_evaluation,
+)
 from serving.metrics import (
     REQUEST_COUNT,
     REQUEST_FAILURES,
@@ -128,12 +135,13 @@ def metrics():
 
 @app.post("/api/summarize", response_model=SummaryResponse)
 def summarize_note(request: NoteRequest):
-    REQUEST_COUNT.inc()
+    ep = "summarize"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         summary = generate_summary(request.note)
         log_to_db(request.note, summary, "SUCCESS")
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return SummaryResponse(
             summary=summary,
             timestamp=datetime.now(),
@@ -141,15 +149,16 @@ def summarize_note(request: NoteRequest):
             summary_length=len(summary),
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         log_to_db(request.note, str(e), "FAILURE")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/summarize/upload", response_model=SummaryResponse)
 async def summarize_file(file: UploadFile = File(...)):
-    REQUEST_COUNT.inc()
+    ep = "summarize_upload"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         content = await file.read()
@@ -158,7 +167,7 @@ async def summarize_file(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="File content too short")
         summary = generate_summary(note_text)
         log_to_db(note_text, summary, "SUCCESS")
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return SummaryResponse(
             summary=summary,
             timestamp=datetime.now(),
@@ -166,13 +175,13 @@ async def summarize_file(file: UploadFile = File(...)):
             summary_length=len(summary),
         )
     except UnicodeDecodeError:
-        REQUEST_FAILURES.inc()
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
         raise HTTPException(status_code=400, detail="File must be a UTF-8 text file")
     except HTTPException:
         raise
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -181,7 +190,8 @@ async def summarize_file(file: UploadFile = File(...)):
 
 @app.post("/api/predict", response_model=RiskResponse)
 def predict_patient_risk(request: VitalsRequest):
-    REQUEST_COUNT.inc()
+    ep = "predict"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         result = predict_risk(
@@ -193,7 +203,8 @@ def predict_patient_risk(request: VitalsRequest):
             diastolic_bp=request.diastolic_bp,
             age=request.age,
         )
-        REQUEST_LATENCY.observe(time.time() - start)
+        log_prediction(result["features_used"], result["prediction"], result["confidence"])
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return RiskResponse(
             prediction=result["prediction"],
             confidence=result["confidence"],
@@ -202,8 +213,8 @@ def predict_patient_risk(request: VitalsRequest):
             timestamp=datetime.now(),
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -217,7 +228,8 @@ def clinical_reasoning(request: ClinicalReasoningRequest):
     Triage Agent → Diagnostic Agent → Treatment Agent, producing
     a full clinical assessment with auditable reasoning chain.
     """
-    REQUEST_COUNT.inc()
+    ep = "reason"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from agents.orchestrator import ClinicalOrchestrator
@@ -245,20 +257,44 @@ def clinical_reasoning(request: ClinicalReasoningRequest):
         orchestrator = ClinicalOrchestrator(risk_predictor=predict_risk)
         result = orchestrator.reason(ctx)
 
-        REQUEST_LATENCY.observe(time.time() - start)
+        triage_dict = result.triage.to_dict()
+        diag_dict = result.diagnosis.to_dict()
+        treat_dict = result.treatment.to_dict()
+
+        # Extract diagnosis — may be a string or dict depending on to_dict()
+        primary_dx = diag_dict.get("primary_diagnosis", "")
+        dx_name = primary_dx.get("name", "") if isinstance(primary_dx, dict) else str(primary_dx)
+        dx_conf = primary_dx.get("probability", 0) if isinstance(primary_dx, dict) else diag_dict.get("confidence", 0)
+
+        try:
+            log_reasoning(
+                patient_id=result.patient_id,
+                complaint=request.chief_complaint,
+                esi=triage_dict.get("esi_level", 0),
+                diagnosis=dx_name,
+                confidence=dx_conf,
+                disposition=treat_dict.get("disposition", ""),
+                consensus=result.consensus_score,
+                latency=result.pipeline_latency_ms,
+                audit=result.reasoning_audit,
+            )
+        except Exception:
+            pass  # DB logging is best-effort
+
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return ClinicalReasoningResponse(
             patient_id=result.patient_id,
-            triage=result.triage.to_dict(),
-            diagnosis=result.diagnosis.to_dict(),
-            treatment=result.treatment.to_dict(),
+            triage=triage_dict,
+            diagnosis=diag_dict,
+            treatment=treat_dict,
             reasoning_audit=result.reasoning_audit,
             consensus_score=result.consensus_score,
             pipeline_latency_ms=result.pipeline_latency_ms,
             timestamp=datetime.now(),
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -286,30 +322,32 @@ def _get_rag_pipeline():
 @app.post("/api/rag/query", response_model=RAGQueryResponse)
 def rag_query(request: RAGQueryRequest):
     """Query the medical knowledge base using semantic search."""
-    REQUEST_COUNT.inc()
+    ep = "rag_query"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         rag = _get_rag_pipeline()
         result = rag.query_knowledge(request.query, top_k=request.top_k)
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return RAGQueryResponse(**result)
     except HTTPException:
         raise
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/rag/summarize", response_model=RAGSummarizeResponse)
 def rag_summarize(request: RAGSummarizeRequest):
     """RAG-augmented clinical note summarization with citations."""
-    REQUEST_COUNT.inc()
+    ep = "rag_summarize"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         rag = _get_rag_pipeline()
         result = rag.augment_and_generate(request.note, top_k=request.top_k)
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return RAGSummarizeResponse(
             **result,
             timestamp=datetime.now(),
@@ -317,8 +355,8 @@ def rag_summarize(request: RAGSummarizeRequest):
     except HTTPException:
         raise
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -328,28 +366,46 @@ def rag_summarize(request: RAGSummarizeRequest):
 @app.post("/api/ner/extract", response_model=NERResponse)
 def extract_entities(request: NERRequest):
     """Extract medical entities (medications, conditions, procedures, labs) from clinical notes."""
-    REQUEST_COUNT.inc()
+    ep = "ner_extract"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from ner.extractor import ClinicalNERExtractor
 
         extractor = ClinicalNERExtractor()
         result = extractor.extract(request.note)
-        REQUEST_LATENCY.observe(time.time() - start)
+        result_dict = result.to_dict()
+
+        note_hash = hashlib.sha256(request.note.encode()).hexdigest()[:16]
+        try:
+            log_ner(
+                patient_id=getattr(request, "patient_id", "unknown"),
+                note_hash=note_hash,
+                count=result_dict.get("entity_count", 0),
+                medications=result_dict.get("medications", []),
+                conditions=result_dict.get("conditions", []),
+                procedures=result_dict.get("procedures", []),
+                labs=result_dict.get("lab_values", []),
+            )
+        except Exception:
+            pass  # DB logging is best-effort
+
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return NERResponse(
-            **result.to_dict(),
+            **result_dict,
             timestamp=datetime.now(),
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/ner/graph", response_model=KnowledgeGraphResponse)
 def build_knowledge_graph(request: KnowledgeGraphRequest):
     """Build a patient knowledge graph from a clinical note."""
-    REQUEST_COUNT.inc()
+    ep = "ner_graph"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from ner.knowledge_graph import PatientKnowledgeGraph
@@ -357,7 +413,7 @@ def build_knowledge_graph(request: KnowledgeGraphRequest):
         kg = PatientKnowledgeGraph()
         result = kg.build_from_note(request.note, request.patient_id)
         graph_data = kg.to_dict()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return KnowledgeGraphResponse(
             patient_id=result["patient_id"],
             nodes=result["nodes"],
@@ -369,8 +425,8 @@ def build_knowledge_graph(request: KnowledgeGraphRequest):
     except ImportError:
         raise HTTPException(status_code=503, detail="networkx not installed")
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -380,7 +436,8 @@ def build_knowledge_graph(request: KnowledgeGraphRequest):
 @app.post("/api/fhir/predict", response_model=FHIRPredictResponse)
 def fhir_predict(request: FHIRBundleRequest):
     """Accept a FHIR R4 Bundle, run risk prediction, return FHIR RiskAssessment."""
-    REQUEST_COUNT.inc()
+    ep = "fhir_predict"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from fhir_layer.converter import FHIRConverter
@@ -389,7 +446,6 @@ def fhir_predict(request: FHIRBundleRequest):
         patient = parsed["patient"]
         vitals = parsed["vitals"]
 
-        # Run risk prediction with parsed vitals
         result = predict_risk(
             heart_rate=vitals.get("heart_rate", 80),
             respiratory_rate=vitals.get("respiratory_rate", 16),
@@ -400,6 +456,8 @@ def fhir_predict(request: FHIRBundleRequest):
             age=patient.get("age", 50),
         )
 
+        log_prediction(result["features_used"], result["prediction"], result["confidence"])
+
         risk_assessment = FHIRConverter.to_risk_assessment(
             patient_id=patient.get("patient_id", "unknown"),
             prediction=result["prediction"],
@@ -408,7 +466,7 @@ def fhir_predict(request: FHIRBundleRequest):
             features=result["features_used"],
         )
 
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return FHIRPredictResponse(
             risk_assessment=risk_assessment,
             original_prediction=result,
@@ -417,8 +475,8 @@ def fhir_predict(request: FHIRBundleRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -428,7 +486,8 @@ def fhir_predict(request: FHIRBundleRequest):
 @app.post("/api/evaluate", response_model=EvaluationResponse)
 def evaluate_output(request: EvaluationRequest):
     """Evaluate a clinical AI output for factual consistency, hallucinations, and safety."""
-    REQUEST_COUNT.inc()
+    ep = "evaluate"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from evaluation.evaluator import ClinicalEvaluator
@@ -436,14 +495,30 @@ def evaluate_output(request: EvaluationRequest):
         evaluator = ClinicalEvaluator()
         report = evaluator.evaluate(request.source_note, request.generated_output)
         report_dict = report.to_dict()
-        REQUEST_LATENCY.observe(time.time() - start)
+
+        note_hash = hashlib.sha256(request.source_note.encode()).hexdigest()[:16]
+        try:
+            log_evaluation(
+                note_hash=note_hash,
+                overall=report_dict.get("overall_score", 0),
+                passed=report_dict.get("pass_threshold", False),
+                factual=report_dict.get("factual_consistency", {}).get("score", 0),
+                hallucination=report_dict.get("hallucination", {}).get("score", 0),
+                accuracy=report_dict.get("medical_accuracy", {}).get("score", 0),
+                safety=report_dict.get("clinical_safety", {}).get("safe", False),
+                details=report_dict,
+            )
+        except Exception:
+            pass  # DB logging is best-effort
+
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return EvaluationResponse(
             **report_dict,
             timestamp=datetime.now(),
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -452,14 +527,14 @@ def evaluate_output(request: EvaluationRequest):
 
 @app.post("/api/command-center", response_model=CommandCenterResponse)
 def command_center(request: CommandCenterRequest):
-    """Run the unified pipeline — all 7 subsystems on one patient.
+    """Run the unified pipeline — all 9 stages on one patient.
 
     NER → Knowledge Graph → Multi-Agent Reasoning → Risk Prediction →
-    RAG Retrieval → Summarization → Safety Evaluation → FHIR Export.
-    Includes feedback loops: if safety evaluation fails, the summarizer
-    re-runs with RAG context for better accuracy.
+    RAG Retrieval → Summarization → Safety Evaluation → FHIR Export →
+    Data Engineering.
     """
-    REQUEST_COUNT.inc()
+    ep = "command_center"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from serving.command_center import UnifiedPipeline
@@ -486,14 +561,14 @@ def command_center(request: CommandCenterRequest):
             current_medications=request.current_medications,
             allergies=request.allergies,
         )
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return CommandCenterResponse(
             **result.to_dict(),
             timestamp=datetime.now(),
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -515,7 +590,8 @@ def get_usage():
 @app.post("/api/de/stream", response_model=DEStreamingResponse)
 def de_stream_ingest(request: CommandCenterRequest):
     """Ingest patient data through event streaming pipeline with schema validation."""
-    REQUEST_COUNT.inc()
+    ep = "de_stream"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from data_engineering.streaming import event_stream
@@ -535,7 +611,7 @@ def de_stream_ingest(request: CommandCenterRequest):
             }
         )
         evolution = event_stream.registry.get_evolution("patient_vitals")
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return DEStreamingResponse(
             patient_id=request.patient_id,
             events=result.get("events", []),
@@ -545,7 +621,7 @@ def de_stream_ingest(request: CommandCenterRequest):
             schema_evolution=evolution,
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -565,7 +641,8 @@ def de_lineage():
 @app.post("/api/de/quality", response_model=DEQualityResponse)
 def de_quality(request: CommandCenterRequest):
     """Run data quality validation on patient data."""
-    REQUEST_COUNT.inc()
+    ep = "de_quality"
+    REQUEST_COUNT.labels(endpoint=ep).inc()
     start = time.time()
     try:
         from data_engineering.quality import DataQualityFramework
@@ -584,14 +661,14 @@ def de_quality(request: CommandCenterRequest):
         )
         note_report = dq.validate_clinical_note(request.clinical_note)
         summary = dq.get_pipeline_quality_summary()
-        REQUEST_LATENCY.observe(time.time() - start)
+        REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return DEQualityResponse(
             vitals_quality=vitals_report.to_dict(),
             note_quality=note_report.to_dict(),
             pipeline_summary=summary,
         )
     except Exception as e:
-        REQUEST_FAILURES.inc()
+        REQUEST_FAILURES.labels(endpoint=ep).inc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

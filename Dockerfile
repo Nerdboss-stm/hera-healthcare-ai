@@ -1,9 +1,12 @@
-FROM --platform=linux/amd64 python:3.10-slim-bullseye
+FROM python:3.10-slim-bullseye
 
 WORKDIR /app
 
-COPY requirements.txt ./requirements.txt
+# Install PyTorch CPU-only first (much smaller, no CUDA bloat)
+RUN python -m pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
+# Install remaining dependencies
+COPY requirements.txt ./requirements.txt
 RUN python -m pip install --no-cache-dir -r requirements.txt \
  && python -m pip install --no-cache-dir "uvicorn[standard]" prometheus_client psycopg2-binary
 
@@ -20,6 +23,7 @@ COPY clinical_summarizer/ ./clinical_summarizer/
 COPY data/processed/ ./data/processed/
 COPY data/clinical_notes/ ./data/clinical_notes/
 COPY database/ ./database/
+COPY model/ ./model/
 
 EXPOSE 8000
 
