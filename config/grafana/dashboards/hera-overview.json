@@ -5,19 +5,192 @@
   "graphTooltip": 1,
   "id": null,
   "links": [],
-  "liveNow": false,
+  "liveNow": true,
   "panels": [
+    {
+      "title": "System Health",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "title": "API Uptime",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "up{job=\"hera-api\"}", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
+          ],
+          "thresholds": { "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        }
+      }
+    },
+    {
+      "title": "Total Requests",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(hera_requests_total)", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 10 }, { "color": "yellow", "value": 100 } ] }
+        }
+      }
+    },
+    {
+      "title": "Error Rate (5m)",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(hera_request_failures_total[5m])) / sum(rate(hera_requests_total[5m])) * 100", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0, "max": 100,
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 15 } ] }
+        }
+      }
+    },
+    {
+      "title": "Active Patients",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "hera_active_patients", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [ { "color": "purple", "value": null }, { "color": "blue", "value": 5 }, { "color": "green", "value": 20 } ] }
+        }
+      }
+    },
+    {
+      "title": "Avg P95 Latency",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(hera_request_latency_seconds_bucket[5m])) by (le))", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 2 }, { "color": "red", "value": 10 } ] }
+        }
+      }
+    },
+    {
+      "title": "Total Failures",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(hera_request_failures_total)", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 } ] }
+        }
+      }
+    },
+    {
+      "title": "Clinical Risk and Triage",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false
+    },
+    {
+      "title": "Risk Level Distribution",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (risk_level) (hera_risk_predictions_total)", "legendFormat": "{{ risk_level }}", "refId": "A" }
+      ],
+      "options": {
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }
+      },
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Critical" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF4444", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "High" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF8800", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Medium" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FFCC00", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Low" }, "properties": [{ "id": "color", "value": { "fixedColor": "#44BB44", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "title": "ESI Triage Level Distribution",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (esi_level) (hera_esi_assignments_total)", "legendFormat": "ESI {{ esi_level }}", "refId": "A" }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "barWidth": 0.6,
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ESI 1" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF0000", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "ESI 2" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF6600", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "ESI 3" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FFCC00", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "ESI 4" }, "properties": [{ "id": "color", "value": { "fixedColor": "#66BB66", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "ESI 5" }, "properties": [{ "id": "color", "value": { "fixedColor": "#4488FF", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "title": "Risk Predictions Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (risk_level) (rate(hera_risk_predictions_total[5m]))", "legendFormat": "{{ risk_level }}", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 30, "lineWidth": 2, "stacking": { "mode": "normal" } },
+          "unit": "ops"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Critical" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF4444", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "High" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF8800", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Medium" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FFCC00", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "Low" }, "properties": [{ "id": "color", "value": { "fixedColor": "#44BB44", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "title": "API Performance",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "collapsed": false
+    },
     {
       "title": "Request Rate by Endpoint",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        {
-          "expr": "rate(hera_requests_total[1m])",
-          "legendFormat": "{{ endpoint }}",
-          "refId": "A"
-        }
+        { "expr": "rate(hera_requests_total[1m])", "legendFormat": "{{ endpoint }}", "refId": "A" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -27,157 +200,141 @@
       }
     },
     {
-      "title": "Error Rate by Endpoint",
+      "title": "P95 Latency by Endpoint",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        {
-          "expr": "rate(hera_request_failures_total[1m])",
-          "legendFormat": "{{ endpoint }}",
-          "refId": "A"
+        { "expr": "histogram_quantile(0.95, rate(hera_request_latency_seconds_bucket[1m]))", "legendFormat": "{{ endpoint }}", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 2 }, { "color": "red", "value": 10 } ] }
         }
+      }
+    },
+    {
+      "title": "Error Rate by Endpoint",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(hera_request_failures_total[1m])", "legendFormat": "{{ endpoint }}", "refId": "A" }
       ],
       "fieldConfig": {
         "defaults": {
           "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
           "color": { "mode": "palette-classic" },
           "unit": "reqps",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 0.1 }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "title": "P95 Latency by Endpoint",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(hera_request_latency_seconds_bucket[1m]))",
-          "legendFormat": "{{ endpoint }}",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
-          "unit": "s"
-        }
-      }
-    },
-    {
-      "title": "Total Requests",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "sum(hera_requests_total)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              { "color": "blue", "value": null },
-              { "color": "green", "value": 10 }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "title": "Total Failures",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "sum(hera_request_failures_total)",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 1 },
-              { "color": "red", "value": 5 }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "title": "API Uptime",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "up{job=\"hera-api\"}",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }
-          ],
-          "thresholds": {
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          }
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.1 } ] }
         }
       }
     },
     {
       "title": "Latency Heatmap",
       "type": "heatmap",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        {
-          "expr": "sum(rate(hera_request_latency_seconds_bucket[1m])) by (le)",
-          "format": "heatmap",
-          "legendFormat": "{{ le }}",
-          "refId": "A"
-        }
+        { "expr": "sum(rate(hera_request_latency_seconds_bucket[1m])) by (le)", "format": "heatmap", "legendFormat": "{{ le }}", "refId": "A" }
       ]
     },
     {
-      "title": "Request Volume by Endpoint (Pie)",
-      "type": "piechart",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "title": "Pipeline and Data Engineering",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "collapsed": false
+    },
+    {
+      "title": "Pipeline Stage Completions",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        {
-          "expr": "sum by (endpoint) (hera_requests_total)",
-          "legendFormat": "{{ endpoint }}",
-          "refId": "A"
+        { "expr": "sum by (stage) (hera_pipeline_stages_total{status=\"success\"})", "legendFormat": "{{ stage }}", "refId": "A" }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "barWidth": 0.5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" }
         }
-      ]
+      }
+    },
+    {
+      "title": "CDC Events by Table",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (table) (rate(hera_cdc_events_total[5m]))", "legendFormat": "{{ table }}", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1, "stacking": { "mode": "normal" } },
+          "unit": "ops",
+          "color": { "mode": "palette-classic" }
+        }
+      }
+    },
+    {
+      "title": "Warehouse Encounters Loaded",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "hera_warehouse_encounters_total", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 10 } ] }
+        }
+      }
+    },
+    {
+      "title": "Request Volume by Endpoint",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (endpoint) (hera_requests_total)", "legendFormat": "{{ endpoint }}", "refId": "A" }
+      ],
+      "options": {
+        "pieType": "donut",
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }
+      }
+    },
+    {
+      "title": "Pipeline Stage Failure Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum by (stage) (rate(hera_pipeline_stages_total{status!=\"success\"}[5m]))", "legendFormat": "{{ stage }} failures", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "ops",
+          "color": { "mode": "palette-classic" }
+        }
+      }
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
-  "tags": ["hera", "clinical-ai"],
+  "tags": ["hera", "clinical-ai", "healthcare", "monitoring"],
   "templating": { "list": [] },
   "time": { "from": "now-30m", "to": "now" },
   "timepicker": {},
   "timezone": "",
-  "title": "HERA Clinical AI — Overview",
+  "title": "HERA Clinical AI - Overview",
   "uid": "hera-overview",
-  "version": 1
+  "version": 2
 }

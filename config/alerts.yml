@@ -31,13 +31,22 @@ groups:
 - name: hera_clinical_alerts
   rules:
   - alert: HighRiskPatientSurge
-    expr: increase(hera_requests_total{endpoint="predict"}[10m]) > 20
+    expr: increase(hera_risk_predictions_total{risk_level="Critical"}[10m]) > 5
     for: 1m
     labels:
-      severity: info
+      severity: critical
     annotations:
-      summary: "High volume of risk predictions"
-      description: "More than 20 risk predictions in 10 minutes."
+      summary: "Surge of Critical risk patients"
+      description: "More than 5 Critical-risk predictions in 10 minutes."
+
+  - alert: ESI1Spike
+    expr: increase(hera_esi_assignments_total{esi_level="1"}[10m]) > 3
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "ESI Level 1 (Resuscitation) spike"
+      description: "3+ ESI-1 patients in 10 minutes - mass casualty alert."
 
   - alert: CommandCenterFailures
     expr: rate(hera_request_failures_total{endpoint="command_center"}[5m]) > 0.05
@@ -47,3 +56,30 @@ groups:
     annotations:
       summary: "Command Center pipeline failures detected"
       description: "Command Center failure rate is {{ $value }} per second."
+
+  - alert: NoRiskPredictions
+    expr: increase(hera_risk_predictions_total[15m]) == 0 and up{job="hera-api"} == 1
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "No risk predictions in 15 minutes"
+      description: "API is up but no patients have been processed."
+
+  - alert: CDCEventBacklog
+    expr: increase(hera_cdc_events_total[5m]) > 100
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CDC event volume"
+      description: "More than 100 CDC events in 5 minutes. Check pipeline throughput."
+
+  - alert: WarehouseStale
+    expr: increase(hera_warehouse_encounters_total[30m]) == 0 and hera_active_patients > 0
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Warehouse not receiving new encounters"
+      description: "Active patients detected but no warehouse loads in 30 minutes."

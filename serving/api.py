@@ -589,6 +589,21 @@ def command_center(request: CommandCenterRequest):
                 esi = sr.get("triage", {}).get("esi_level", 0)
                 ESI_ASSIGNMENTS.labels(esi_level=str(esi)).inc()
 
+        # Record CDC events + warehouse encounter in Prometheus
+        try:
+            from data_engineering.cdc import cdc_stream
+            from data_engineering.warehouse import clinical_warehouse
+            cdc_events = cdc_stream.capture_encounter(rd)
+            for evt in cdc_events:
+                tbl = evt.table if hasattr(evt, 'table') else evt.get("table", "unknown")
+                ct = evt.change_type if hasattr(evt, 'change_type') else evt.get("change_type", "INSERT")
+                CDC_EVENTS.labels(table=tbl, change_type=ct).inc()
+            clinical_warehouse.load_encounter(rd)
+            WAREHOUSE_ENCOUNTERS.inc()
+        except Exception as wh_err:
+            import logging
+            logging.getLogger(__name__).warning("Warehouse/CDC metric error: %s", wh_err)
+
         # Log to all PostgreSQL tables from pipeline stages
         try:
             for s in rd.get("stages", []):
