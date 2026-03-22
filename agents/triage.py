@@ -62,27 +62,41 @@ HIGH_ACUITY_COMPLAINTS = {
 RESOURCE_ESTIMATES = {
     "labs_imaging": [
         "abdominal pain",
-        "headache",
         "fever",
         "back pain",
         "weakness",
         "dizziness",
         "urinary",
+        "painful urination",
     ],
     "single_resource": [
         "laceration",
+        "cut on",
         "sprain",
         "rash",
         "sore throat",
         "ear pain",
         "refill",
         "suture removal",
+        "migraine",
+        "headache",
+        "anxiety",
+        "panic",
+        "tingling",
+        "racing heart",
     ],
     "no_resources": [
         "prescription refill",
+        "medication refill",
         "medical clearance",
         "wound check",
         "suture removal",
+        "well child",
+        "well-child",
+        "routine",
+        "follow up",
+        "follow-up",
+        "checkup",
     ],
 }
 
@@ -171,6 +185,11 @@ class TriageAgent:
         for kw in RESOURCE_ESTIMATES["labs_imaging"]:
             if kw in complaint_lower:
                 return 3
+        # Default: estimate based on complaint length/complexity
+        # Short, simple complaints → fewer resources needed
+        words = complaint_lower.split()
+        if len(words) <= 2:
+            return 4  # simple complaint, likely single resource
         return 3  # default: assume labs/imaging needed
 
     def _compute_risk_score(

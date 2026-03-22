@@ -1,10 +1,49 @@
 groups:
-- name: hera_alerts
+- name: hera_api_alerts
   rules:
-  - alert: TooManyHighRisk
-    expr: high_risk_predictions > 3
+  - alert: HighErrorRate
+    expr: rate(hera_request_failures_total[5m]) > 0.1
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "HERA API error rate above 10%"
+      description: "Endpoint {{ $labels.endpoint }} has elevated failure rate."
+
+  - alert: HighLatency
+    expr: histogram_quantile(0.95, rate(hera_request_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "HERA API p95 latency above 10s"
+      description: "Endpoint {{ $labels.endpoint }} p95 latency is {{ $value }}s."
+
+  - alert: APIDown
+    expr: up{job="hera-api"} == 0
     for: 30s
     labels:
       severity: critical
     annotations:
-      summary: "Too many High Risk patients"
+      summary: "HERA API is down"
+      description: "The hera-api target has been unreachable for 30s."
+
+- name: hera_clinical_alerts
+  rules:
+  - alert: HighRiskPatientSurge
+    expr: increase(hera_requests_total{endpoint="predict"}[10m]) > 20
+    for: 1m
+    labels:
+      severity: info
+    annotations:
+      summary: "High volume of risk predictions"
+      description: "More than 20 risk predictions in 10 minutes."
+
+  - alert: CommandCenterFailures
+    expr: rate(hera_request_failures_total{endpoint="command_center"}[5m]) > 0.05
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Command Center pipeline failures detected"
+      description: "Command Center failure rate is {{ $value }} per second."

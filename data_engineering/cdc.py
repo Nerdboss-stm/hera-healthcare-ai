@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import json
 import hashlib
+import logging
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class ChangeType(Enum):
@@ -103,6 +106,7 @@ class CDCStream:
             sequence_number=self._sequence,
         )
         self._log.append(event)
+        self._persist_event(event)
 
         # Update snapshot
         if table not in self._snapshots:
@@ -113,6 +117,33 @@ class CDCStream:
             self._snapshots[table][record_key] = new_state
 
         return event
+
+    def _persist_event(self, event: ChangeEvent):
+        """Write CDC event to PostgreSQL de_cdc_events table."""
+        try:
+            import psycopg2
+            from config.settings import DB_CONFIG
+            conn = psycopg2.connect(**DB_CONFIG)
+            cur = conn.cursor()
+            cur.execute(
+                """INSERT INTO de_cdc_events
+                (event_id, table_name, record_key, change_type,
+                 before_state, after_state, diff, checksum, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    event.event_id, event.table, event.record_key,
+                    event.change_type,
+                    json.dumps(event.before, default=str) if event.before else None,
+                    json.dumps(event.after, default=str) if event.after else None,
+                    json.dumps(event.diff, default=str) if event.diff else None,
+                    event.checksum, event.timestamp,
+                ),
+            )
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as e:
+            logger.debug("CDC persist skipped: %s", e)
 
     def capture_encounter(self, encounter_data: dict) -> list[ChangeEvent]:
         """Capture all changes for a clinical encounter."""

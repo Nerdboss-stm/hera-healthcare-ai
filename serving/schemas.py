@@ -34,6 +34,9 @@ class RiskResponse(BaseModel):
     prediction: str
     confidence: float
     risk_score: float
+    risk_level: Optional[str] = None
+    ml_binary_label: Optional[str] = None
+    ml_probability: Optional[float] = None
     features_used: Dict[str, float]
     timestamp: datetime
 

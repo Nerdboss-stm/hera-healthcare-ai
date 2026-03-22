@@ -50,6 +50,12 @@ from serving.metrics import (
     REQUEST_COUNT,
     REQUEST_FAILURES,
     REQUEST_LATENCY,
+    RISK_PREDICTIONS,
+    ESI_ASSIGNMENTS,
+    PIPELINE_STAGES,
+    ACTIVE_PATIENTS,
+    CDC_EVENTS,
+    WAREHOUSE_ENCOUNTERS,
     prometheus_metrics,
 )
 
@@ -212,6 +218,9 @@ def predict_patient_risk(request: VitalsRequest):
             prediction=result["prediction"],
             confidence=result["confidence"],
             risk_score=result["risk_score"],
+            risk_level=result.get("risk_level"),
+            ml_binary_label=result.get("ml_binary_label"),
+            ml_probability=result.get("ml_probability"),
             features_used=result["features_used"],
             timestamp=datetime.now(),
         )
@@ -565,8 +574,74 @@ def command_center(request: CommandCenterRequest):
             allergies=request.allergies,
         )
         REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
+        ACTIVE_PATIENTS.inc()
+
+        # Record clinical metrics for Prometheus
+        rd = result.to_dict()
+        for s in rd.get("stages", []):
+            sys_name = s.get("system", "")
+            sr = s.get("result") or {}
+            PIPELINE_STAGES.labels(stage=sys_name, status=s.get("status", "unknown")).inc()
+            if sys_name == "risk_predictor":
+                rl = sr.get("risk_level", sr.get("prediction", "unknown"))
+                RISK_PREDICTIONS.labels(risk_level=rl).inc()
+            elif sys_name == "agents":
+                esi = sr.get("triage", {}).get("esi_level", 0)
+                ESI_ASSIGNMENTS.labels(esi_level=str(esi)).inc()
+
+        # Log to all PostgreSQL tables from pipeline stages
+        try:
+            for s in rd.get("stages", []):
+                sys_name = s.get("system", "")
+                sr = s.get("result") or {}
+                if sys_name == "risk_predictor" and sr.get("features_used"):
+                    log_prediction(sr["features_used"], sr.get("prediction", ""), sr.get("confidence", 0))
+                elif sys_name == "agents" and sr.get("triage"):
+                    tri = sr.get("triage", {})
+                    dxr = sr.get("diagnosis", {})
+                    txr = sr.get("treatment", {})
+                    log_reasoning(
+                        patient_id=request.patient_id,
+                        complaint=request.chief_complaint,
+                        esi=tri.get("esi_level", 0),
+                        diagnosis=dxr.get("primary_diagnosis", ""),
+                        confidence=dxr.get("confidence", 0),
+                        disposition=txr.get("disposition", ""),
+                        consensus=sr.get("consensus_score", 0),
+                        latency=s.get("latency_ms", 0),
+                        audit=sr.get("audit", []),
+                    )
+                elif sys_name == "ner" and sr.get("entity_count") is not None:
+                    note_hash = hashlib.sha256(request.clinical_note.encode()).hexdigest()[:16]
+                    log_ner(
+                        patient_id=request.patient_id,
+                        note_hash=note_hash,
+                        count=sr.get("entity_count", 0),
+                        medications=sr.get("medications", []),
+                        conditions=sr.get("conditions", []),
+                        procedures=sr.get("procedures", []),
+                        labs=sr.get("lab_values", []),
+                    )
+                elif sys_name == "evaluator" and sr.get("overall_score") is not None:
+                    note_hash = hashlib.sha256(request.clinical_note.encode()).hexdigest()[:16]
+                    log_evaluation(
+                        note_hash=note_hash,
+                        overall=sr.get("overall_score", 0),
+                        passed=sr.get("pass_threshold", False),
+                        factual=sr.get("factual_consistency", {}).get("score", 0) if isinstance(sr.get("factual_consistency"), dict) else 0,
+                        hallucination=sr.get("hallucination", {}).get("score", 0) if isinstance(sr.get("hallucination"), dict) else 0,
+                        accuracy=sr.get("medical_accuracy", {}).get("score", 0) if isinstance(sr.get("medical_accuracy"), dict) else 0,
+                        safety=sr.get("clinical_safety", {}).get("safe", False) if isinstance(sr.get("clinical_safety"), dict) else False,
+                        details=sr,
+                    )
+                elif sys_name == "summarizer" and sr.get("summary"):
+                    log_to_db(request.clinical_note, sr.get("summary", ""), "SUCCESS")
+        except Exception as log_err:
+            import logging
+            logging.getLogger(__name__).warning("CC DB logging error: %s", log_err)
+
         return CommandCenterResponse(
-            **result.to_dict(),
+            **rd,
             timestamp=datetime.now(),
         )
     except Exception as e:

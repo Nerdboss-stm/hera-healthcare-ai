@@ -196,7 +196,8 @@ class ClinicalWarehouse:
                 heart_rate REAL, respiratory_rate REAL, body_temperature REAL,
                 oxygen_saturation REAL, systolic_bp REAL, diastolic_bp REAL,
                 mean_arterial_pressure REAL, risk_score REAL,
-                risk_prediction TEXT, confidence REAL, esi_level INTEGER,
+                risk_prediction TEXT, risk_level TEXT,
+                confidence REAL, esi_level INTEGER,
                 entity_count INTEGER, summary_compression REAL,
                 safety_score REAL, safety_passed INTEGER,
                 pipeline_latency_ms REAL, fhir_resource_count INTEGER,
@@ -337,6 +338,7 @@ class ClinicalWarehouse:
         ner_count = 0
         risk_score = 0.0
         risk_prediction = "Unknown"
+        risk_level = "Unknown"
         confidence = 0.0
         esi_level = 0
         compression = 0.0
@@ -352,6 +354,7 @@ class ClinicalWarehouse:
             elif sys_name == "risk_predictor":
                 risk_score = result.get("risk_score", 0.0)
                 risk_prediction = result.get("prediction", "Unknown")
+                risk_level = result.get("risk_level", risk_prediction)
                 confidence = result.get("confidence", 0.0)
             elif sys_name == "agents":
                 triage = result.get("triage", {})
@@ -369,7 +372,7 @@ class ClinicalWarehouse:
         dbp = vitals.get("diastolic_bp", 0)
         map_val = round(dbp + (sbp - dbp) / 3, 1) if sbp and dbp else 0
 
-        phs = ", ".join([ph] * 23)
+        phs24 = ", ".join([ph] * 24)
         if self._is_pg:
             self._execute(
                 f"""INSERT INTO fact_clinical_encounters (
@@ -377,15 +380,17 @@ class ClinicalWarehouse:
                     heart_rate, respiratory_rate, body_temperature,
                     oxygen_saturation, systolic_bp, diastolic_bp,
                     mean_arterial_pressure, risk_score, risk_prediction,
-                    confidence, esi_level, entity_count, summary_compression,
-                    safety_score, safety_passed, pipeline_latency_ms,
-                    fhir_resource_count, feedback_loops, created_at
-                ) VALUES ({phs})""",
+                    risk_level, confidence, esi_level, entity_count,
+                    summary_compression, safety_score, safety_passed,
+                    pipeline_latency_ms, fhir_resource_count,
+                    feedback_loops, created_at
+                ) VALUES ({phs24})""",
                 (
                     patient_key, diagnosis_key, 1, time_key,
                     vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
                     vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
-                    sbp, dbp, map_val, risk_score, risk_prediction, confidence,
+                    sbp, dbp, map_val, risk_score, risk_prediction,
+                    risk_level, confidence,
                     esi_level, ner_count, compression, safety_score, safety_passed,
                     pipeline_result.get("overall_latency_ms", 0),
                     fhir_count, pipeline_result.get("feedback_loops_triggered", 0),
@@ -406,15 +411,17 @@ class ClinicalWarehouse:
                     heart_rate, respiratory_rate, body_temperature,
                     oxygen_saturation, systolic_bp, diastolic_bp,
                     mean_arterial_pressure, risk_score, risk_prediction,
-                    confidence, esi_level, entity_count, summary_compression,
-                    safety_score, safety_passed, pipeline_latency_ms,
-                    fhir_resource_count, feedback_loops, created_at
-                ) VALUES ({phs})""",
+                    risk_level, confidence, esi_level, entity_count,
+                    summary_compression, safety_score, safety_passed,
+                    pipeline_latency_ms, fhir_resource_count,
+                    feedback_loops, created_at
+                ) VALUES ({phs24})""",
                 (
                     patient_key, diagnosis_key, 1, time_key,
                     vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
                     vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
-                    sbp, dbp, map_val, risk_score, risk_prediction, confidence,
+                    sbp, dbp, map_val, risk_score, risk_prediction,
+                    risk_level, confidence,
                     esi_level, ner_count, compression, safety_score,
                     1 if safety_passed else 0,
                     pipeline_result.get("overall_latency_ms", 0),
@@ -495,32 +502,34 @@ class ClinicalWarehouse:
         )
 
     def query_risk_distribution(self) -> dict:
-        """Get risk score distribution for analytics."""
+        """Get risk score distribution for analytics (4 levels)."""
         rows = self._execute("""
             SELECT
                 CASE
-                    WHEN risk_score < 0.3 THEN 'low'
-                    WHEN risk_score < 0.7 THEN 'medium'
-                    ELSE 'high'
+                    WHEN risk_score >= 0.75 THEN 'critical'
+                    WHEN risk_score >= 0.50 THEN 'high'
+                    WHEN risk_score >= 0.25 THEN 'medium'
+                    ELSE 'low'
                 END AS risk_level,
-                COUNT(*) AS count,
+                COUNT(*) AS cnt,
                 ROUND(AVG(pipeline_latency_ms)::numeric, 1) AS avg_latency
             FROM fact_clinical_encounters
-            GROUP BY risk_level
+            GROUP BY 1
         """ if self._is_pg else """
             SELECT
                 CASE
-                    WHEN risk_score < 0.3 THEN 'low'
-                    WHEN risk_score < 0.7 THEN 'medium'
-                    ELSE 'high'
+                    WHEN risk_score >= 0.75 THEN 'critical'
+                    WHEN risk_score >= 0.50 THEN 'high'
+                    WHEN risk_score >= 0.25 THEN 'medium'
+                    ELSE 'low'
                 END AS risk_level,
-                COUNT(*) AS count,
+                COUNT(*) AS cnt,
                 ROUND(AVG(pipeline_latency_ms), 1) AS avg_latency
             FROM fact_clinical_encounters
-            GROUP BY risk_level
+            GROUP BY 1
         """, fetch="all")
         return {
-            row["risk_level"]: {"count": row["count"], "avg_latency": row["avg_latency"]}
+            row["risk_level"]: {"count": row["cnt"], "avg_latency": row["avg_latency"]}
             for row in rows
         }
 

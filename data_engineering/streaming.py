@@ -302,7 +302,33 @@ class EventStream:
             self._topics[topic][partition].append(event)
             self._metrics["events_produced"] += 1
             self._metrics["bytes_processed"] += len(json.dumps(value))
+        self._persist_event(event)
         return event
+
+    def _persist_event(self, event: Event):
+        """Write stream event to PostgreSQL de_stream_events table."""
+        try:
+            import psycopg2
+            from config.settings import DB_CONFIG
+            conn = psycopg2.connect(**DB_CONFIG)
+            cur = conn.cursor()
+            cur.execute(
+                """INSERT INTO de_stream_events
+                (event_id, topic, partition_num, offset_num, key, value,
+                 schema_version, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    event.event_id, event.topic, event.partition,
+                    event.offset, event.key,
+                    json.dumps(event.value, default=str),
+                    event.schema_version, event.timestamp,
+                ),
+            )
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as e:
+            logger.debug("Stream persist skipped: %s", e)
 
     def consume(
         self,

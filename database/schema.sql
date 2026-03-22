@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS fact_clinical_encounters (
     mean_arterial_pressure FLOAT,
     risk_score FLOAT,
     risk_prediction VARCHAR(50),
+    risk_level VARCHAR(50),
     confidence FLOAT,
     esi_level INT,
     entity_count INT,
