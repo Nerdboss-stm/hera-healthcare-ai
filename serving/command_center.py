@@ -522,7 +522,7 @@ class UnifiedPipeline:
             from data_engineering.streaming import event_stream
             from data_engineering.quality import DataQualityFramework
             from data_engineering.lineage import DataLineageTracker
-            from data_engineering.warehouse import ClinicalWarehouse
+            from data_engineering.warehouse import clinical_warehouse  # noqa: F811
             from data_engineering.cdc import cdc_stream
             from data_engineering.catalog import data_catalog
 
@@ -550,8 +550,8 @@ class UnifiedPipeline:
             tracker = DataLineageTracker()
             tracker.build_pipeline_lineage()
 
-            # 4. Load into warehouse
-            wh = ClinicalWarehouse()
+            # 4. Load into warehouse (singleton — persists across requests)
+            from data_engineering.warehouse import clinical_warehouse as wh
             encounter_result = {
                 "patient_id": patient_id,
                 "age": age,

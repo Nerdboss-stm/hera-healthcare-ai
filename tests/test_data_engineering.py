@@ -224,7 +224,7 @@ class TestWarehouse:
     def test_warehouse_creation(self):
         from data_engineering.warehouse import ClinicalWarehouse
 
-        wh = ClinicalWarehouse()
+        wh = ClinicalWarehouse(force_sqlite=True)
         stats = wh.get_warehouse_stats()
         assert "dim_patient" in stats["tables"]
         assert "fact_clinical_encounters" in stats["tables"]
@@ -233,7 +233,7 @@ class TestWarehouse:
     def test_load_encounter(self):
         from data_engineering.warehouse import ClinicalWarehouse
 
-        wh = ClinicalWarehouse()
+        wh = ClinicalWarehouse(force_sqlite=True)
         enc_id = wh.load_encounter(
             {
                 "patient_id": "P-001",
@@ -266,7 +266,7 @@ class TestWarehouse:
     def test_query_encounters(self):
         from data_engineering.warehouse import ClinicalWarehouse
 
-        wh = ClinicalWarehouse()
+        wh = ClinicalWarehouse(force_sqlite=True)
         wh.load_encounter(
             {
                 "patient_id": "P-002",
@@ -281,7 +281,7 @@ class TestWarehouse:
     def test_dimension_providers_seeded(self):
         from data_engineering.warehouse import ClinicalWarehouse
 
-        wh = ClinicalWarehouse()
+        wh = ClinicalWarehouse(force_sqlite=True)
         stats = wh.get_warehouse_stats()
         assert stats["tables"]["dim_provider"] == 9  # 9 HERA agents
 

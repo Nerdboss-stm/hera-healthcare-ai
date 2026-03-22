@@ -541,26 +541,38 @@
 <!-- ═══ DATA ENGINEERING ═══ -->
 <div class="pn" id="pn-de">
 <div class="card">
-    <div class="ch">Data Engineering Platform</div>
-    <div class="ex blue"><div class="ei">&#9881;</div><div><h4>What's happening?</h4><p>7 production data engineering systems work together: <strong>Event Streaming</strong> (Kafka-style with schema registry + dead letter queue), <strong>Column-Level Lineage</strong> (tracks every field transformation across all 9 pipeline stages), <strong>Data Quality</strong> (Great Expectations-style validation with anomaly detection), <strong>Star Schema Warehouse</strong> (fact_encounters + 4 dimension tables), <strong>ETL Orchestrator</strong> (Airflow-style DAG with 16 tasks, retries, SLAs), <strong>CDC Stream</strong> (before/after snapshots with event replay), and <strong>Data Catalog</strong> (12 datasets with PII flagging and freshness monitoring).</p></div></div>
-    <div class="bgrp"><button class="btn btn-p" id="deBtn" onclick="loadDE()"><span class="bt">Load Data Engineering Dashboard</span><div class="sp"></div></button></div>
+    <div class="ch">Data Engineering Platform <span id="de-backend-badge" style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px"></span></div>
+    <div class="ex blue"><div class="ei">&#9881;</div><div><h4>Live Data Engineering Dashboard</h4><p>Run patients through <strong>Command Center</strong> first, then load this dashboard to see real data flow through all 7 systems. Each run populates the warehouse, streams events, emits CDC changes, and updates the catalog. Data persists in PostgreSQL across sessions.</p></div></div>
+    <div class="bgrp">
+        <button class="btn btn-p" id="deBtn" onclick="loadDE()"><span class="bt">Load Data Engineering Dashboard</span><div class="sp"></div></button>
+        <button class="btn" id="deRefreshBtn" onclick="loadDE()" style="display:none;margin-left:8px"><span class="bt">Refresh</span></button>
+    </div>
 </div>
 
 <div class="ra" id="deResult">
+
+<!-- KPI Bar -->
+<div class="card" style="margin-top:12px">
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px" id="de-kpis"></div>
+</div>
 
 <!-- Streaming -->
 <div class="card" style="margin-top:12px">
     <div class="ch">Event Streaming Pipeline</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
-        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Metrics</div><div id="de-stream-metrics" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Live Metrics</div><div id="de-stream-metrics" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
         <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Schema Evolution (patient_vitals)</div><div id="de-schema-evo" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
     </div>
 </div>
 
-<!-- Quality -->
+<!-- Warehouse -->
 <div class="card" style="margin-top:12px">
-    <div class="ch">Data Quality Framework</div>
-    <div id="de-quality" style="margin-top:8px"></div>
+    <div class="ch">Star Schema Analytics Warehouse</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Risk Distribution</div><div id="de-risk-chart" style="height:180px"></div></div>
+        <div><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Table Row Counts</div><div id="de-warehouse-stats" style="background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div></div>
+    </div>
+    <div style="margin-top:10px"><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Recent Encounters</div><div id="de-encounters" style="max-height:280px;overflow-y:auto"></div></div>
 </div>
 
 <!-- Lineage -->
@@ -573,21 +585,17 @@
     <div style="margin-top:8px"><div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">Impact Analysis: If heart_rate changes, what breaks?</div><div id="de-impact" style="background:#fff1f2;border-radius:7px;padding:12px;font-size:12px;line-height:1.6"></div></div>
 </div>
 
-<!-- Warehouse -->
-<div class="card" style="margin-top:12px">
-    <div class="ch">Star Schema Analytics Warehouse</div>
-    <div id="de-warehouse" style="margin-top:8px;background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div>
-</div>
-
 <!-- Orchestrator -->
 <div class="card" style="margin-top:12px">
-    <div class="ch">ETL Pipeline Orchestrator (Airflow-Style)</div>
+    <div class="ch">ETL Pipeline Orchestrator (Airflow-Style DAG)</div>
+    <div id="de-orch-dag" style="margin-top:8px;overflow-x:auto"></div>
     <div id="de-orchestrator" style="margin-top:8px"></div>
 </div>
 
 <!-- CDC -->
 <div class="card" style="margin-top:12px">
     <div class="ch">Change Data Capture (CDC) Stream</div>
+    <div id="de-cdc-timeline" style="margin-top:8px;overflow-x:auto"></div>
     <div id="de-cdc" style="margin-top:8px;background:var(--bg);border-radius:7px;padding:12px;font-size:12px;line-height:1.8"></div>
 </div>
 
@@ -650,6 +658,8 @@ async function runCC(){
         $('wi-hr').value=payload.heart_rate;$('wi-spo2').value=payload.oxygen_saturation;
         $('wi-sbp').value=payload.systolic_bp;$('wi-temp').value=payload.body_temperature;
         $('ccWhatIf').classList.add('vis');
+        // Auto-refresh DE dashboard if already loaded
+        if($('deResult').classList.contains('vis')){try{const ld=await(await fetch('/api/de/live')).json();renderDELive(ld)}catch{}}
     }catch(e){toast(e.message)}
     finally{sl('ccBtn',false)}
 }
@@ -821,61 +831,232 @@ async function chk(){try{const r=await fetch('/api/health');const d=await r.json
 chk();setInterval(chk,30000);
 
 // ═══ DATA ENGINEERING ═══
+let _deInterval=null;
 async function loadDE(){
     sl('deBtn',true);
     try{
         const jf=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(`${u}: ${r.status}`);return r.json()};
-        const [lineR,orchR,cdcR,catR]=await Promise.all([
+        const [live,lineR,orchR,catR]=await Promise.all([
+            jf('/api/de/live'),
             jf('/api/de/lineage'),
             jf('/api/de/orchestrator'),
-            jf('/api/de/cdc'),
             jf('/api/de/catalog'),
         ]);
-
-        // Streaming — show schema evolution from catalog
-        const schEvo=[
-            {v:'1.0',fields:7,change:'Initial vitals schema'},
-            {v:'2.0',fields:9,change:'Added age and BMI for risk model v2'},
-            {v:'3.0',fields:11,change:'Added MAP derived feature and chief complaint for NER'},
-        ];
-        $('de-stream-metrics').innerHTML=`<b>Topics:</b> patient-vitals, clinical-notes, pipeline-results<br><b>Partitions:</b> 4 per topic<br><b>Schema Registry:</b> 3 schemas registered (5 total versions)<br><b>Dead Letter Queue:</b> Active (catches validation failures)<br><b>Serialization:</b> JSON with SHA-256 checksums`;
-        $('de-schema-evo').innerHTML=schEvo.map(s=>`<div style="margin-bottom:6px"><span style="display:inline-block;width:35px;font-weight:700;color:var(--p)">v${s.v}</span> <span style="color:var(--t2)">${s.fields} fields</span> — ${s.change}</div>`).join('');
-
-        // Quality
-        $('de-quality').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><div style="background:var(--g-bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--g)">12</div><div style="font-size:10px;color:var(--t2)">Quality Checks</div></div><div style="background:var(--bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800">5</div><div style="font-size:10px;color:var(--t2)">Categories</div></div><div style="background:var(--bg);border-radius:7px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800">3</div><div style="font-size:10px;color:var(--t2)">Severity Levels</div></div></div><div style="margin-top:10px;font-size:12px;line-height:1.8;background:var(--bg);border-radius:7px;padding:12px"><b>Schema:</b> Field presence, type validation<br><b>Completeness:</b> Missing vital signs, null detection<br><b>Accuracy:</b> Clinical range validation (HR 40-180, SpO2 85-100, etc.)<br><b>Consistency:</b> BP consistency (systolic > diastolic), pulse pressure<br><b>Freshness:</b> SLA monitoring per dataset</div>`;
-
-        // Lineage
-        const dag=lineR.dag||{};
-        $('de-lineage-dag').innerHTML=`<b>Total Nodes:</b> ${dag.total_nodes||0}<br><b>Total Edges:</b> ${dag.total_edges||0}<br><b>PII Columns:</b> ${dag.pii_columns||0}<br><b>Stages Tracked:</b> ${(dag.stages||[]).join(', ')}<br><br><b>Transformation Types:</b> regex_extraction, graph_construction, triage_classification, diagnostic_inference, treatment_planning, derived, ml_inference, vector_search, t5_generation, context_augmentation, llm_judge, fhir_mapping`;
-        $('de-pii').innerHTML=(lineR.pii_columns||[]).map(p=>`<div style="margin-bottom:3px"><span style="color:var(--r);font-weight:600">&#9888;</span> ${p.fqn} <span style="color:var(--t3)">(${p.dtype})</span></div>`).join('')||'No PII detected';
-
-        const imp=lineR.impact_analysis||{};
-        $('de-impact').innerHTML=`<b>Source:</b> ${imp.source||'N/A'}<br><b>Downstream columns affected:</b> ${imp.total_downstream||0}<br><b>Stages impacted:</b> ${(imp.affected_stages||[]).join(', ')}<br><b>Columns:</b> ${(imp.affected_columns||[]).slice(0,8).join(', ')}`;
-
-        // Warehouse
-        const wStats=`<b>Schema:</b> Star Schema (OLAP)<br><b>Fact Table:</b> fact_clinical_encounters (all encounter metrics)<br><b>Dimensions:</b> dim_patient, dim_diagnosis, dim_provider (9 HERA agents), dim_time<br><b>Aggregates:</b> agg_hourly_summary (pre-computed rollups)<br><b>Indexes:</b> patient_key, risk_score, time_key<br><b>Features:</b> Derived columns (MAP, BMI), auto-refresh aggregates`;
-        $('de-warehouse').innerHTML=wStats;
-
-        // Orchestrator
-        const dagDef=orchR.dag_definition||{};
-        const tasks=Object.values(dagDef.tasks||{});
-        const order=dagDef.execution_order||[];
-        $('de-orchestrator').innerHTML=`<div style="font-size:12px;margin-bottom:8px"><b>DAG:</b> ${dagDef.dag_id} &mdash; <b>${dagDef.total_tasks} tasks</b>, execution order resolved via topological sort</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${order.map((t,i)=>`<div style="background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:4px 8px;font-size:10px;display:flex;align-items:center;gap:4px"><span style="font-weight:700;color:var(--p)">${i+1}</span> ${t.replace(/_/g,' ')}${i<order.length-1?'<span style="margin-left:4px;color:var(--t3)">&#10132;</span>':''}</div>`).join('')}</div><div style="background:var(--bg);border-radius:7px;padding:10px;font-size:11px;line-height:1.7">${tasks.map(t=>`<div><span style="font-weight:600">${t.task_id}</span> <span style="color:var(--t3)">depends:[${t.depends_on.join(',')}]</span> retries:${t.retries} sla:${t.sla_seconds}s — <em>${t.description}</em></div>`).join('')}</div>`;
-
-        // CDC
-        const cdcStats=cdcR.stats||{};
-        $('de-cdc').innerHTML=`<b>Total Events:</b> ${cdcStats.total_events}<br><b>Sequence Number:</b> ${cdcStats.sequence_number}<br><b>Tables Tracked:</b> ${(cdcStats.tables_tracked||[]).join(', ')||'(pending — run Command Center first)'}<br><b>Change Types:</b> INSERT, UPDATE, DELETE<br><b>Features:</b> Before/after snapshots, field-level diff, SHA-256 checksums, named consumers, event replay from any point<br><b>Consumers:</b> ${Object.keys(cdcStats.consumers||{}).length||0} registered`;
-
-        // Catalog
-        const cat=catR.catalog;
-        const datasets=Object.entries(cat.datasets||{});
-        $('de-catalog-datasets').innerHTML=datasets.map(([id,ds])=>`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--bd)"><div style="font-weight:600;font-size:12px">${ds.name}</div><div style="font-size:10px;color:var(--t2)">${ds.description}</div><div style="margin-top:3px">${(ds.tags||[]).map(t=>`<span style="display:inline-block;background:var(--p-l);color:var(--p-d);border-radius:4px;padding:1px 5px;font-size:9px;margin:1px">${t}</span>`).join('')}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">${(ds.columns||[]).length} columns | ${ds.category} | owner: ${ds.owner}</div></div>`).join('');
-
-        $('de-freshness').innerHTML=(catR.freshness_report||[]).map(f=>`<div style="margin-bottom:4px"><span style="${f.is_stale?'color:var(--w)':'color:var(--g)'};font-weight:600">${f.is_stale?'&#9888; STALE':'&#10003; Fresh'}</span> ${f.name} <span style="color:var(--t3)">(SLA: ${f.sla_minutes}min)</span></div>`).join('');
-
+        renderDELive(live);
+        renderDELineage(lineR);
+        renderDEOrchestrator(orchR);
+        renderDECatalog(catR);
         $('deResult').classList.add('vis');
-        toast('Data Engineering dashboard loaded');
+        $('deRefreshBtn').style.display='inline-flex';
+        // Auto-refresh every 10s
+        if(_deInterval) clearInterval(_deInterval);
+        _deInterval=setInterval(async()=>{
+            if(!document.getElementById('pn-de').classList.contains('on'))return;
+            try{const d=await jf('/api/de/live');renderDELive(d)}catch{}
+        },10000);
+        toast('Data Engineering dashboard loaded (live)');
     }catch(e){toast('Error: '+e.message)}finally{sl('deBtn',false)}
+}
+
+function renderDELive(d){
+    const s=d.streaming||{};const w=d.warehouse||{};const c=d.cdc||{};const cat=d.catalog||{};
+    const ws=w.stats||{};const tbls=ws.tables||{};
+    const enc=tbls.fact_clinical_encounters||0;
+    const rd=w.risk_distribution||{};
+    const backend=ws.backend||'sqlite';
+
+    // Backend badge
+    const bb=$('de-backend-badge');
+    bb.textContent=backend==='postgresql'?'PostgreSQL':'SQLite (fallback)';
+    bb.style.background=backend==='postgresql'?'#d1fae5':'#fef3c7';
+    bb.style.color=backend==='postgresql'?'#065f46':'#92400e';
+
+    // KPIs
+    const kpi=(label,val,color)=>`<div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:${color}">${val}</div><div style="font-size:10px;color:var(--t2);margin-top:2px">${label}</div></div>`;
+    $('de-kpis').innerHTML=
+        kpi('Events Streamed',s.events_produced||0,'var(--p)')+
+        kpi('Encounters',enc,'#8b5cf6')+
+        kpi('CDC Events',c.total_events||0,'#14b8a6')+
+        kpi('DLQ Errors',s.events_failed||0,s.events_failed>0?'var(--r)':'var(--g)')+
+        kpi('Datasets',cat.total_datasets||0,'#f59e0b')+
+        kpi('PII Columns',cat.pii?.length||0,'var(--r)');
+
+    // Streaming
+    const ts=s.topic_stats||{};
+    let sm=`<b>Events Produced:</b> <span style="color:var(--p);font-weight:700">${s.events_produced||0}</span><br>`;
+    sm+=`<b>Events Consumed:</b> ${s.events_consumed||0}<br>`;
+    sm+=`<b>Events Failed (DLQ):</b> <span style="color:${s.events_failed>0?'var(--r)':'var(--g)'}"> ${s.events_failed||0}</span><br>`;
+    sm+=`<b>Bytes Processed:</b> ${((s.bytes_processed||0)/1024).toFixed(1)} KB<br>`;
+    sm+=`<b>Topics:</b> ${s.topics||0} | <b>Schemas:</b> ${s.schemas_registered||0}<br>`;
+    Object.entries(ts).forEach(([t,st])=>{sm+=`<div style="margin-top:4px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid var(--bd)"><b>${t}</b> — ${st.total_events} events across ${st.partitions} partitions <span style="color:var(--t3)">[${(st.events_per_partition||[]).join(', ')}]</span></div>`});
+    $('de-stream-metrics').innerHTML=sm;
+
+    const evo=s.schema_evolution||[];
+    $('de-schema-evo').innerHTML=evo.map(e=>`<div style="margin-bottom:6px;padding:6px 8px;background:#fff;border-radius:4px;border-left:3px solid var(--p)"><span style="font-weight:700;color:var(--p)">v${e.version}</span> <span style="color:var(--t2)">${e.fields.length} fields</span><br><span style="font-size:10px;color:var(--t3)">${e.changelog}</span></div>`).join('')||'<span style="color:var(--t3)">No schema evolution data</span>';
+
+    // Warehouse — risk chart SVG
+    const maxR=Math.max((rd.low?.count||0),(rd.medium?.count||0),(rd.high?.count||0),1);
+    const bw=80,bh=140,gap=30,pad=40;
+    const svgW=pad*2+bw*3+gap*2,svgH=bh+60;
+    const bars=[
+        {label:'Low Risk',count:rd.low?.count||0,lat:rd.low?.avg_latency||0,color:'#10b981'},
+        {label:'Medium Risk',count:rd.medium?.count||0,lat:rd.medium?.avg_latency||0,color:'#f59e0b'},
+        {label:'High Risk',count:rd.high?.count||0,lat:rd.high?.avg_latency||0,color:'#ef4444'},
+    ];
+    let svg=`<svg width="100%" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">`;
+    svg+=`<line x1="${pad}" y1="${bh}" x2="${svgW-pad}" y2="${bh}" stroke="#e2e8f0" stroke-width="1"/>`;
+    bars.forEach((b,i)=>{
+        const x=pad+i*(bw+gap);
+        const h=maxR>0?Math.max((b.count/maxR)*bh*0.85,4):4;
+        const y=bh-h;
+        svg+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="${b.color}" opacity="0.85"><animate attributeName="height" from="0" to="${h}" dur="0.6s" fill="freeze"/><animate attributeName="y" from="${bh}" to="${y}" dur="0.6s" fill="freeze"/></rect>`;
+        svg+=`<text x="${x+bw/2}" y="${y-8}" text-anchor="middle" font-size="14" font-weight="800" fill="${b.color}">${b.count}</text>`;
+        svg+=`<text x="${x+bw/2}" y="${bh+16}" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">${b.label}</text>`;
+        if(b.lat>0) svg+=`<text x="${x+bw/2}" y="${bh+30}" text-anchor="middle" font-size="9" fill="#94a3b8">${b.lat}ms avg</text>`;
+    });
+    if(enc===0) svg+=`<text x="${svgW/2}" y="${bh/2}" text-anchor="middle" font-size="13" fill="#94a3b8" font-weight="600">Run Command Center to populate</text>`;
+    svg+=`</svg>`;
+    $('de-risk-chart').innerHTML=svg;
+
+    // Warehouse stats
+    let ws2='';
+    Object.entries(tbls).forEach(([t,cnt])=>{
+        const icon=t.startsWith('dim_')?'&#9670;':t.startsWith('fact_')?'&#9632;':'&#9650;';
+        const col=t.startsWith('fact_')?'var(--p)':t.startsWith('agg_')?'#8b5cf6':'var(--t2)';
+        ws2+=`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9"><span><span style="color:${col}">${icon}</span> ${t}</span><span style="font-weight:700;color:${col}">${cnt}</span></div>`;
+    });
+    ws2+=`<div style="margin-top:6px;font-size:10px;color:var(--t3)">Backend: <b>${backend}</b> | Schema: star_schema</div>`;
+    $('de-warehouse-stats').innerHTML=ws2;
+
+    // Encounters table
+    const encs=w.recent_encounters||[];
+    if(encs.length>0){
+        let et='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--bg);font-weight:600;color:var(--t2)">';
+        et+='<th style="padding:6px 8px;text-align:left">Patient</th><th>Diagnosis</th><th>Risk</th><th>ESI</th><th>Safety</th><th>Latency</th><th>Time</th></tr></thead><tbody>';
+        encs.forEach(e=>{
+            const isH=e.risk_score>0.7;const safe=e.safety_passed===true||e.safety_passed===1;
+            et+=`<tr style="border-bottom:1px solid #f1f5f9">`;
+            et+=`<td style="padding:5px 8px;font-weight:600">${e.patient_id}</td>`;
+            et+=`<td style="padding:5px 4px">${e.diagnosis_name||'—'}</td>`;
+            et+=`<td style="padding:5px 4px"><span style="color:${isH?'var(--r)':'var(--g)'}; font-weight:700">${((e.risk_score||0)*100).toFixed(0)}%</span></td>`;
+            et+=`<td style="padding:5px 4px;text-align:center;font-weight:700">${e.esi_level||'—'}</td>`;
+            et+=`<td style="padding:5px 4px"><span style="color:${safe?'var(--g)':'var(--r)'}; font-weight:600">${safe?'PASS':'FAIL'}</span></td>`;
+            et+=`<td style="padding:5px 4px;color:var(--t3)">${(e.pipeline_latency_ms||0).toFixed(0)}ms</td>`;
+            et+=`<td style="padding:5px 4px;color:var(--t3);font-size:10px">${(e.created_at||'').slice(11,19)}</td>`;
+            et+=`</tr>`;
+        });
+        et+='</tbody></table>';
+        $('de-encounters').innerHTML=et;
+    } else {
+        $('de-encounters').innerHTML='<div style="text-align:center;padding:20px;color:var(--t3);font-size:12px">No encounters yet — run Command Center to populate the warehouse</div>';
+    }
+
+    // CDC timeline
+    const cdcEvts=c.recent_events||[];
+    if(cdcEvts.length>0){
+        const tw=Math.max(cdcEvts.length*50+40,300),th=80;
+        let cs=`<svg width="100%" height="${th}" viewBox="0 0 ${tw} ${th}" xmlns="http://www.w3.org/2000/svg">`;
+        cs+=`<line x1="20" y1="40" x2="${tw-20}" y2="40" stroke="#e2e8f0" stroke-width="2"/>`;
+        const cc={'INSERT':'#10b981','UPDATE':'#3b82f6','DELETE':'#ef4444'};
+        cdcEvts.forEach((e,i)=>{
+            const x=20+i*((tw-40)/Math.max(cdcEvts.length-1,1));
+            const col=cc[e.change_type]||'#94a3b8';
+            cs+=`<circle cx="${x}" cy="40" r="8" fill="${col}" opacity="0.9"><animate attributeName="r" from="0" to="8" dur="0.4s" begin="${i*0.05}s" fill="freeze"/></circle>`;
+            cs+=`<text x="${x}" y="60" text-anchor="middle" font-size="8" fill="#64748b">${e.table||''}</text>`;
+            cs+=`<text x="${x}" y="72" text-anchor="middle" font-size="7" fill="#94a3b8">${e.change_type||''}</text>`;
+        });
+        // Legend
+        cs+=`<text x="${tw-120}" y="14" font-size="8" fill="#10b981" font-weight="600">&#9679; INSERT</text>`;
+        cs+=`<text x="${tw-75}" y="14" font-size="8" fill="#3b82f6" font-weight="600">&#9679; UPDATE</text>`;
+        cs+=`<text x="${tw-30}" y="14" font-size="8" fill="#ef4444" font-weight="600">&#9679; DELETE</text>`;
+        cs+=`</svg>`;
+        $('de-cdc-timeline').innerHTML=cs;
+    } else {
+        $('de-cdc-timeline').innerHTML='<div style="text-align:center;padding:12px;color:var(--t3);font-size:11px">No CDC events yet</div>';
+    }
+
+    // CDC stats
+    $('de-cdc').innerHTML=`<b>Total Events:</b> <span style="font-weight:700;color:#14b8a6">${c.total_events||0}</span><br><b>Sequence:</b> ${c.sequence_number||0}<br><b>Tables:</b> ${(c.tables_tracked||[]).join(', ')||'(pending — run Command Center)'}<br><b>Consumers:</b> ${Object.keys(c.consumers||{}).length||0}`;
+
+    // Freshness
+    $('de-freshness').innerHTML=(cat.freshness||[]).map(f=>`<div style="margin-bottom:4px"><span style="${f.is_stale?'color:var(--w)':'color:var(--g)'};font-weight:600">${f.is_stale?'&#9888; STALE':'&#10003; Fresh'}</span> ${f.name} <span style="color:var(--t3)">(SLA: ${f.sla_minutes}min)</span></div>`).join('')||'<span style="color:var(--t3)">No freshness data</span>';
+}
+
+function renderDELineage(lineR){
+    const dag=lineR.dag||{};
+    $('de-lineage-dag').innerHTML=`<b>Nodes:</b> <span style="font-weight:700;color:var(--p)">${dag.total_nodes||0}</span> | <b>Edges:</b> <span style="font-weight:700;color:#8b5cf6">${dag.total_edges||0}</span> | <b>PII:</b> <span style="font-weight:700;color:var(--r)">${dag.pii_columns||0}</span><br><b>Stages:</b> ${(dag.stages||[]).join(' &#10132; ')}<br><b>Transforms:</b> regex_extraction, graph_construction, triage_classification, diagnostic_inference, treatment_planning, ml_inference, vector_search, t5_generation, llm_judge, fhir_mapping`;
+    $('de-pii').innerHTML=(lineR.pii_columns||[]).map(p=>`<div style="margin-bottom:3px"><span style="color:var(--r);font-weight:600">&#9888;</span> <b>${p.fqn}</b> <span style="color:var(--t3)">(${p.dtype})</span></div>`).join('')||'No PII detected';
+    const imp=lineR.impact_analysis||{};
+    $('de-impact').innerHTML=`<b>Source:</b> ${imp.source||'N/A'}<br><b>Downstream affected:</b> <span style="font-weight:700;color:var(--r)">${imp.total_downstream||0}</span> columns<br><b>Stages:</b> ${(imp.affected_stages||[]).join(', ')}<br><b>Columns:</b> ${(imp.affected_columns||[]).slice(0,8).join(', ')}`;
+}
+
+function renderDEOrchestrator(orchR){
+    const dagDef=orchR.dag_definition||{};
+    const tasks=dagDef.tasks||{};
+    const order=dagDef.execution_order||[];
+
+    // SVG DAG visualization
+    const taskList=Object.values(tasks);
+    // Compute depth layers
+    const depth={};
+    function getDepth(tid){
+        if(depth[tid]!==undefined)return depth[tid];
+        const t=tasks[tid];
+        if(!t||!t.depends_on||t.depends_on.length===0){depth[tid]=0;return 0}
+        const d=Math.max(...t.depends_on.map(d=>getDepth(d)))+1;
+        depth[tid]=d;return d;
+    }
+    order.forEach(t=>getDepth(t));
+    const layers={};
+    Object.entries(depth).forEach(([tid,d])=>{if(!layers[d])layers[d]=[];layers[d].push(tid)});
+    const maxLayer=Math.max(...Object.keys(layers).map(Number));
+    const nodeW=110,nodeH=32,layerGap=50,nodeGap=10;
+    const maxPerLayer=Math.max(...Object.values(layers).map(l=>l.length));
+    const svgW=(maxLayer+1)*(nodeW+layerGap)+40;
+    const svgH=maxPerLayer*(nodeH+nodeGap)+40;
+    const pos={};
+    Object.entries(layers).forEach(([lay,tids])=>{
+        const x=20+Number(lay)*(nodeW+layerGap);
+        const totalH=tids.length*(nodeH+nodeGap)-nodeGap;
+        const startY=(svgH-totalH)/2;
+        tids.forEach((tid,i)=>{pos[tid]={x,y:startY+i*(nodeH+nodeGap)}});
+    });
+    const sysCol={'streaming':'#3b82f6','quality':'#10b981','ner':'#8b5cf6','agents':'#f59e0b','risk_predictor':'#ef4444','rag':'#14b8a6','summarizer':'#f97316','evaluator':'#ec4899','fhir':'#6366f1','warehouse':'#0ea5e9','lineage':'#84cc16','cdc':'#a855f7','catalog':'#06b6d4'};
+    let ds=`<svg width="100%" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="min-width:${svgW}px">`;
+    // Edges
+    Object.entries(tasks).forEach(([tid,t])=>{
+        (t.depends_on||[]).forEach(dep=>{
+            const a=pos[dep],b=pos[tid];
+            if(a&&b){
+                const x1=a.x+nodeW,y1=a.y+nodeH/2,x2=b.x,y2=b.y+nodeH/2;
+                const cx1=x1+(x2-x1)*0.5,cx2=x2-(x2-x1)*0.5;
+                ds+=`<path d="M${x1},${y1} C${cx1},${y1} ${cx2},${y2} ${x2},${y2}" fill="none" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#ah)"/>`;
+            }
+        });
+    });
+    ds+=`<defs><marker id="ah" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker></defs>`;
+    // Nodes
+    Object.entries(pos).forEach(([tid,p])=>{
+        const t=tasks[tid]||{};
+        const cn=t.callable_name||'';
+        const sys=cn.split('.')[0]||'';
+        const col=sysCol[sys]||'#64748b';
+        ds+=`<rect x="${p.x}" y="${p.y}" width="${nodeW}" height="${nodeH}" rx="6" fill="white" stroke="${col}" stroke-width="2"/>`;
+        ds+=`<rect x="${p.x}" y="${p.y}" width="4" height="${nodeH}" rx="2" fill="${col}"/>`;
+        ds+=`<text x="${p.x+10}" y="${p.y+14}" font-size="9" font-weight="700" fill="${col}">${tid.replace(/_/g,' ')}</text>`;
+        ds+=`<text x="${p.x+10}" y="${p.y+24}" font-size="7" fill="#94a3b8">SLA:${t.sla_seconds}s R:${t.retries}</text>`;
+    });
+    ds+=`</svg>`;
+    $('de-orch-dag').innerHTML=ds;
+
+    // Task list
+    $('de-orchestrator').innerHTML=`<div style="font-size:12px;margin-bottom:6px"><b>DAG:</b> ${dagDef.dag_id} — <b>${dagDef.total_tasks} tasks</b>, topological sort</div><div style="background:var(--bg);border-radius:7px;padding:10px;font-size:11px;line-height:1.7;max-height:200px;overflow-y:auto">${taskList.map(t=>`<div><span style="font-weight:600">${t.task_id}</span> <span style="color:var(--t3)">depends:[${(t.depends_on||[]).join(',')}]</span> retries:${t.retries} sla:${t.sla_seconds}s — <em>${t.description}</em></div>`).join('')}</div>`;
+}
+
+function renderDECatalog(catR){
+    const cat=catR.catalog||{};
+    const datasets=Object.entries(cat.datasets||{});
+    $('de-catalog-datasets').innerHTML=datasets.map(([id,ds])=>`<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--bd)"><div style="font-weight:600;font-size:12px">${ds.name}</div><div style="font-size:10px;color:var(--t2)">${ds.description}</div><div style="margin-top:3px">${(ds.tags||[]).map(t=>`<span style="display:inline-block;background:var(--p-l);color:var(--p-d);border-radius:4px;padding:1px 5px;font-size:9px;margin:1px">${t}</span>`).join('')}</div><div style="font-size:10px;color:var(--t3);margin-top:2px">${(ds.columns||[]).length} columns | ${ds.category} | owner: ${ds.owner}</div></div>`).join('');
 }
 
 // Defaults

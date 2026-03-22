@@ -79,7 +79,10 @@ app.mount("/static", StaticFiles(directory=os.path.join(_dir, "static")), name="
 
 @app.get("/", response_class=FileResponse)
 def serve_ui():
-    return FileResponse(os.path.join(_dir, "static", "index.html"))
+    return FileResponse(
+        os.path.join(_dir, "static", "index.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -675,9 +678,9 @@ def de_quality(request: CommandCenterRequest):
 @app.get("/api/de/warehouse", response_model=DEWarehouseResponse)
 def de_warehouse_stats():
     """Get analytics warehouse stats and recent encounters."""
-    from data_engineering.warehouse import ClinicalWarehouse
+    from data_engineering.warehouse import clinical_warehouse as wh
 
-    wh = ClinicalWarehouse()
+    wh.refresh_aggregates()
     return DEWarehouseResponse(
         encounter_id=0,
         warehouse_stats=wh.get_warehouse_stats(),
@@ -726,7 +729,7 @@ def de_dashboard():
     from data_engineering.streaming import event_stream
     from data_engineering.lineage import DataLineageTracker
     from data_engineering.quality import DataQualityFramework
-    from data_engineering.warehouse import ClinicalWarehouse
+    from data_engineering.warehouse import clinical_warehouse
     from data_engineering.orchestrator import build_hera_dag
     from data_engineering.cdc import cdc_stream
     from data_engineering.catalog import data_catalog
@@ -742,9 +745,55 @@ def de_dashboard():
             "total_edges": len(tracker._edges),
             "pii_columns": len(tracker.get_pii_columns()),
         },
-        warehouse=ClinicalWarehouse().get_warehouse_stats(),
+        warehouse=clinical_warehouse.get_warehouse_stats(),
         orchestrator=build_hera_dag().get_dag_definition(),
         cdc=cdc_stream.get_stats(),
         catalog=data_catalog.to_dict(),
         timestamp=datetime.now(),
     )
+
+
+@app.get("/api/de/live")
+def de_live():
+    """Live DE metrics — single endpoint for real-time dashboard updates."""
+    from data_engineering.streaming import event_stream
+    from data_engineering.warehouse import clinical_warehouse
+    from data_engineering.cdc import cdc_stream
+    from data_engineering.catalog import data_catalog
+
+    clinical_warehouse.refresh_aggregates()
+
+    return {
+        "streaming": {
+            **event_stream.get_metrics(),
+            "topic_stats": event_stream.get_topic_stats(),
+            "dlq": event_stream.get_dead_letter_queue()[-10:],
+            "schema_evolution": event_stream.registry.get_evolution("patient_vitals"),
+        },
+        "warehouse": {
+            "stats": clinical_warehouse.get_warehouse_stats(),
+            "risk_distribution": clinical_warehouse.query_risk_distribution(),
+            "recent_encounters": clinical_warehouse.query_encounters(limit=20),
+            "hourly_summary": clinical_warehouse.query_hourly_summary(),
+        },
+        "cdc": {
+            **cdc_stream.get_stats(),
+            "recent_events": [
+                {
+                    "event_id": e.get("event_id", "") if isinstance(e, dict) else getattr(e, "event_id", ""),
+                    "table": e.get("table", "") if isinstance(e, dict) else getattr(e, "table", ""),
+                    "change_type": e.get("change_type", "") if isinstance(e, dict) else getattr(e, "change_type", ""),
+                    "record_key": e.get("record_key", "") if isinstance(e, dict) else getattr(e, "record_key", ""),
+                    "timestamp": e.get("timestamp", "") if isinstance(e, dict) else getattr(e, "timestamp", ""),
+                }
+                for e in cdc_stream.replay()[-20:]
+            ],
+        },
+        "catalog": {
+            "freshness": data_catalog.get_freshness_report(),
+            "pii": data_catalog.get_pii_report(),
+            "total_datasets": data_catalog.to_dict().get("total_datasets", 0),
+            "total_columns": data_catalog.to_dict().get("total_columns", 0),
+        },
+        "timestamp": datetime.now().isoformat(),
+    }

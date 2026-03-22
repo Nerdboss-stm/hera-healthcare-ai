@@ -1,120 +1,216 @@
-"""Star schema analytics warehouse — dimensional model for clinical data.
+"""Star schema analytics warehouse — PostgreSQL-backed dimensional model.
 
-Demonstrates: fact/dimension table design, star schema, SQLite-backed
-OLAP warehouse, pre-computed aggregates, and analytical queries.
+Uses the shared hera_ai PostgreSQL database for persistent storage.
+Falls back to in-memory SQLite when PostgreSQL is unavailable (local dev).
 """
 
 from __future__ import annotations
 
-import sqlite3
+import sys
 import logging
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
 
+def _connect_pg():
+    """Try to connect to PostgreSQL. Returns (conn, is_pg) or (None, False)."""
+    try:
+        import psycopg2
+        import psycopg2.extras
+        from config.settings import DB_CONFIG
+
+        conn = psycopg2.connect(**DB_CONFIG)
+        conn.autocommit = False
+        return conn, True
+    except Exception as e:
+        logger.info("PostgreSQL unavailable (%s), using SQLite fallback", e)
+        return None, False
+
+
+def _connect_sqlite():
+    """Create in-memory SQLite connection as fallback."""
+    import sqlite3
+
+    conn = sqlite3.connect(":memory:", check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 class ClinicalWarehouse:
-    """SQLite-backed star schema warehouse for clinical analytics."""
+    """Star schema warehouse backed by PostgreSQL (or SQLite fallback).
 
-    def __init__(self, db_path: str = ":memory:"):
-        self._conn = sqlite3.connect(db_path, check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        self._setup_schema()
+    Args:
+        force_sqlite: If True, skip PostgreSQL and use in-memory SQLite.
+                      Useful for testing without a database dependency.
+    """
 
-    def _setup_schema(self):
-        """Create star schema: fact table + dimension tables."""
+    def __init__(self, force_sqlite: bool = False):
+        if not force_sqlite:
+            pg_conn, is_pg = _connect_pg()
+        else:
+            pg_conn, is_pg = None, False
+
+        if is_pg and pg_conn:
+            self._conn = pg_conn
+            self._is_pg = True
+            self._ph = "%s"  # placeholder style
+        else:
+            self._conn = _connect_sqlite()
+            self._is_pg = False
+            self._ph = "?"
+            self._setup_sqlite_schema()
+
+        if self._is_pg:
+            self._seed_providers_pg()
+
+    @property
+    def backend(self) -> str:
+        return "postgresql" if self._is_pg else "sqlite"
+
+    def _reconnect_pg(self):
+        """Reconnect to PostgreSQL if the connection was lost."""
+        if not self._is_pg:
+            return
+        try:
+            self._conn.close()
+        except Exception:
+            pass
+        pg_conn, is_pg = _connect_pg()
+        if is_pg and pg_conn:
+            self._conn = pg_conn
+        else:
+            logger.warning("PostgreSQL reconnect failed, falling back to SQLite")
+            self._conn = _connect_sqlite()
+            self._is_pg = False
+            self._ph = "?"
+            self._setup_sqlite_schema()
+
+    def _execute(self, sql: str, params: tuple = (), fetch: str = "none"):
+        """Execute SQL with auto-reconnect for PostgreSQL."""
+        try:
+            cur = self._conn.cursor()
+            cur.execute(sql, params)
+            if fetch == "one":
+                row = cur.fetchone()
+                if self._is_pg:
+                    if row and cur.description:
+                        cols = [d[0] for d in cur.description]
+                        return dict(zip(cols, row))
+                    return None
+                return dict(row) if row else None
+            elif fetch == "all":
+                rows = cur.fetchall()
+                if self._is_pg:
+                    cols = [d[0] for d in cur.description]
+                    return [dict(zip(cols, r)) for r in rows]
+                return [dict(r) for r in rows]
+            else:
+                return cur
+        except Exception as e:
+            if self._is_pg and "connection" in str(e).lower():
+                self._reconnect_pg()
+                return self._execute(sql, params, fetch)
+            raise
+
+    def _commit(self):
+        self._conn.commit()
+
+    def _seed_providers_pg(self):
+        """Seed providers into PostgreSQL if not present.
+
+        If PG tables don't exist yet (schema not applied), falls back to SQLite.
+        """
+        try:
+            cur = self._conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM dim_provider")
+            count = cur.fetchone()[0]
+            if count == 0:
+                providers = [
+                    ("Triage Agent", "agent", "multi_agent_reasoning"),
+                    ("Diagnostic Agent", "agent", "multi_agent_reasoning"),
+                    ("Treatment Agent", "agent", "multi_agent_reasoning"),
+                    ("NER Extractor", "system", "ner"),
+                    ("Risk Predictor", "model", "risk_prediction"),
+                    ("T5 Summarizer", "model", "summarization"),
+                    ("Safety Evaluator", "system", "evaluation"),
+                    ("RAG Pipeline", "system", "rag"),
+                    ("FHIR Converter", "system", "fhir"),
+                ]
+                for name, ptype, system in providers:
+                    cur.execute(
+                        "INSERT INTO dim_provider (provider_name, provider_type, system) "
+                        "VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                        (name, ptype, system),
+                    )
+                self._commit()
+        except Exception as e:
+            logger.warning("PG warehouse tables not found, falling back to SQLite: %s", e)
+            try:
+                self._conn.rollback()
+                self._conn.close()
+            except Exception:
+                pass
+            # Fall back to SQLite
+            self._conn = _connect_sqlite()
+            self._is_pg = False
+            self._ph = "?"
+            self._setup_sqlite_schema()
+
+    def _setup_sqlite_schema(self):
+        """Create star schema in SQLite (fallback mode)."""
         cur = self._conn.cursor()
-
-        # Dimension: Patient
         cur.execute("""
             CREATE TABLE IF NOT EXISTS dim_patient (
                 patient_key INTEGER PRIMARY KEY AUTOINCREMENT,
                 patient_id TEXT UNIQUE NOT NULL,
-                age INTEGER,
-                gender TEXT DEFAULT 'unknown',
+                age INTEGER, gender TEXT DEFAULT 'unknown',
                 created_at TEXT
             )
         """)
-
-        # Dimension: Diagnosis
         cur.execute("""
             CREATE TABLE IF NOT EXISTS dim_diagnosis (
                 diagnosis_key INTEGER PRIMARY KEY AUTOINCREMENT,
-                diagnosis_code TEXT,
-                diagnosis_name TEXT,
-                category TEXT,
-                severity TEXT
+                diagnosis_code TEXT, diagnosis_name TEXT,
+                category TEXT, severity TEXT
             )
         """)
-
-        # Dimension: Provider (system/agent)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS dim_provider (
                 provider_key INTEGER PRIMARY KEY AUTOINCREMENT,
-                provider_name TEXT,
-                provider_type TEXT,
-                system TEXT
+                provider_name TEXT, provider_type TEXT, system TEXT
             )
         """)
-
-        # Dimension: Time
         cur.execute("""
             CREATE TABLE IF NOT EXISTS dim_time (
                 time_key INTEGER PRIMARY KEY AUTOINCREMENT,
-                full_datetime TEXT,
-                date TEXT,
-                hour INTEGER,
-                day_of_week TEXT,
-                month INTEGER,
-                year INTEGER
+                full_datetime TEXT, date TEXT, hour INTEGER,
+                day_of_week TEXT, month INTEGER, year INTEGER
             )
         """)
-
-        # Fact: Clinical Encounters
         cur.execute("""
             CREATE TABLE IF NOT EXISTS fact_clinical_encounters (
                 encounter_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                patient_key INTEGER REFERENCES dim_patient(patient_key),
-                diagnosis_key INTEGER REFERENCES dim_diagnosis(diagnosis_key),
-                provider_key INTEGER REFERENCES dim_provider(provider_key),
-                time_key INTEGER REFERENCES dim_time(time_key),
-                heart_rate REAL,
-                respiratory_rate REAL,
-                body_temperature REAL,
-                oxygen_saturation REAL,
-                systolic_bp REAL,
-                diastolic_bp REAL,
-                mean_arterial_pressure REAL,
-                risk_score REAL,
-                risk_prediction TEXT,
-                confidence REAL,
-                esi_level INTEGER,
-                entity_count INTEGER,
-                summary_compression REAL,
-                safety_score REAL,
-                safety_passed INTEGER,
-                pipeline_latency_ms REAL,
-                fhir_resource_count INTEGER,
-                feedback_loops INTEGER DEFAULT 0,
-                created_at TEXT
+                patient_key INTEGER, diagnosis_key INTEGER,
+                provider_key INTEGER, time_key INTEGER,
+                heart_rate REAL, respiratory_rate REAL, body_temperature REAL,
+                oxygen_saturation REAL, systolic_bp REAL, diastolic_bp REAL,
+                mean_arterial_pressure REAL, risk_score REAL,
+                risk_prediction TEXT, confidence REAL, esi_level INTEGER,
+                entity_count INTEGER, summary_compression REAL,
+                safety_score REAL, safety_passed INTEGER,
+                pipeline_latency_ms REAL, fhir_resource_count INTEGER,
+                feedback_loops INTEGER DEFAULT 0, created_at TEXT
             )
         """)
-
-        # Aggregate: Hourly summary
         cur.execute("""
             CREATE TABLE IF NOT EXISTS agg_hourly_summary (
-                hour_key TEXT PRIMARY KEY,
-                encounter_count INTEGER,
-                avg_risk_score REAL,
-                avg_latency_ms REAL,
-                high_risk_count INTEGER,
-                safety_failure_count INTEGER,
-                avg_entity_count REAL,
-                updated_at TEXT
+                hour_key TEXT PRIMARY KEY, encounter_count INTEGER,
+                avg_risk_score REAL, avg_latency_ms REAL,
+                high_risk_count INTEGER, safety_failure_count INTEGER,
+                avg_entity_count REAL, updated_at TEXT
             )
         """)
-
-        # Indexes
         cur.execute(
             "CREATE INDEX IF NOT EXISTS idx_fact_patient ON fact_clinical_encounters(patient_key)"
         )
@@ -124,8 +220,7 @@ class ClinicalWarehouse:
         cur.execute(
             "CREATE INDEX IF NOT EXISTS idx_fact_time ON fact_clinical_encounters(time_key)"
         )
-
-        # Seed dimension: providers (the HERA agents)
+        # Seed providers
         providers = [
             ("Triage Agent", "agent", "multi_agent_reasoning"),
             ("Diagnostic Agent", "agent", "multi_agent_reasoning"),
@@ -142,66 +237,83 @@ class ClinicalWarehouse:
                 "INSERT OR IGNORE INTO dim_provider (provider_name, provider_type, system) VALUES (?, ?, ?)",
                 (name, ptype, system),
             )
-
         self._conn.commit()
 
     def _get_or_create_time(self, dt: datetime) -> int:
-        cur = self._conn.cursor()
+        ph = self._ph
         full = dt.isoformat()
-        cur.execute("SELECT time_key FROM dim_time WHERE full_datetime = ?", (full,))
-        row = cur.fetchone()
+        row = self._execute(
+            f"SELECT time_key FROM dim_time WHERE full_datetime = {ph}",
+            (full,), fetch="one",
+        )
         if row:
             return row["time_key"]
-        cur.execute(
-            "INSERT INTO dim_time (full_datetime, date, hour, day_of_week, month, year) VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                full,
-                dt.strftime("%Y-%m-%d"),
-                dt.hour,
-                dt.strftime("%A"),
-                dt.month,
-                dt.year,
-            ),
+        cur = self._execute(
+            f"INSERT INTO dim_time (full_datetime, date, hour, day_of_week, month, year) "
+            f"VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})",
+            (full, dt.strftime("%Y-%m-%d"), dt.hour, dt.strftime("%A"), dt.month, dt.year),
         )
-        self._conn.commit()
+        self._commit()
+        if self._is_pg:
+            row = self._execute(
+                f"SELECT time_key FROM dim_time WHERE full_datetime = {ph}",
+                (full,), fetch="one",
+            )
+            return row["time_key"] if row else 0
         return cur.lastrowid
 
-    def _get_or_create_patient(
-        self, patient_id: str, age: int = 0, gender: str = "unknown"
-    ) -> int:
-        cur = self._conn.cursor()
-        cur.execute(
-            "SELECT patient_key FROM dim_patient WHERE patient_id = ?", (patient_id,)
+    def _get_or_create_patient(self, patient_id: str, age: int = 0, gender: str = "unknown") -> int:
+        ph = self._ph
+        row = self._execute(
+            f"SELECT patient_key FROM dim_patient WHERE patient_id = {ph}",
+            (patient_id,), fetch="one",
         )
-        row = cur.fetchone()
         if row:
             return row["patient_key"]
-        cur.execute(
-            "INSERT INTO dim_patient (patient_id, age, gender, created_at) VALUES (?, ?, ?, ?)",
-            (patient_id, age, gender, datetime.now(timezone.utc).isoformat()),
-        )
-        self._conn.commit()
-        return cur.lastrowid
+        now = datetime.now(timezone.utc).isoformat()
+        if self._is_pg:
+            self._execute(
+                f"INSERT INTO dim_patient (patient_id, age, gender, created_at) "
+                f"VALUES ({ph}, {ph}, {ph}, {ph}) ON CONFLICT (patient_id) DO NOTHING",
+                (patient_id, age, gender, now),
+            )
+            self._commit()
+            row = self._execute(
+                f"SELECT patient_key FROM dim_patient WHERE patient_id = {ph}",
+                (patient_id,), fetch="one",
+            )
+            return row["patient_key"] if row else 0
+        else:
+            cur = self._execute(
+                f"INSERT OR IGNORE INTO dim_patient (patient_id, age, gender, created_at) "
+                f"VALUES ({ph}, {ph}, {ph}, {ph})",
+                (patient_id, age, gender, now),
+            )
+            self._commit()
+            return cur.lastrowid or 0
 
-    def _get_or_create_diagnosis(
-        self, name: str, category: str = "", severity: str = ""
-    ) -> int:
-        cur = self._conn.cursor()
-        cur.execute(
-            "SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = ?", (name,)
+    def _get_or_create_diagnosis(self, name: str, category: str = "", severity: str = "") -> int:
+        ph = self._ph
+        row = self._execute(
+            f"SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = {ph}",
+            (name,), fetch="one",
         )
-        row = cur.fetchone()
         if row:
             return row["diagnosis_key"]
-        cur.execute(
-            "INSERT INTO dim_diagnosis (diagnosis_name, category, severity) VALUES (?, ?, ?)",
+        self._execute(
+            f"INSERT INTO dim_diagnosis (diagnosis_name, category, severity) VALUES ({ph}, {ph}, {ph})",
             (name, category, severity),
         )
-        self._conn.commit()
-        return cur.lastrowid
+        self._commit()
+        row = self._execute(
+            f"SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = {ph}",
+            (name,), fetch="one",
+        )
+        return row["diagnosis_key"] if row else 0
 
     def load_encounter(self, pipeline_result: dict) -> int:
         """Load a complete pipeline result into the warehouse."""
+        ph = self._ph
         now = datetime.now(timezone.utc)
         patient_id = pipeline_result.get("patient_id", "unknown")
 
@@ -229,27 +341,27 @@ class ClinicalWarehouse:
         esi_level = 0
         compression = 0.0
         safety_score = 0.0
-        safety_passed = 0
+        safety_passed = False
         fhir_count = 0
 
         for s in stages:
-            sys = s.get("system", "")
+            sys_name = s.get("system", "")
             result = s.get("result", {})
-            if sys == "ner":
+            if sys_name == "ner":
                 ner_count = result.get("entity_count", 0)
-            elif sys == "risk_predictor":
+            elif sys_name == "risk_predictor":
                 risk_score = result.get("risk_score", 0.0)
                 risk_prediction = result.get("prediction", "Unknown")
                 confidence = result.get("confidence", 0.0)
-            elif sys == "agents":
+            elif sys_name == "agents":
                 triage = result.get("triage", {})
                 esi_level = triage.get("esi_level", 0)
-            elif sys == "summarizer":
+            elif sys_name == "summarizer":
                 compression = result.get("compression", 0.0)
-            elif sys == "evaluator":
+            elif sys_name == "evaluator":
                 safety_score = result.get("overall_score", 0.0)
-                safety_passed = 1 if result.get("pass_threshold", False) else 0
-            elif sys == "fhir":
+                safety_passed = bool(result.get("pass_threshold", False))
+            elif sys_name == "fhir":
                 fhir_count = result.get("resource_count", 0)
 
         vitals = pipeline_result.get("vitals", {})
@@ -257,76 +369,114 @@ class ClinicalWarehouse:
         dbp = vitals.get("diastolic_bp", 0)
         map_val = round(dbp + (sbp - dbp) / 3, 1) if sbp and dbp else 0
 
-        cur = self._conn.cursor()
-        cur.execute(
-            """
-            INSERT INTO fact_clinical_encounters (
-                patient_key, diagnosis_key, provider_key, time_key,
-                heart_rate, respiratory_rate, body_temperature,
-                oxygen_saturation, systolic_bp, diastolic_bp,
-                mean_arterial_pressure, risk_score, risk_prediction,
-                confidence, esi_level, entity_count, summary_compression,
-                safety_score, safety_passed, pipeline_latency_ms,
-                fhir_resource_count, feedback_loops, created_at
-            ) VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                patient_key,
-                diagnosis_key,
-                time_key,
-                vitals.get("heart_rate", 0),
-                vitals.get("respiratory_rate", 0),
-                vitals.get("body_temperature", 0),
-                vitals.get("oxygen_saturation", 0),
-                sbp,
-                dbp,
-                map_val,
-                risk_score,
-                risk_prediction,
-                confidence,
-                esi_level,
-                ner_count,
-                compression,
-                safety_score,
-                safety_passed,
-                pipeline_result.get("overall_latency_ms", 0),
-                fhir_count,
-                pipeline_result.get("feedback_loops_triggered", 0),
-                now.isoformat(),
-            ),
-        )
-        self._conn.commit()
-        return cur.lastrowid
+        phs = ", ".join([ph] * 23)
+        if self._is_pg:
+            self._execute(
+                f"""INSERT INTO fact_clinical_encounters (
+                    patient_key, diagnosis_key, provider_key, time_key,
+                    heart_rate, respiratory_rate, body_temperature,
+                    oxygen_saturation, systolic_bp, diastolic_bp,
+                    mean_arterial_pressure, risk_score, risk_prediction,
+                    confidence, esi_level, entity_count, summary_compression,
+                    safety_score, safety_passed, pipeline_latency_ms,
+                    fhir_resource_count, feedback_loops, created_at
+                ) VALUES ({phs})""",
+                (
+                    patient_key, diagnosis_key, 1, time_key,
+                    vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
+                    vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
+                    sbp, dbp, map_val, risk_score, risk_prediction, confidence,
+                    esi_level, ner_count, compression, safety_score, safety_passed,
+                    pipeline_result.get("overall_latency_ms", 0),
+                    fhir_count, pipeline_result.get("feedback_loops_triggered", 0),
+                    now.isoformat(),
+                ),
+            )
+            self._commit()
+            row = self._execute(
+                "SELECT MAX(encounter_id) AS eid FROM fact_clinical_encounters",
+                fetch="one",
+            )
+            return row["eid"] if row else 0
+        else:
+            # SQLite: safety_passed as int
+            cur = self._execute(
+                f"""INSERT INTO fact_clinical_encounters (
+                    patient_key, diagnosis_key, provider_key, time_key,
+                    heart_rate, respiratory_rate, body_temperature,
+                    oxygen_saturation, systolic_bp, diastolic_bp,
+                    mean_arterial_pressure, risk_score, risk_prediction,
+                    confidence, esi_level, entity_count, summary_compression,
+                    safety_score, safety_passed, pipeline_latency_ms,
+                    fhir_resource_count, feedback_loops, created_at
+                ) VALUES ({phs})""",
+                (
+                    patient_key, diagnosis_key, 1, time_key,
+                    vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
+                    vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
+                    sbp, dbp, map_val, risk_score, risk_prediction, confidence,
+                    esi_level, ner_count, compression, safety_score,
+                    1 if safety_passed else 0,
+                    pipeline_result.get("overall_latency_ms", 0),
+                    fhir_count, pipeline_result.get("feedback_loops_triggered", 0),
+                    now.isoformat(),
+                ),
+            )
+            self._commit()
+            return cur.lastrowid
 
     def refresh_aggregates(self):
         """Recompute hourly aggregates."""
-        cur = self._conn.cursor()
-        cur.execute("""
-            INSERT OR REPLACE INTO agg_hourly_summary (
-                hour_key, encounter_count, avg_risk_score, avg_latency_ms,
-                high_risk_count, safety_failure_count, avg_entity_count, updated_at
-            )
-            SELECT
-                dt.date || 'T' || printf('%02d', dt.hour) AS hour_key,
-                COUNT(*) AS encounter_count,
-                ROUND(AVG(f.risk_score), 3) AS avg_risk_score,
-                ROUND(AVG(f.pipeline_latency_ms), 1) AS avg_latency_ms,
-                SUM(CASE WHEN f.risk_score > 0.7 THEN 1 ELSE 0 END) AS high_risk_count,
-                SUM(CASE WHEN f.safety_passed = 0 THEN 1 ELSE 0 END) AS safety_failure_count,
-                ROUND(AVG(f.entity_count), 1) AS avg_entity_count,
-                datetime('now') AS updated_at
-            FROM fact_clinical_encounters f
-            JOIN dim_time dt ON f.time_key = dt.time_key
-            GROUP BY dt.date, dt.hour
-        """)
-        self._conn.commit()
+        if self._is_pg:
+            self._execute("""
+                INSERT INTO agg_hourly_summary (
+                    hour_key, encounter_count, avg_risk_score, avg_latency_ms,
+                    high_risk_count, safety_failure_count, avg_entity_count, updated_at
+                )
+                SELECT
+                    TO_CHAR(dt.full_datetime, 'YYYY-MM-DD"T"HH24') AS hour_key,
+                    COUNT(*) AS encounter_count,
+                    ROUND(AVG(f.risk_score)::numeric, 3) AS avg_risk_score,
+                    ROUND(AVG(f.pipeline_latency_ms)::numeric, 1) AS avg_latency_ms,
+                    SUM(CASE WHEN f.risk_score > 0.7 THEN 1 ELSE 0 END) AS high_risk_count,
+                    SUM(CASE WHEN f.safety_passed = FALSE THEN 1 ELSE 0 END) AS safety_failure_count,
+                    ROUND(AVG(f.entity_count)::numeric, 1) AS avg_entity_count,
+                    NOW() AS updated_at
+                FROM fact_clinical_encounters f
+                JOIN dim_time dt ON f.time_key = dt.time_key
+                GROUP BY TO_CHAR(dt.full_datetime, 'YYYY-MM-DD"T"HH24')
+                ON CONFLICT (hour_key) DO UPDATE SET
+                    encounter_count = EXCLUDED.encounter_count,
+                    avg_risk_score = EXCLUDED.avg_risk_score,
+                    avg_latency_ms = EXCLUDED.avg_latency_ms,
+                    high_risk_count = EXCLUDED.high_risk_count,
+                    safety_failure_count = EXCLUDED.safety_failure_count,
+                    avg_entity_count = EXCLUDED.avg_entity_count,
+                    updated_at = EXCLUDED.updated_at
+            """)
+        else:
+            self._execute("""
+                INSERT OR REPLACE INTO agg_hourly_summary (
+                    hour_key, encounter_count, avg_risk_score, avg_latency_ms,
+                    high_risk_count, safety_failure_count, avg_entity_count, updated_at
+                )
+                SELECT
+                    dt.date || 'T' || printf('%02d', dt.hour) AS hour_key,
+                    COUNT(*), ROUND(AVG(f.risk_score), 3),
+                    ROUND(AVG(f.pipeline_latency_ms), 1),
+                    SUM(CASE WHEN f.risk_score > 0.7 THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN f.safety_passed = 0 THEN 1 ELSE 0 END),
+                    ROUND(AVG(f.entity_count), 1), datetime('now')
+                FROM fact_clinical_encounters f
+                JOIN dim_time dt ON f.time_key = dt.time_key
+                GROUP BY dt.date, dt.hour
+            """)
+        self._commit()
 
     def query_encounters(self, limit: int = 20) -> list[dict]:
         """Query recent encounters with full dimensional context."""
-        cur = self._conn.cursor()
-        cur.execute(
-            """
-            SELECT
+        return self._execute(
+            f"""SELECT
                 p.patient_id, p.age, p.gender,
                 d.diagnosis_name, d.category,
                 f.risk_score, f.risk_prediction, f.confidence,
@@ -334,22 +484,30 @@ class ClinicalWarehouse:
                 f.safety_passed, f.pipeline_latency_ms,
                 f.fhir_resource_count, f.feedback_loops,
                 f.heart_rate, f.systolic_bp, f.diastolic_bp,
-                dt.full_datetime
+                f.created_at
             FROM fact_clinical_encounters f
             JOIN dim_patient p ON f.patient_key = p.patient_key
             JOIN dim_diagnosis d ON f.diagnosis_key = d.diagnosis_key
             JOIN dim_time dt ON f.time_key = dt.time_key
             ORDER BY f.encounter_id DESC
-            LIMIT ?
-        """,
-            (limit,),
+            LIMIT {self._ph}""",
+            (limit,), fetch="all",
         )
-        return [dict(row) for row in cur.fetchall()]
 
     def query_risk_distribution(self) -> dict:
         """Get risk score distribution for analytics."""
-        cur = self._conn.cursor()
-        cur.execute("""
+        rows = self._execute("""
+            SELECT
+                CASE
+                    WHEN risk_score < 0.3 THEN 'low'
+                    WHEN risk_score < 0.7 THEN 'medium'
+                    ELSE 'high'
+                END AS risk_level,
+                COUNT(*) AS count,
+                ROUND(AVG(pipeline_latency_ms)::numeric, 1) AS avg_latency
+            FROM fact_clinical_encounters
+            GROUP BY risk_level
+        """ if self._is_pg else """
             SELECT
                 CASE
                     WHEN risk_score < 0.3 THEN 'low'
@@ -360,34 +518,45 @@ class ClinicalWarehouse:
                 ROUND(AVG(pipeline_latency_ms), 1) AS avg_latency
             FROM fact_clinical_encounters
             GROUP BY risk_level
-        """)
+        """, fetch="all")
         return {
-            row["risk_level"]: {
-                "count": row["count"],
-                "avg_latency": row["avg_latency"],
-            }
-            for row in cur.fetchall()
+            row["risk_level"]: {"count": row["count"], "avg_latency": row["avg_latency"]}
+            for row in rows
         }
 
+    def query_hourly_summary(self, limit: int = 24) -> list[dict]:
+        """Get recent hourly aggregate summaries."""
+        return self._execute(
+            f"SELECT * FROM agg_hourly_summary ORDER BY hour_key DESC LIMIT {self._ph}",
+            (limit,), fetch="all",
+        )
+
     def get_warehouse_stats(self) -> dict:
-        """Get warehouse metadata and stats."""
-        cur = self._conn.cursor()
+        """Get warehouse metadata and row counts."""
         tables = {}
         for tbl in [
-            "dim_patient",
-            "dim_diagnosis",
-            "dim_provider",
-            "dim_time",
-            "fact_clinical_encounters",
-            "agg_hourly_summary",
+            "dim_patient", "dim_diagnosis", "dim_provider",
+            "dim_time", "fact_clinical_encounters", "agg_hourly_summary",
         ]:
-            cur.execute(f"SELECT COUNT(*) AS cnt FROM {tbl}")  # noqa: S608
-            tables[tbl] = cur.fetchone()["cnt"]
+            row = self._execute(
+                f"SELECT COUNT(*) AS cnt FROM {tbl}",  # noqa: S608
+                fetch="one",
+            )
+            tables[tbl] = row["cnt"] if row else 0
 
         return {
             "tables": tables,
             "schema_type": "star_schema",
+            "backend": self.backend,
             "fact_table": "fact_clinical_encounters",
             "dimensions": ["dim_patient", "dim_diagnosis", "dim_provider", "dim_time"],
             "aggregates": ["agg_hourly_summary"],
         }
+
+
+# Singleton — shared across the app
+clinical_warehouse = ClinicalWarehouse()
+print(
+    f"[Warehouse] Backend: {clinical_warehouse.backend}",
+    file=sys.stderr, flush=True,
+)
