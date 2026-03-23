@@ -204,6 +204,59 @@ CLINICAL_KNOWLEDGE = {
     ],
 }
 
+# Symptom aliases — maps common phrases to CLINICAL_KNOWLEDGE keys
+SYMPTOM_ALIASES: dict[str, str] = {
+    "shortness of breath": "dyspnea",
+    "sob": "dyspnea",
+    "difficulty breathing": "dyspnea",
+    "breathing difficulty": "dyspnea",
+    "breathless": "dyspnea",
+    "can't breathe": "dyspnea",
+    "cough": "dyspnea",
+    "wheezing": "dyspnea",
+    "chest tightness": "chest pain",
+    "heart attack": "chest pain",
+    "substernal": "chest pain",
+    "angina": "chest pain",
+    "palpitations": "chest pain",
+    "stomach pain": "abdominal pain",
+    "belly pain": "abdominal pain",
+    "nausea": "abdominal pain",
+    "vomiting": "abdominal pain",
+    "diarrhea": "abdominal pain",
+    "constipation": "abdominal pain",
+    "migraine": "headache",
+    "head pain": "headache",
+    "dizziness": "headache",
+    "dizzy": "headache",
+    "vertigo": "headache",
+    "high temperature": "fever",
+    "chills": "fever",
+    "infection": "fever",
+    "septic": "fever",
+    "confused": "altered mental status",
+    "confusion": "altered mental status",
+    "unresponsive": "altered mental status",
+    "drowsy": "altered mental status",
+    "syncope": "altered mental status",
+    "fainted": "altered mental status",
+    "passed out": "altered mental status",
+    "seizure": "altered mental status",
+    "unconscious": "altered mental status",
+    "weak": "altered mental status",
+    "weakness": "altered mental status",
+    "fall": "altered mental status",
+    "back pain": "abdominal pain",
+    "flank pain": "abdominal pain",
+    "urinary": "fever",
+    "dysuria": "fever",
+    "rash": "fever",
+    "swelling": "abdominal pain",
+    "bleeding": "abdominal pain",
+    "laceration": "chest pain",
+    "trauma": "chest pain",
+}
+
 # Confirmatory tests by diagnosis category
 RECOMMENDED_TESTS = {
     "I21.9": ["Troponin (serial q3h)", "12-lead ECG", "CXR", "BMP"],
@@ -238,12 +291,23 @@ class DiagnosticAgent:
 
         note_lower = ctx.clinical_note.lower()
         complaint_lower = ctx.chief_complaint.lower()
+        combined_text = f"{complaint_lower} {note_lower}"
+
+        # Resolve symptom aliases to canonical category names
+        resolved_categories: set[str] = set()
+        for alias, canonical in SYMPTOM_ALIASES.items():
+            if alias in combined_text:
+                resolved_categories.add(canonical)
 
         # Collect candidate diagnoses from all matching symptom categories
         candidates: list[Diagnosis] = []
         matched_categories = set()
         for category, diagnoses in CLINICAL_KNOWLEDGE.items():
-            if category in complaint_lower or category in note_lower:
+            if (
+                category in complaint_lower
+                or category in note_lower
+                or category in resolved_categories
+            ):
                 matched_categories.add(category)
                 for dx in diagnoses:
                     candidates.append(

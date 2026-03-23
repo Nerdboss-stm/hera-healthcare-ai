@@ -21,7 +21,12 @@ def _load_model():
         return None, None
 
     if _model is None:
-        from transformers import T5ForConditionalGeneration, T5Tokenizer
+        try:
+            from transformers import T5ForConditionalGeneration, T5Tokenizer
+        except ImportError:
+            logger.warning("transformers not installed, using extractive summary")
+            _using_fallback = True
+            return None, None
 
         # Try fine-tuned model first
         if os.path.exists(MODEL_PATH):
@@ -50,10 +55,16 @@ def _load_model():
                 _model, _tokenizer = None, None
 
         # Fallback to pretrained t5-small
-        logger.info("Loading fallback model: %s", FALLBACK_MODEL)
-        _tokenizer = T5Tokenizer.from_pretrained(FALLBACK_MODEL)
-        _model = T5ForConditionalGeneration.from_pretrained(FALLBACK_MODEL)
-        _using_fallback = True
+        try:
+            logger.info("Loading fallback model: %s", FALLBACK_MODEL)
+            _tokenizer = T5Tokenizer.from_pretrained(FALLBACK_MODEL)
+            _model = T5ForConditionalGeneration.from_pretrained(FALLBACK_MODEL)
+            _using_fallback = True
+        except Exception as e:
+            logger.warning("Failed to download/load %s: %s — using extractive", FALLBACK_MODEL, e)
+            _model, _tokenizer = None, None
+            _using_fallback = True
+            return None, None
     return _model, _tokenizer
 
 
@@ -77,28 +88,36 @@ def _extractive_summary(note: str, max_length: int = 150) -> str:
 
 
 def generate_summary(note: str, max_length=150, min_length=30) -> str:
-    model, tokenizer = _load_model()
+    try:
+        model, tokenizer = _load_model()
+    except Exception as e:
+        logger.warning("Model load failed: %s — using extractive", e)
+        return _extractive_summary(note, max_length)
 
     if model is None or tokenizer is None:
         return _extractive_summary(note, max_length)
 
-    # T5 requires a task prefix for summarization
-    prefix = "summarize: " if _using_fallback else ""
-    input_text = f"{prefix}{note}"
-    input_ids = tokenizer(
-        input_text,
-        return_tensors="pt",
-        padding=True,
-        truncation=True,
-        max_length=512,
-    ).input_ids
-    output = model.generate(
-        input_ids,
-        max_length=max_length,
-        min_length=min_length,
-        num_beams=4,
-        length_penalty=2.0,
-        early_stopping=True,
-        no_repeat_ngram_size=3,
-    )
-    return tokenizer.decode(output[0], skip_special_tokens=True)
+    try:
+        # T5 requires a task prefix for summarization
+        prefix = "summarize: " if _using_fallback else ""
+        input_text = f"{prefix}{note}"
+        input_ids = tokenizer(
+            input_text,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+        ).input_ids
+        output = model.generate(
+            input_ids,
+            max_length=max_length,
+            min_length=min_length,
+            num_beams=4,
+            length_penalty=2.0,
+            early_stopping=True,
+            no_repeat_ngram_size=3,
+        )
+        return tokenizer.decode(output[0], skip_special_tokens=True)
+    except Exception as e:
+        logger.warning("T5 inference failed: %s — using extractive", e)
+        return _extractive_summary(note, max_length)

@@ -199,11 +199,14 @@
 
         /* Result badges */
         .rb{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:16px;font-size:11px;font-weight:600;margin-bottom:10px}
+        .rb.critical{background:#7c3aed;color:#fff}
         .rb.hi{background:var(--r);color:#fff}
+        .rb.med{background:#f59e0b;color:#fff}
         .rb.lo{background:var(--g);color:#fff}
 
         /* Result card */
         .rc.hr{background:var(--r-bg);border:1px solid #fecaca;border-radius:var(--rad);padding:20px}
+        .rc.mr{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--rad);padding:20px}
         .rc.lr{background:var(--g-bg);border:1px solid #a7f3d0;border-radius:var(--rad);padding:20px}
 
         /* What-if */
@@ -713,8 +716,8 @@ function renderCC(d,prev){
             ph+=`<div class="ps-detail"><div class="mrow"><div class="met"><div class="ml">ESI Level</div><div class="mv" style="color:${esiC[t.esi_level]||'var(--t)'}">${t.esi_level||'?'}</div></div><div class="met"><div class="ml">Primary Dx</div><div class="mv" style="font-size:13px">${dx.primary_diagnosis||'?'}</div></div><div class="met"><div class="ml">Disposition</div><div class="mv" style="font-size:13px">${tx.disposition||'?'}</div></div></div></div>`;
         }
         if(s.system==='risk_predictor'&&s.result&&s.result.prediction){
-            const isH=s.result.prediction==='High Risk';
-            ph+=`<div class="ps-detail"><span class="rb ${isH?'hi':'lo'}">${s.result.prediction}</span> Score: ${(s.result.risk_score*100).toFixed(1)}%, Confidence: ${(s.result.confidence*100).toFixed(1)}%</div>`;
+            const rl=s.result.prediction;const rCls=rl==='Critical'?'critical':rl==='High'?'hi':rl==='Medium'?'med':'lo';
+            ph+=`<div class="ps-detail"><span class="rb ${rCls}">${rl}</span> Score: ${(s.result.risk_score*100).toFixed(1)}%, Confidence: ${(s.result.confidence*100).toFixed(1)}%</div>`;
         }
         if(s.system==='evaluator'&&s.result){
             const os=s.result.overall_score||0;const pt=s.result.pass_threshold;
@@ -795,8 +798,8 @@ async function runNER(){
 async function runFHIR(){
     const b=$('fhir-b').value.trim();if(!b){toast('Enter a FHIR Bundle');return}sl('fhirBtn',true);
     try{const bundle=JSON.parse(b);const r=await fetch('/api/fhir/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bundle})});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();
-    const ra=d.risk_assessment,pr=d.original_prediction,isH=pr.prediction==='High Risk';
-    let h=`<div class="card rc ${isH?'hr':'lr'}"><span class="rb ${isH?'hi':'lo'}">${pr.prediction}</span><div class="fb"><div class="ft">FHIR R4 RiskAssessment</div><div style="font-size:11px;color:var(--t2)">Type: ${ra.resourceType} | Status: ${ra.status} | Subject: ${ra.subject?.reference}</div></div><div class="mrow"><div class="met"><div class="ml">Risk Score</div><div class="mv" style="color:${isH?'var(--r)':'var(--g)'}">${(pr.risk_score*100).toFixed(1)}%</div></div><div class="met"><div class="ml">Confidence</div><div class="mv">${(pr.confidence*100).toFixed(1)}%</div></div></div><div class="jb">${JSON.stringify(ra,null,2)}</div></div>`;
+    const ra=d.risk_assessment,pr=d.original_prediction,rl=pr.prediction,rCls=rl==='Critical'?'critical':rl==='High'?'hi':rl==='Medium'?'med':'lo',rcCls=rl==='Critical'||rl==='High'?'hr':rl==='Medium'?'mr':'lr',rCol=rl==='Critical'?'#7c3aed':rl==='High'?'var(--r)':rl==='Medium'?'#f59e0b':'var(--g)';
+    let h=`<div class="card rc ${rcCls}"><span class="rb ${rCls}">${rl}</span><div class="fb"><div class="ft">FHIR R4 RiskAssessment</div><div style="font-size:11px;color:var(--t2)">Type: ${ra.resourceType} | Status: ${ra.status} | Subject: ${ra.subject?.reference}</div></div><div class="mrow"><div class="met"><div class="ml">Risk Score</div><div class="mv" style="color:${rCol}">${(pr.risk_score*100).toFixed(1)}%</div></div><div class="met"><div class="ml">Confidence</div><div class="mv">${(pr.confidence*100).toFixed(1)}%</div></div></div><div class="jb">${JSON.stringify(ra,null,2)}</div></div>`;
     $('fhirResult').innerHTML=h;$('fhirResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('fhirBtn',false)}
 }
 
@@ -813,8 +816,8 @@ async function runEval(){
 async function runPred(){
     sl('predBtn',true);
     try{const p={heart_rate:+$('v-hr').value,respiratory_rate:+$('v-rr').value,body_temperature:+$('v-temp').value,oxygen_saturation:+$('v-spo2').value,systolic_bp:+$('v-sbp').value,diastolic_bp:+$('v-dbp').value,age:+$('v-age').value};
-    const r=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();const isH=d.prediction==='High Risk';
-    $('predCard').innerHTML=`<span class="rb ${isH?'hi':'lo'}">${d.prediction}</span><div class="cbar"><div class="cbar-l"><span>Low</span><span>${(d.risk_score*100).toFixed(1)}%</span><span>High</span></div><div class="cbar-b"><div class="cbar-f" style="width:${(d.risk_score*100)}%;background:${isH?'linear-gradient(90deg,#f59e0b,#ef4444)':'linear-gradient(90deg,#10b981,#34d399)'}"></div></div></div><div class="mrow"><div class="met"><div class="ml">Confidence</div><div class="mv">${(d.confidence*100).toFixed(1)}%</div></div><div class="met"><div class="ml">Risk</div><div class="mv">${(d.risk_score*100).toFixed(1)}%</div></div><div class="met"><div class="ml">BMI</div><div class="mv">${d.features_used.calculated_bmi}</div></div><div class="met"><div class="ml">MAP</div><div class="mv">${d.features_used.calculated_map}</div></div></div>`;
+    const r=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();const rl=d.prediction;const rCls=rl==='Critical'?'critical':rl==='High'?'hi':rl==='Medium'?'med':'lo';const barGrad=rl==='Critical'?'linear-gradient(90deg,#ef4444,#7c3aed)':rl==='High'?'linear-gradient(90deg,#f59e0b,#ef4444)':rl==='Medium'?'linear-gradient(90deg,#fbbf24,#f59e0b)':'linear-gradient(90deg,#10b981,#34d399)';
+    $('predCard').innerHTML=`<span class="rb ${rCls}">${rl}</span><div class="cbar"><div class="cbar-l"><span>Low</span><span>${(d.risk_score*100).toFixed(1)}%</span><span>High</span></div><div class="cbar-b"><div class="cbar-f" style="width:${(d.risk_score*100)}%;background:${barGrad}"></div></div></div><div class="mrow"><div class="met"><div class="ml">Confidence</div><div class="mv">${(d.confidence*100).toFixed(1)}%</div></div><div class="met"><div class="ml">Risk</div><div class="mv">${(d.risk_score*100).toFixed(1)}%</div></div><div class="met"><div class="ml">BMI</div><div class="mv">${d.features_used.calculated_bmi}</div></div><div class="met"><div class="ml">MAP</div><div class="mv">${d.features_used.calculated_map}</div></div></div>`;
     $('predResult').classList.add('vis');}catch(e){toast(e.message)}finally{sl('predBtn',false)}
 }
 const loadPre=t=>{const p=t==='crit'?{hr:130,rr:28,temp:39.2,spo2:88,sbp:85,dbp:50,age:72}:{hr:72,rr:14,temp:36.8,spo2:99,sbp:118,dbp:76,age:30};$('v-hr').value=p.hr;$('v-rr').value=p.rr;$('v-temp').value=p.temp;$('v-spo2').value=p.spo2;$('v-sbp').value=p.sbp;$('v-dbp').value=p.dbp;$('v-age').value=p.age};
@@ -934,11 +937,11 @@ function renderDELive(d){
         let et='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--bg);font-weight:600;color:var(--t2)">';
         et+='<th style="padding:6px 8px;text-align:left">Patient</th><th>Diagnosis</th><th>Risk</th><th>ESI</th><th>Safety</th><th>Latency</th><th>Time</th></tr></thead><tbody>';
         encs.forEach(e=>{
-            const isH=e.risk_score>0.7;const safe=e.safety_passed===true||e.safety_passed===1;
+            const rs=e.risk_score||0;const rCol=rs>=0.75?'#7c3aed':rs>=0.5?'var(--r)':rs>=0.25?'#f59e0b':'var(--g)';const safe=e.safety_passed===true||e.safety_passed===1;
             et+=`<tr style="border-bottom:1px solid #f1f5f9">`;
             et+=`<td style="padding:5px 8px;font-weight:600">${e.patient_id}</td>`;
             et+=`<td style="padding:5px 4px">${e.diagnosis_name||'—'}</td>`;
-            et+=`<td style="padding:5px 4px"><span style="color:${isH?'var(--r)':'var(--g)'}; font-weight:700">${((e.risk_score||0)*100).toFixed(0)}%</span></td>`;
+            et+=`<td style="padding:5px 4px"><span style="color:${rCol}; font-weight:700">${(rs*100).toFixed(0)}%</span></td>`;
             et+=`<td style="padding:5px 4px;text-align:center;font-weight:700">${e.esi_level||'—'}</td>`;
             et+=`<td style="padding:5px 4px"><span style="color:${safe?'var(--g)':'var(--r)'}; font-weight:600">${safe?'PASS':'FAIL'}</span></td>`;
             et+=`<td style="padding:5px 4px;color:var(--t3)">${(e.pipeline_latency_ms||0).toFixed(0)}ms</td>`;
