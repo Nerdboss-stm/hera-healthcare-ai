@@ -61,7 +61,9 @@ def _load_model():
             _model = T5ForConditionalGeneration.from_pretrained(FALLBACK_MODEL)
             _using_fallback = True
         except Exception as e:
-            logger.warning("Failed to download/load %s: %s — using extractive", FALLBACK_MODEL, e)
+            logger.warning(
+                "Failed to download/load %s: %s — using extractive", FALLBACK_MODEL, e
+            )
             _model, _tokenizer = None, None
             _using_fallback = True
             return None, None
