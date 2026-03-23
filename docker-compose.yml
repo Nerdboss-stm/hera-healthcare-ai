@@ -52,6 +52,8 @@ services:
       - ./config/alerts.yml:/etc/prometheus/alerts.yml
     ports:
       - "9090:9090"
+    dns:
+      - 127.0.0.11
     depends_on:
       - api
     restart: unless-stopped

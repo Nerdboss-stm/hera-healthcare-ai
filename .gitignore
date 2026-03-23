@@ -35,6 +35,13 @@ runs/
 # Data (large files)
 data/clinical_notes/notes_5000.csv
 
+# Prometheus data
+data/01*/
+data/chunks_head/
+data/lock
+data/queries.active
+data/wal/
+
 # Jupyter
 .ipynb_checkpoints/
 
