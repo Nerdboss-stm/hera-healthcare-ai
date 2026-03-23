@@ -23,8 +23,9 @@ COPY clinical_summarizer/ ./clinical_summarizer/
 COPY data/processed/ ./data/processed/
 COPY data/clinical_notes/ ./data/clinical_notes/
 COPY database/ ./database/
+COPY scripts/ ./scripts/
 COPY model/ ./model/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "serving.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD python scripts/init_db.py && uvicorn serving.api:app --host 0.0.0.0 --port ${PORT:-8000}

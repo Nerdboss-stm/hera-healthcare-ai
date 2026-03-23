@@ -1,0 +1,38 @@
+databases:
+  - name: hera-db
+    plan: free
+    databaseName: hera_ai
+    user: hera
+    ipAllowList: []
+
+services:
+  - type: web
+    name: hera-healthcare-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: hera-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hera-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: hera-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hera-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: hera-db
+          property: database
+      - key: PORT
+        value: "8000"
+      - key: PYTHON_ENV
+        value: production
