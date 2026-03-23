@@ -1,0 +1,22 @@
+version: 1.0
+runtime: docker
+build:
+  commands:
+    build:
+      - docker build -t hera-healthcare-ai .
+run:
+  runtime-version: 3.10
+  command: python scripts/init_db.py; uvicorn serving.api:app --host 0.0.0.0 --port 8000
+  network:
+    port: 8000
+  env:
+    - name: PORT
+      value: "8000"
+    - name: PYTHON_ENV
+      value: "production"
+  healthcheck:
+    path: /api/health
+    interval: 10
+    timeout: 5
+    healthy_threshold: 2
+    unhealthy_threshold: 3
