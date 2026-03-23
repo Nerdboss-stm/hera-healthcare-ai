@@ -9,6 +9,8 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Version](https://img.shields.io/badge/Version-4.0.0-orange)
 
+**[Live Demo](https://3wihdymitc.us-east-1.awsapprunner.com)** — Running on AWS App Runner (1 vCPU, 2GB RAM)
+
 ---
 
 ## What This Is
@@ -89,12 +91,47 @@ Services start at:
 - **Grafana** — http://localhost:3001 (admin/admin)
 - **PostgreSQL** — localhost:5433 (hera/hera123)
 
+### Seed Data
+
+After starting services, populate the database with 20 diverse patients covering all risk levels (Critical/High/Medium/Low), ESI 1-5, various diagnoses, and CDC events:
+
+```bash
+python scripts/seed_patients.py
+```
+
 ### Local
 
 ```bash
 pip install -r requirements.txt
 uvicorn serving.api:app --host 0.0.0.0 --port 8000
 ```
+
+---
+
+## Deployment
+
+### AWS App Runner (Production)
+
+The app is deployed via GitHub Actions CI/CD to AWS App Runner:
+
+```
+Push to main → CI (lint + test + build) → Docker image → ECR → App Runner auto-deploys
+```
+
+**GitHub Secrets required:**
+
+| Secret | Description |
+|--------|-------------|
+| `AWS_ACCESS_KEY_ID` | IAM user with ECR + App Runner access |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
+| `AWS_REGION` | e.g. `us-east-1` |
+| `ECR_REPOSITORY` | ECR repo name (e.g. `hera-healthcare-ai`) |
+
+**Infrastructure:**
+- **App Runner**: 1 vCPU, 2GB RAM, auto-scales to 0 when idle (~$5-7/mo)
+- **ECR**: Docker image registry (~$0.10/mo)
+- **CI workflow**: `.github/workflows/ci.yml` — lint, test, Docker build
+- **CD workflow**: `.github/workflows/deploy.yml` — build, push to ECR, trigger App Runner
 
 ---
 
@@ -264,12 +301,24 @@ hera-healthcare-ai/
 ├── config/
 │   ├── prometheus.yml              #   Prometheus scrape config
 │   ├── alerts.yml                  #   Alert rules
-│   └── settings.py                 #   DB + path config
+│   ├── settings.py                 #   DB + path config
+│   └── grafana/
+│       ├── provisioning/
+│       │   ├── datasources/
+│       │   │   └── prometheus.yml  #   Auto-configured Prometheus datasource
+│       │   └── dashboards/
+│       │       └── default.yml     #   Dashboard provisioning config
+│       └── dashboards/
+│           └── hera-overview.json  #   17-panel overview dashboard
+│
+├── scripts/
+│   └── seed_patients.py            #   Seed 20 diverse patients
 │
 ├── docker-compose.yml              #   4-service stack
 ├── Dockerfile                      #   API container
 ├── requirements.txt                #   Dependencies
-└── .github/workflows/ci.yml        #   CI: lint + test + Docker
+├── .github/workflows/ci.yml        #   CI: lint + test + Docker
+└── .github/workflows/deploy.yml    #   CD: Docker → ECR → App Runner
 ```
 
 ---
@@ -296,7 +345,7 @@ hera-healthcare-ai/
 | **Catalog** | Custom catalog service | 12 datasets, PII, freshness SLAs |
 | **Database** | PostgreSQL | 5 tables for audit + logging |
 | **Monitoring** | Prometheus + Grafana | Observability stack |
-| **CI/CD** | GitHub Actions + ruff | Lint, test, Docker build |
+| **CI/CD** | GitHub Actions | Lint, test, Docker build, deploy to AWS ECR + App Runner |
 
 ---
 
@@ -354,6 +403,34 @@ ruff format --check .                         # Format check
 | Prometheus | http://localhost:9090 | — |
 | Grafana | http://localhost:3001 | admin / admin |
 | PostgreSQL | localhost:5433 | hera / hera123 |
+
+### Prometheus
+
+Scrapes the `/metrics` endpoint every 5s. Metrics exposed:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `hera_requests_total` | Counter | Total API requests by endpoint |
+| `hera_request_failures_total` | Counter | Failed requests by endpoint |
+| `hera_request_latency_seconds` | Histogram | Latency distribution (buckets: 0.1s–30s) |
+| `summarizer_requests_total` | Counter | Summarizer invocations |
+| `summarizer_failures_total` | Counter | Summarizer failures |
+| `summarizer_request_latency_seconds` | Histogram | Summarizer latency |
+
+**Alert rule** (`config/alerts.yml`): `TooManyHighRisk` fires when `high_risk_predictions > 3` for 30s (severity: critical).
+
+### Grafana
+
+Auto-provisioned datasource and dashboard via `config/grafana/provisioning/`. Dashboard JSON at `config/grafana/dashboards/hera-overview.json`.
+
+**HERA Clinical AI - Overview** (17 panels, 4 rows):
+
+| Row | Panels |
+|-----|--------|
+| **System Health** | API Uptime, Total Requests, Error Rate (5m gauge), Active Patients, P95 Latency, Total Failures |
+| **Clinical Risk & Triage** | Risk Level Distribution (donut), ESI Triage Distribution (bar), Risk Predictions Over Time (stacked) |
+| **API Performance** | Request Rate by Endpoint, P95 Latency by Endpoint, Error Rate by Endpoint, Latency Heatmap |
+| **Pipeline & Data Engineering** | Pipeline Stage Completions (bar), CDC Events by Table, Warehouse Encounters, Request Volume (donut), Pipeline Stage Failure Rate |
 
 ---
 
