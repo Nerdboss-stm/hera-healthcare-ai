@@ -124,15 +124,3 @@ jobs:
           docker logs hera-test 2>&1 | head -20
           docker stop hera-test || true
           docker rm hera-test || true
-
-  deploy:
-    name: Deploy to Render
-    runs-on: ubuntu-latest
-    needs: [lint, test, docker, model-smoke-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Trigger Render Deploy
-        run: |
-          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d '{}' || echo "Deploy hook not configured yet"
