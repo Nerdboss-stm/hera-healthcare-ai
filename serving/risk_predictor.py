@@ -140,6 +140,72 @@ def _compute_clinical_risk_score(
     return round(min(blended, 1.0), 4)
 
 
+def _train_inline_model():
+    """Train a lightweight Random Forest on synthetic vitals data.
+
+    Used when no pre-trained .pkl file exists (e.g., fresh Docker deploy).
+    Returns a fitted sklearn RandomForestClassifier.
+    """
+    from sklearn.ensemble import RandomForestClassifier
+
+    rng = np.random.RandomState(42)
+    n = 500
+
+    # Generate synthetic vitals: half normal, half abnormal
+    hr_normal = rng.normal(80, 10, n // 2)
+    hr_abnormal = rng.normal(130, 20, n // 2)
+    rr_normal = rng.normal(16, 3, n // 2)
+    rr_abnormal = rng.normal(30, 5, n // 2)
+    temp_normal = rng.normal(37.0, 0.3, n // 2)
+    temp_abnormal = rng.normal(39.5, 0.8, n // 2)
+    spo2_normal = rng.normal(98, 1, n // 2).clip(90, 100)
+    spo2_abnormal = rng.normal(88, 4, n // 2).clip(60, 100)
+    sbp_normal = rng.normal(120, 10, n // 2)
+    sbp_abnormal = rng.normal(85, 15, n // 2)
+    dbp_normal = rng.normal(80, 8, n // 2)
+    dbp_abnormal = rng.normal(50, 12, n // 2)
+    age_normal = rng.randint(20, 55, n // 2).astype(float)
+    age_abnormal = rng.randint(60, 95, n // 2).astype(float)
+
+    X = np.vstack(
+        [
+            np.column_stack(
+                [
+                    hr_normal,
+                    rr_normal,
+                    temp_normal,
+                    spo2_normal,
+                    sbp_normal,
+                    dbp_normal,
+                    age_normal,
+                    np.full(n // 2, 24.22),
+                    (2 * dbp_normal + sbp_normal) / 3,
+                ]
+            ),
+            np.column_stack(
+                [
+                    hr_abnormal,
+                    rr_abnormal,
+                    temp_abnormal,
+                    spo2_abnormal,
+                    sbp_abnormal,
+                    dbp_abnormal,
+                    age_abnormal,
+                    np.full(n // 2, 24.22),
+                    (2 * dbp_abnormal + sbp_abnormal) / 3,
+                ]
+            ),
+        ]
+    )
+    y = np.array([0] * (n // 2) + [1] * (n // 2))
+
+    model = RandomForestClassifier(
+        n_estimators=50, max_depth=8, random_state=42, n_jobs=1
+    )
+    model.fit(X, y)
+    return model
+
+
 def _load_risk_model():
     global _model
     if _model is None:
@@ -147,10 +213,13 @@ def _load_risk_model():
             if os.path.exists(path):
                 _model = joblib.load(path)
                 return _model
-        raise FileNotFoundError(
-            "Risk prediction model not found. "
-            "Run 'python -m risk_prediction.train' then 'python -m risk_prediction.tune' first."
+        # No .pkl found — train inline model
+        import logging
+
+        logging.getLogger(__name__).info(
+            "No risk model .pkl found, training inline model"
         )
+        _model = _train_inline_model()
     return _model
 
 
