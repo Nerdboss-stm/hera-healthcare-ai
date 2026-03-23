@@ -17,7 +17,7 @@
       "title": "API Uptime",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "up{job=\"hera-api\"}", "refId": "A" }
       ],
@@ -34,7 +34,7 @@
       "title": "Total Requests",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum(hera_requests_total)", "refId": "A" }
       ],
@@ -49,7 +49,7 @@
       "title": "Error Rate (5m)",
       "type": "gauge",
       "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum(rate(hera_request_failures_total[5m])) / sum(rate(hera_requests_total[5m])) * 100", "refId": "A" }
       ],
@@ -65,7 +65,7 @@
       "title": "Active Patients",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "hera_active_patients", "refId": "A" }
       ],
@@ -80,7 +80,7 @@
       "title": "Avg P95 Latency",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "histogram_quantile(0.95, sum(rate(hera_request_latency_seconds_bucket[5m])) by (le))", "refId": "A" }
       ],
@@ -95,7 +95,7 @@
       "title": "Total Failures",
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum(hera_request_failures_total)", "refId": "A" }
       ],
@@ -115,7 +115,7 @@
       "title": "Risk Level Distribution",
       "type": "piechart",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum by (risk_level) (hera_risk_predictions_total)", "legendFormat": "{{ risk_level }}", "refId": "A" }
       ],
@@ -137,7 +137,7 @@
       "title": "ESI Triage Level Distribution",
       "type": "barchart",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum by (esi_level) (hera_esi_assignments_total)", "legendFormat": "ESI {{ esi_level }}", "refId": "A" }
       ],
@@ -161,7 +161,7 @@
       "title": "Risk Predictions Over Time",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum by (risk_level) (rate(hera_risk_predictions_total[5m]))", "legendFormat": "{{ risk_level }}", "refId": "A" }
       ],
@@ -188,7 +188,7 @@
       "title": "Request Rate by Endpoint",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "rate(hera_requests_total[1m])", "legendFormat": "{{ endpoint }}", "refId": "A" }
       ],
@@ -203,7 +203,7 @@
       "title": "P95 Latency by Endpoint",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "histogram_quantile(0.95, rate(hera_request_latency_seconds_bucket[1m]))", "legendFormat": "{{ endpoint }}", "refId": "A" }
       ],
@@ -219,7 +219,7 @@
       "title": "Error Rate by Endpoint",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "rate(hera_request_failures_total[1m])", "legendFormat": "{{ endpoint }}", "refId": "A" }
       ],
@@ -236,7 +236,7 @@
       "title": "Latency Heatmap",
       "type": "heatmap",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum(rate(hera_request_latency_seconds_bucket[1m])) by (le)", "format": "heatmap", "legendFormat": "{{ le }}", "refId": "A" }
       ]
@@ -251,9 +251,9 @@
       "title": "Pipeline Stage Completions",
       "type": "barchart",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
-        { "expr": "sum by (stage) (hera_pipeline_stages_total{status=\"success\"})", "legendFormat": "{{ stage }}", "refId": "A" }
+        { "expr": "sum by (stage) (hera_pipeline_stages_total{status=\"completed\"})", "legendFormat": "{{ stage }}", "refId": "A" }
       ],
       "options": {
         "orientation": "horizontal",
@@ -270,7 +270,7 @@
       "title": "CDC Events by Table",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum by (table) (rate(hera_cdc_events_total[5m]))", "legendFormat": "{{ table }}", "refId": "A" }
       ],
@@ -286,7 +286,7 @@
       "title": "Warehouse Encounters Loaded",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 40 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "hera_warehouse_encounters_total", "refId": "A" }
       ],
@@ -301,7 +301,7 @@
       "title": "Request Volume by Endpoint",
       "type": "piechart",
       "gridPos": { "h": 8, "w": 9, "x": 6, "y": 40 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum by (endpoint) (hera_requests_total)", "legendFormat": "{{ endpoint }}", "refId": "A" }
       ],
@@ -314,7 +314,7 @@
       "title": "Pipeline Stage Failure Rate",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 9, "x": 15, "y": 40 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "targets": [
         { "expr": "sum by (stage) (rate(hera_pipeline_stages_total{status!=\"success\"}[5m]))", "legendFormat": "{{ stage }} failures", "refId": "A" }
       ],
