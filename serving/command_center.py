@@ -551,6 +551,7 @@ class UnifiedPipeline:
 
             # 4. Load into warehouse (singleton — persists across requests)
             from data_engineering.warehouse import clinical_warehouse as wh
+
             encounter_result = {
                 "patient_id": patient_id,
                 "age": age,

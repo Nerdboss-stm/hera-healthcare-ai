@@ -212,7 +212,9 @@ def predict_patient_risk(request: VitalsRequest):
             diastolic_bp=request.diastolic_bp,
             age=request.age,
         )
-        log_prediction(result["features_used"], result["prediction"], result["confidence"])
+        log_prediction(
+            result["features_used"], result["prediction"], result["confidence"]
+        )
         REQUEST_LATENCY.labels(endpoint=ep).observe(time.time() - start)
         return RiskResponse(
             prediction=result["prediction"],
@@ -275,8 +277,16 @@ def clinical_reasoning(request: ClinicalReasoningRequest):
 
         # Extract diagnosis — may be a string or dict depending on to_dict()
         primary_dx = diag_dict.get("primary_diagnosis", "")
-        dx_name = primary_dx.get("name", "") if isinstance(primary_dx, dict) else str(primary_dx)
-        dx_conf = primary_dx.get("probability", 0) if isinstance(primary_dx, dict) else diag_dict.get("confidence", 0)
+        dx_name = (
+            primary_dx.get("name", "")
+            if isinstance(primary_dx, dict)
+            else str(primary_dx)
+        )
+        dx_conf = (
+            primary_dx.get("probability", 0)
+            if isinstance(primary_dx, dict)
+            else diag_dict.get("confidence", 0)
+        )
 
         try:
             log_reasoning(
@@ -468,7 +478,9 @@ def fhir_predict(request: FHIRBundleRequest):
             age=patient.get("age", 50),
         )
 
-        log_prediction(result["features_used"], result["prediction"], result["confidence"])
+        log_prediction(
+            result["features_used"], result["prediction"], result["confidence"]
+        )
 
         risk_assessment = FHIRConverter.to_risk_assessment(
             patient_id=patient.get("patient_id", "unknown"),
@@ -581,7 +593,9 @@ def command_center(request: CommandCenterRequest):
         for s in rd.get("stages", []):
             sys_name = s.get("system", "")
             sr = s.get("result") or {}
-            PIPELINE_STAGES.labels(stage=sys_name, status=s.get("status", "unknown")).inc()
+            PIPELINE_STAGES.labels(
+                stage=sys_name, status=s.get("status", "unknown")
+            ).inc()
             if sys_name == "risk_predictor":
                 rl = sr.get("risk_level", sr.get("prediction", "unknown"))
                 RISK_PREDICTIONS.labels(risk_level=rl).inc()
@@ -593,16 +607,26 @@ def command_center(request: CommandCenterRequest):
         try:
             from data_engineering.cdc import cdc_stream
             from data_engineering.warehouse import clinical_warehouse
+
             cdc_events = cdc_stream.capture_encounter(rd)
             for evt in cdc_events:
-                tbl = evt.table if hasattr(evt, 'table') else evt.get("table", "unknown")
-                ct = evt.change_type if hasattr(evt, 'change_type') else evt.get("change_type", "INSERT")
+                tbl = (
+                    evt.table if hasattr(evt, "table") else evt.get("table", "unknown")
+                )
+                ct = (
+                    evt.change_type
+                    if hasattr(evt, "change_type")
+                    else evt.get("change_type", "INSERT")
+                )
                 CDC_EVENTS.labels(table=tbl, change_type=ct).inc()
             clinical_warehouse.load_encounter(rd)
             WAREHOUSE_ENCOUNTERS.inc()
         except Exception as wh_err:
             import logging
-            logging.getLogger(__name__).warning("Warehouse/CDC metric error: %s", wh_err)
+
+            logging.getLogger(__name__).warning(
+                "Warehouse/CDC metric error: %s", wh_err
+            )
 
         # Log to all PostgreSQL tables from pipeline stages
         try:
@@ -610,7 +634,11 @@ def command_center(request: CommandCenterRequest):
                 sys_name = s.get("system", "")
                 sr = s.get("result") or {}
                 if sys_name == "risk_predictor" and sr.get("features_used"):
-                    log_prediction(sr["features_used"], sr.get("prediction", ""), sr.get("confidence", 0))
+                    log_prediction(
+                        sr["features_used"],
+                        sr.get("prediction", ""),
+                        sr.get("confidence", 0),
+                    )
                 elif sys_name == "agents" and sr.get("triage"):
                     tri = sr.get("triage", {})
                     dxr = sr.get("diagnosis", {})
@@ -627,7 +655,9 @@ def command_center(request: CommandCenterRequest):
                         audit=sr.get("audit", []),
                     )
                 elif sys_name == "ner" and sr.get("entity_count") is not None:
-                    note_hash = hashlib.sha256(request.clinical_note.encode()).hexdigest()[:16]
+                    note_hash = hashlib.sha256(
+                        request.clinical_note.encode()
+                    ).hexdigest()[:16]
                     log_ner(
                         patient_id=request.patient_id,
                         note_hash=note_hash,
@@ -638,21 +668,32 @@ def command_center(request: CommandCenterRequest):
                         labs=sr.get("lab_values", []),
                     )
                 elif sys_name == "evaluator" and sr.get("overall_score") is not None:
-                    note_hash = hashlib.sha256(request.clinical_note.encode()).hexdigest()[:16]
+                    note_hash = hashlib.sha256(
+                        request.clinical_note.encode()
+                    ).hexdigest()[:16]
                     log_evaluation(
                         note_hash=note_hash,
                         overall=sr.get("overall_score", 0),
                         passed=sr.get("pass_threshold", False),
-                        factual=sr.get("factual_consistency", {}).get("score", 0) if isinstance(sr.get("factual_consistency"), dict) else 0,
-                        hallucination=sr.get("hallucination", {}).get("score", 0) if isinstance(sr.get("hallucination"), dict) else 0,
-                        accuracy=sr.get("medical_accuracy", {}).get("score", 0) if isinstance(sr.get("medical_accuracy"), dict) else 0,
-                        safety=sr.get("clinical_safety", {}).get("safe", False) if isinstance(sr.get("clinical_safety"), dict) else False,
+                        factual=sr.get("factual_consistency", {}).get("score", 0)
+                        if isinstance(sr.get("factual_consistency"), dict)
+                        else 0,
+                        hallucination=sr.get("hallucination", {}).get("score", 0)
+                        if isinstance(sr.get("hallucination"), dict)
+                        else 0,
+                        accuracy=sr.get("medical_accuracy", {}).get("score", 0)
+                        if isinstance(sr.get("medical_accuracy"), dict)
+                        else 0,
+                        safety=sr.get("clinical_safety", {}).get("safe", False)
+                        if isinstance(sr.get("clinical_safety"), dict)
+                        else False,
                         details=sr,
                     )
                 elif sys_name == "summarizer" and sr.get("summary"):
                     log_to_db(request.clinical_note, sr.get("summary", ""), "SUCCESS")
         except Exception as log_err:
             import logging
+
             logging.getLogger(__name__).warning("CC DB logging error: %s", log_err)
 
         return CommandCenterResponse(
@@ -870,11 +911,21 @@ def de_live():
             **cdc_stream.get_stats(),
             "recent_events": [
                 {
-                    "event_id": e.get("event_id", "") if isinstance(e, dict) else getattr(e, "event_id", ""),
-                    "table": e.get("table", "") if isinstance(e, dict) else getattr(e, "table", ""),
-                    "change_type": e.get("change_type", "") if isinstance(e, dict) else getattr(e, "change_type", ""),
-                    "record_key": e.get("record_key", "") if isinstance(e, dict) else getattr(e, "record_key", ""),
-                    "timestamp": e.get("timestamp", "") if isinstance(e, dict) else getattr(e, "timestamp", ""),
+                    "event_id": e.get("event_id", "")
+                    if isinstance(e, dict)
+                    else getattr(e, "event_id", ""),
+                    "table": e.get("table", "")
+                    if isinstance(e, dict)
+                    else getattr(e, "table", ""),
+                    "change_type": e.get("change_type", "")
+                    if isinstance(e, dict)
+                    else getattr(e, "change_type", ""),
+                    "record_key": e.get("record_key", "")
+                    if isinstance(e, dict)
+                    else getattr(e, "record_key", ""),
+                    "timestamp": e.get("timestamp", "")
+                    if isinstance(e, dict)
+                    else getattr(e, "timestamp", ""),
                 }
                 for e in cdc_stream.replay()[-20:]
             ],

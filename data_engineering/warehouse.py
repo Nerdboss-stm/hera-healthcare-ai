@@ -145,7 +145,9 @@ class ClinicalWarehouse:
                     )
                 self._commit()
         except Exception as e:
-            logger.warning("PG warehouse tables not found, falling back to SQLite: %s", e)
+            logger.warning(
+                "PG warehouse tables not found, falling back to SQLite: %s", e
+            )
             try:
                 self._conn.rollback()
                 self._conn.close()
@@ -245,29 +247,41 @@ class ClinicalWarehouse:
         full = dt.isoformat()
         row = self._execute(
             f"SELECT time_key FROM dim_time WHERE full_datetime = {ph}",
-            (full,), fetch="one",
+            (full,),
+            fetch="one",
         )
         if row:
             return row["time_key"]
         cur = self._execute(
             f"INSERT INTO dim_time (full_datetime, date, hour, day_of_week, month, year) "
             f"VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})",
-            (full, dt.strftime("%Y-%m-%d"), dt.hour, dt.strftime("%A"), dt.month, dt.year),
+            (
+                full,
+                dt.strftime("%Y-%m-%d"),
+                dt.hour,
+                dt.strftime("%A"),
+                dt.month,
+                dt.year,
+            ),
         )
         self._commit()
         if self._is_pg:
             row = self._execute(
                 f"SELECT time_key FROM dim_time WHERE full_datetime = {ph}",
-                (full,), fetch="one",
+                (full,),
+                fetch="one",
             )
             return row["time_key"] if row else 0
         return cur.lastrowid
 
-    def _get_or_create_patient(self, patient_id: str, age: int = 0, gender: str = "unknown") -> int:
+    def _get_or_create_patient(
+        self, patient_id: str, age: int = 0, gender: str = "unknown"
+    ) -> int:
         ph = self._ph
         row = self._execute(
             f"SELECT patient_key FROM dim_patient WHERE patient_id = {ph}",
-            (patient_id,), fetch="one",
+            (patient_id,),
+            fetch="one",
         )
         if row:
             return row["patient_key"]
@@ -281,7 +295,8 @@ class ClinicalWarehouse:
             self._commit()
             row = self._execute(
                 f"SELECT patient_key FROM dim_patient WHERE patient_id = {ph}",
-                (patient_id,), fetch="one",
+                (patient_id,),
+                fetch="one",
             )
             return row["patient_key"] if row else 0
         else:
@@ -293,11 +308,14 @@ class ClinicalWarehouse:
             self._commit()
             return cur.lastrowid or 0
 
-    def _get_or_create_diagnosis(self, name: str, category: str = "", severity: str = "") -> int:
+    def _get_or_create_diagnosis(
+        self, name: str, category: str = "", severity: str = ""
+    ) -> int:
         ph = self._ph
         row = self._execute(
             f"SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = {ph}",
-            (name,), fetch="one",
+            (name,),
+            fetch="one",
         )
         if row:
             return row["diagnosis_key"]
@@ -308,7 +326,8 @@ class ClinicalWarehouse:
         self._commit()
         row = self._execute(
             f"SELECT diagnosis_key FROM dim_diagnosis WHERE diagnosis_name = {ph}",
-            (name,), fetch="one",
+            (name,),
+            fetch="one",
         )
         return row["diagnosis_key"] if row else 0
 
@@ -386,14 +405,29 @@ class ClinicalWarehouse:
                     feedback_loops, created_at
                 ) VALUES ({phs24})""",
                 (
-                    patient_key, diagnosis_key, 1, time_key,
-                    vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
-                    vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
-                    sbp, dbp, map_val, risk_score, risk_prediction,
-                    risk_level, confidence,
-                    esi_level, ner_count, compression, safety_score, safety_passed,
+                    patient_key,
+                    diagnosis_key,
+                    1,
+                    time_key,
+                    vitals.get("heart_rate", 0),
+                    vitals.get("respiratory_rate", 0),
+                    vitals.get("body_temperature", 0),
+                    vitals.get("oxygen_saturation", 0),
+                    sbp,
+                    dbp,
+                    map_val,
+                    risk_score,
+                    risk_prediction,
+                    risk_level,
+                    confidence,
+                    esi_level,
+                    ner_count,
+                    compression,
+                    safety_score,
+                    safety_passed,
                     pipeline_result.get("overall_latency_ms", 0),
-                    fhir_count, pipeline_result.get("feedback_loops_triggered", 0),
+                    fhir_count,
+                    pipeline_result.get("feedback_loops_triggered", 0),
                     now.isoformat(),
                 ),
             )
@@ -417,15 +451,29 @@ class ClinicalWarehouse:
                     feedback_loops, created_at
                 ) VALUES ({phs24})""",
                 (
-                    patient_key, diagnosis_key, 1, time_key,
-                    vitals.get("heart_rate", 0), vitals.get("respiratory_rate", 0),
-                    vitals.get("body_temperature", 0), vitals.get("oxygen_saturation", 0),
-                    sbp, dbp, map_val, risk_score, risk_prediction,
-                    risk_level, confidence,
-                    esi_level, ner_count, compression, safety_score,
+                    patient_key,
+                    diagnosis_key,
+                    1,
+                    time_key,
+                    vitals.get("heart_rate", 0),
+                    vitals.get("respiratory_rate", 0),
+                    vitals.get("body_temperature", 0),
+                    vitals.get("oxygen_saturation", 0),
+                    sbp,
+                    dbp,
+                    map_val,
+                    risk_score,
+                    risk_prediction,
+                    risk_level,
+                    confidence,
+                    esi_level,
+                    ner_count,
+                    compression,
+                    safety_score,
                     1 if safety_passed else 0,
                     pipeline_result.get("overall_latency_ms", 0),
-                    fhir_count, pipeline_result.get("feedback_loops_triggered", 0),
+                    fhir_count,
+                    pipeline_result.get("feedback_loops_triggered", 0),
                     now.isoformat(),
                 ),
             )
@@ -498,12 +546,14 @@ class ClinicalWarehouse:
             JOIN dim_time dt ON f.time_key = dt.time_key
             ORDER BY f.encounter_id DESC
             LIMIT {self._ph}""",
-            (limit,), fetch="all",
+            (limit,),
+            fetch="all",
         )
 
     def query_risk_distribution(self) -> dict:
         """Get risk score distribution for analytics (4 levels)."""
-        rows = self._execute("""
+        rows = self._execute(
+            """
             SELECT
                 CASE
                     WHEN risk_score >= 0.75 THEN 'critical'
@@ -515,7 +565,9 @@ class ClinicalWarehouse:
                 ROUND(AVG(pipeline_latency_ms)::numeric, 1) AS avg_latency
             FROM fact_clinical_encounters
             GROUP BY 1
-        """ if self._is_pg else """
+        """
+            if self._is_pg
+            else """
             SELECT
                 CASE
                     WHEN risk_score >= 0.75 THEN 'critical'
@@ -527,7 +579,9 @@ class ClinicalWarehouse:
                 ROUND(AVG(pipeline_latency_ms), 1) AS avg_latency
             FROM fact_clinical_encounters
             GROUP BY 1
-        """, fetch="all")
+        """,
+            fetch="all",
+        )
         return {
             row["risk_level"]: {"count": row["cnt"], "avg_latency": row["avg_latency"]}
             for row in rows
@@ -537,15 +591,20 @@ class ClinicalWarehouse:
         """Get recent hourly aggregate summaries."""
         return self._execute(
             f"SELECT * FROM agg_hourly_summary ORDER BY hour_key DESC LIMIT {self._ph}",
-            (limit,), fetch="all",
+            (limit,),
+            fetch="all",
         )
 
     def get_warehouse_stats(self) -> dict:
         """Get warehouse metadata and row counts."""
         tables = {}
         for tbl in [
-            "dim_patient", "dim_diagnosis", "dim_provider",
-            "dim_time", "fact_clinical_encounters", "agg_hourly_summary",
+            "dim_patient",
+            "dim_diagnosis",
+            "dim_provider",
+            "dim_time",
+            "fact_clinical_encounters",
+            "agg_hourly_summary",
         ]:
             row = self._execute(
                 f"SELECT COUNT(*) AS cnt FROM {tbl}",  # noqa: S608
@@ -567,5 +626,6 @@ class ClinicalWarehouse:
 clinical_warehouse = ClinicalWarehouse()
 print(
     f"[Warehouse] Backend: {clinical_warehouse.backend}",
-    file=sys.stderr, flush=True,
+    file=sys.stderr,
+    flush=True,
 )

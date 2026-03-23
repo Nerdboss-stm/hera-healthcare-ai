@@ -25,9 +25,9 @@ LABEL_MAP = {1: "High Risk", 0: "Low Risk"}
 # 4-level risk thresholds based on clinical severity scoring
 RISK_THRESHOLDS = [
     (0.75, "Critical"),  # risk_score >= 0.75
-    (0.50, "High"),      # risk_score >= 0.50
-    (0.25, "Medium"),    # risk_score >= 0.25
-    (0.00, "Low"),       # risk_score < 0.25
+    (0.50, "High"),  # risk_score >= 0.50
+    (0.25, "Medium"),  # risk_score >= 0.25
+    (0.00, "Low"),  # risk_score < 0.25
 ]
 
 
@@ -192,9 +192,14 @@ def predict_risk(
 
     # Compute blended clinical risk score for 4-level classification
     risk_score = _compute_clinical_risk_score(
-        heart_rate, respiratory_rate, body_temperature,
-        oxygen_saturation, systolic_bp, diastolic_bp,
-        age, ml_prob,
+        heart_rate,
+        respiratory_rate,
+        body_temperature,
+        oxygen_saturation,
+        systolic_bp,
+        diastolic_bp,
+        age,
+        ml_prob,
     )
     risk_level = _classify_risk_level(risk_score)
 

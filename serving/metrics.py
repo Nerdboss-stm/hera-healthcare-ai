@@ -61,12 +61,8 @@ HERA_INFO = Info(
 HERA_INFO.info({"version": "4.0.0", "backend": "postgresql"})
 
 # Keep old names for backward compatibility with existing Prometheus queries
-SUMMARIZER_COUNT = Counter(
-    "summarizer_requests_total", "Total summarizer requests"
-)
-SUMMARIZER_FAILURES = Counter(
-    "summarizer_failures_total", "Failed summarizer requests"
-)
+SUMMARIZER_COUNT = Counter("summarizer_requests_total", "Total summarizer requests")
+SUMMARIZER_FAILURES = Counter("summarizer_failures_total", "Failed summarizer requests")
 SUMMARIZER_LATENCY = Histogram(
     "summarizer_request_latency_seconds", "Summarizer request latency"
 )

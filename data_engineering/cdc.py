@@ -123,6 +123,7 @@ class CDCStream:
         try:
             import psycopg2
             from config.settings import DB_CONFIG
+
             conn = psycopg2.connect(**DB_CONFIG)
             cur = conn.cursor()
             cur.execute(
@@ -131,12 +132,15 @@ class CDCStream:
                  before_state, after_state, diff, checksum, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
-                    event.event_id, event.table, event.record_key,
+                    event.event_id,
+                    event.table,
+                    event.record_key,
                     event.change_type,
                     json.dumps(event.before, default=str) if event.before else None,
                     json.dumps(event.after, default=str) if event.after else None,
                     json.dumps(event.diff, default=str) if event.diff else None,
-                    event.checksum, event.timestamp,
+                    event.checksum,
+                    event.timestamp,
                 ),
             )
             conn.commit()

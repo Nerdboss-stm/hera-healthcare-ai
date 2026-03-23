@@ -71,9 +71,17 @@ def log_prediction(vitals: dict, label: str, confidence: float):
         print(f"Prediction logging failed: {e}", file=sys.stderr, flush=True)
 
 
-def log_reasoning(patient_id: str, complaint: str, esi: int, diagnosis: str,
-                  confidence: float, disposition: str, consensus: float,
-                  latency: float, audit):
+def log_reasoning(
+    patient_id: str,
+    complaint: str,
+    esi: int,
+    diagnosis: str,
+    confidence: float,
+    disposition: str,
+    consensus: float,
+    latency: float,
+    audit,
+):
     conn = _get_conn()
     if not conn:
         return
@@ -86,11 +94,16 @@ def log_reasoning(patient_id: str, complaint: str, esi: int, diagnosis: str,
              pipeline_latency_ms, reasoning_audit, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (
-                str(patient_id), str(complaint), int(esi), str(diagnosis),
+                str(patient_id),
+                str(complaint),
+                int(esi),
+                str(diagnosis),
                 float(confidence) if confidence else 0.0,
-                str(disposition), float(consensus) if consensus else 0.0,
+                str(disposition),
+                float(consensus) if consensus else 0.0,
                 float(latency) if latency else 0.0,
-                _safe_json(audit), datetime.now(),
+                _safe_json(audit),
+                datetime.now(),
             ),
         )
         conn.commit()
@@ -101,8 +114,15 @@ def log_reasoning(patient_id: str, complaint: str, esi: int, diagnosis: str,
         print(f"Reasoning logging failed: {e}", file=sys.stderr, flush=True)
 
 
-def log_ner(patient_id: str, note_hash: str, count: int,
-            medications: list, conditions: list, procedures: list, labs: list):
+def log_ner(
+    patient_id: str,
+    note_hash: str,
+    count: int,
+    medications: list,
+    conditions: list,
+    procedures: list,
+    labs: list,
+):
     conn = _get_conn()
     if not conn:
         return
@@ -114,9 +134,14 @@ def log_ner(patient_id: str, note_hash: str, count: int,
              procedures, lab_values, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
             (
-                str(patient_id), str(note_hash), int(count),
-                _safe_json(medications), _safe_json(conditions),
-                _safe_json(procedures), _safe_json(labs), datetime.now(),
+                str(patient_id),
+                str(note_hash),
+                int(count),
+                _safe_json(medications),
+                _safe_json(conditions),
+                _safe_json(procedures),
+                _safe_json(labs),
+                datetime.now(),
             ),
         )
         conn.commit()
@@ -127,9 +152,16 @@ def log_ner(patient_id: str, note_hash: str, count: int,
         print(f"NER logging failed: {e}", file=sys.stderr, flush=True)
 
 
-def log_evaluation(note_hash: str, overall: float, passed: bool,
-                   factual: float, hallucination: float,
-                   accuracy: float, safety: bool, details: dict):
+def log_evaluation(
+    note_hash: str,
+    overall: float,
+    passed: bool,
+    factual: float,
+    hallucination: float,
+    accuracy: float,
+    safety: bool,
+    details: dict,
+):
     conn = _get_conn()
     if not conn:
         return
@@ -150,7 +182,8 @@ def log_evaluation(note_hash: str, overall: float, passed: bool,
                 float(hallucination) if hallucination is not None else 0.0,
                 float(accuracy) if accuracy is not None else 0.0,
                 bool(safety),
-                _safe_json(details), datetime.now(),
+                _safe_json(details),
+                datetime.now(),
             ),
         )
         conn.commit()

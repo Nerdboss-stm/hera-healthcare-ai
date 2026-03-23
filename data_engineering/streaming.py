@@ -310,6 +310,7 @@ class EventStream:
         try:
             import psycopg2
             from config.settings import DB_CONFIG
+
             conn = psycopg2.connect(**DB_CONFIG)
             cur = conn.cursor()
             cur.execute(
@@ -318,10 +319,14 @@ class EventStream:
                  schema_version, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
-                    event.event_id, event.topic, event.partition,
-                    event.offset, event.key,
+                    event.event_id,
+                    event.topic,
+                    event.partition,
+                    event.offset,
+                    event.key,
                     json.dumps(event.value, default=str),
-                    event.schema_version, event.timestamp,
+                    event.schema_version,
+                    event.timestamp,
                 ),
             )
             conn.commit()
