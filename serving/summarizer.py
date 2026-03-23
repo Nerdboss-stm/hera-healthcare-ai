@@ -1,12 +1,12 @@
 import os
 import logging
-from transformers import T5ForConditionalGeneration, T5Tokenizer
 
 logger = logging.getLogger(__name__)
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(_dir, "..", "model")
 FALLBACK_MODEL = "t5-small"
+LIGHTWEIGHT_MODE = os.getenv("HERA_LIGHTWEIGHT", "").lower() in ("1", "true", "yes")
 
 _model = None
 _tokenizer = None
@@ -15,7 +15,14 @@ _using_fallback = False
 
 def _load_model():
     global _model, _tokenizer, _using_fallback
+
+    if LIGHTWEIGHT_MODE:
+        _using_fallback = True
+        return None, None
+
     if _model is None:
+        from transformers import T5ForConditionalGeneration, T5Tokenizer
+
         # Try fine-tuned model first
         if os.path.exists(MODEL_PATH):
             try:
@@ -50,13 +57,40 @@ def _load_model():
     return _model, _tokenizer
 
 
+def _extractive_summary(note: str, max_length: int = 150) -> str:
+    """Lightweight extractive summary — no ML model needed."""
+    sentences = [s.strip() for s in note.replace("\n", ". ").split(".") if s.strip()]
+    if not sentences:
+        return note[:max_length]
+    # Take the most information-dense sentences (longest first, up to limit)
+    ranked = sorted(sentences, key=len, reverse=True)
+    summary = []
+    total = 0
+    for s in ranked:
+        if total + len(s) > max_length:
+            break
+        summary.append(s)
+        total += len(s) + 2
+    # Return in original order
+    ordered = [s for s in sentences if s in summary]
+    return ". ".join(ordered) + "." if ordered else note[:max_length]
+
+
 def generate_summary(note: str, max_length=150, min_length=30) -> str:
     model, tokenizer = _load_model()
+
+    if model is None or tokenizer is None:
+        return _extractive_summary(note, max_length)
+
     # T5 requires a task prefix for summarization
     prefix = "summarize: " if _using_fallback else ""
     input_text = f"{prefix}{note}"
     input_ids = tokenizer(
-        input_text, return_tensors="pt", padding=True, truncation=True, max_length=512
+        input_text,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=512,
     ).input_ids
     output = model.generate(
         input_ids,

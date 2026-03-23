@@ -7,6 +7,7 @@ passages with source citations and similarity scores.
 
 from __future__ import annotations
 import logging
+import os
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -16,21 +17,34 @@ _faiss = None
 _SentenceTransformer = None
 
 
+_lightweight = os.getenv("HERA_LIGHTWEIGHT", "").lower() in ("1", "true", "yes")
+
+
 def _load_faiss():
     global _faiss
     if _faiss is None:
-        import faiss
+        try:
+            import faiss
 
-        _faiss = faiss
+            _faiss = faiss
+        except ImportError:
+            logger.warning("faiss not installed, using keyword fallback")
+            return None
     return _faiss
 
 
 def _load_sentence_transformer():
     global _SentenceTransformer
     if _SentenceTransformer is None:
-        from sentence_transformers import SentenceTransformer
+        try:
+            from sentence_transformers import SentenceTransformer
 
-        _SentenceTransformer = SentenceTransformer
+            _SentenceTransformer = SentenceTransformer
+        except ImportError:
+            logger.warning(
+                "sentence-transformers not installed, using keyword fallback"
+            )
+            return None
     return _SentenceTransformer
 
 
@@ -65,8 +79,19 @@ class MedicalRetriever:
         metadata: list[dict] | None = None,
     ) -> None:
         """Embed and index a corpus of texts."""
+        self._texts = list(texts)
+        self._metadata = metadata or [{} for _ in texts]
+
         faiss = _load_faiss()
+        if faiss is None or _lightweight:
+            logger.info("Using keyword fallback for %d documents", len(texts))
+            self._index = "keyword"
+            return
+
         encoder = self._ensure_encoder()
+        if encoder is None:
+            self._index = "keyword"
+            return
 
         logger.info("Indexing %d documents into FAISS", len(texts))
         embeddings = encoder.encode(texts, show_progress_bar=False)
@@ -79,12 +104,34 @@ class MedicalRetriever:
 
         self._index = faiss.IndexFlatIP(embeddings.shape[1])
         self._index.add(embeddings)
-        self._texts = list(texts)
-        self._metadata = metadata or [{} for _ in texts]
 
         logger.info(
             "Indexed %d vectors (dim=%d)", self._index.ntotal, embeddings.shape[1]
         )
+
+    def _keyword_retrieve(self, query: str, top_k: int) -> list[dict]:
+        """Simple keyword-based retrieval fallback."""
+        query_terms = set(query.lower().split())
+        scored = []
+        for i, text in enumerate(self._texts):
+            text_lower = text.lower()
+            hits = sum(1 for t in query_terms if t in text_lower)
+            if hits > 0:
+                score = hits / max(len(query_terms), 1)
+                scored.append((score, i))
+        scored.sort(reverse=True)
+        results = []
+        for score, idx in scored[:top_k]:
+            meta = self._metadata[idx] if idx < len(self._metadata) else {}
+            results.append(
+                {
+                    "text": self._texts[idx],
+                    "score": round(score, 4),
+                    "source": meta.get("source", "unknown"),
+                    "metadata": meta,
+                }
+            )
+        return results
 
     def retrieve(
         self, query: str, top_k: int = 3, threshold: float = 0.3
@@ -94,8 +141,14 @@ class MedicalRetriever:
         Returns:
             List of dicts with keys: text, score, source, metadata
         """
-        if self._index is None or self._index.ntotal == 0:
+        if self._index is None:
             logger.warning("Retriever index is empty")
+            return []
+
+        if self._index == "keyword":
+            return self._keyword_retrieve(query, top_k)
+
+        if self._index.ntotal == 0:
             return []
 
         encoder = self._ensure_encoder()
@@ -125,8 +178,12 @@ class MedicalRetriever:
 
     @property
     def is_indexed(self) -> bool:
+        if self._index == "keyword":
+            return len(self._texts) > 0
         return self._index is not None and self._index.ntotal > 0
 
     @property
     def corpus_size(self) -> int:
+        if self._index == "keyword":
+            return len(self._texts)
         return self._index.ntotal if self._index else 0

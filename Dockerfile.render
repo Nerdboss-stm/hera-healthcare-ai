@@ -1,0 +1,37 @@
+FROM python:3.10-slim-bullseye
+
+WORKDIR /app
+
+# Lightweight production build — no PyTorch, no transformers
+# Uses extractive summarizer and keyword-based RAG fallback
+RUN python -m pip install --no-cache-dir \
+    fastapi "uvicorn[standard]" pydantic \
+    scikit-learn numpy pandas joblib \
+    prometheus_client psycopg2-binary \
+    networkx requests rouge-score python-multipart
+
+COPY config/ ./config/
+COPY serving/ ./serving/
+COPY agents/ ./agents/
+COPY rag/ ./rag/
+COPY ner/ ./ner/
+COPY evaluation/ ./evaluation/
+COPY fhir_layer/ ./fhir_layer/
+COPY data_engineering/ ./data_engineering/
+COPY risk_prediction/ ./risk_prediction/
+COPY clinical_summarizer/ ./clinical_summarizer/
+COPY database/ ./database/
+COPY scripts/ ./scripts/
+
+# Create empty dirs so COPY doesn't fail if missing
+RUN mkdir -p data/processed data/clinical_notes model
+
+COPY data/processed/ ./data/processed/
+COPY data/clinical_notes/ ./data/clinical_notes/
+COPY model/ ./model/
+
+ENV HERA_LIGHTWEIGHT=true
+
+EXPOSE 8000
+
+CMD python scripts/init_db.py 2>/dev/null; exec uvicorn serving.api:app --host 0.0.0.0 --port ${PORT:-8000}

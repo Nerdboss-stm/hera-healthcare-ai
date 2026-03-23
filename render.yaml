@@ -10,7 +10,7 @@ services:
     name: hera-healthcare-ai
     runtime: docker
     plan: free
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./Dockerfile.render
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -36,3 +36,5 @@ services:
         value: "8000"
       - key: PYTHON_ENV
         value: production
+      - key: HERA_LIGHTWEIGHT
+        value: "true"
