@@ -522,7 +522,6 @@ class UnifiedPipeline:
             from data_engineering.streaming import event_stream
             from data_engineering.quality import DataQualityFramework
             from data_engineering.lineage import DataLineageTracker
-            from data_engineering.warehouse import clinical_warehouse  # noqa: F811
             from data_engineering.cdc import cdc_stream
             from data_engineering.catalog import data_catalog
 
